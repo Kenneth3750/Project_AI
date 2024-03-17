@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
+os.environ['REPLICATE_API_TOKEN']=""
 tiny_model = whisper.load_model('tiny')
 is_running = False
 app = Flask(__name__)
