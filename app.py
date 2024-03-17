@@ -7,10 +7,15 @@ import os
 import pyttsx3
 from flask import Flask, render_template, request
 import threading
+import os
+from dotenv import load_dotenv
 
 
 
-os.environ['REPLICATE_API_TOKEN']="r8_8UvFyJPwqcvOGjqzekEBVnvyEJiHyIh0zxcMQ"
+# Load environment variables from .env file
+load_dotenv()
+
+os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 tiny_model = whisper.load_model('tiny')
 is_running = False
 app = Flask(__name__)
