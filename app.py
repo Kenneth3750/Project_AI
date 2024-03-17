@@ -10,7 +10,7 @@ import threading
 
 
 
-os.environ['REPLICATE_API_TOKEN']="r8_8UvFyJPwqcvOGjqzekEBVnvyEJiHyIh0zxcMQ"
+os.environ['REPLICATE_API_TOKEN']=""
 tiny_model = whisper.load_model('tiny')
 is_running = False
 app = Flask(__name__)
