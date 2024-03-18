@@ -6,6 +6,7 @@ import whisper
 import os
 import pyttsx3
 from flask import Flask, render_template, request
+from flask_socketio import SocketIO
 import threading
 import os
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 tiny_model = whisper.load_model('tiny')
 is_running = False
 app = Flask(__name__)
+socketio = SocketIO(app)
 lock = threading.Lock()
 conditional_lock = threading.Condition(lock)
 ai_response_running = False
@@ -79,6 +81,7 @@ def AI_response(filename, tiny_model):
         print(f"AI: {full_respone}")
         speak_text(full_respone)
         print(f"AI: {message}")
+        socketio.emit('informacion_del_servidor', {'data': 'Talking...'})
         speak_text(message)
     ai_response_running = False
 
@@ -89,6 +92,7 @@ def main(tiny_model):
     while is_running:
         try:
             filename = "input.wav"
+            socketio.emit('informacion_del_servidor', {'data': 'Recording'})
             with sr.Microphone() as source:
                 recognizer = sr.Recognizer()
                 source.pause_threshold = 2
@@ -104,7 +108,8 @@ def main(tiny_model):
                         print(is_running)
                         print('breakBeforeAI')
                         break
-                    else:       
+                    else:    
+                        socketio.emit('informacion_del_servidor', {'data': 'AI is thinking...'})
                         lock.acquire()
                         AI_response(filename, tiny_model)
                         lock.release()
@@ -142,7 +147,7 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
    
 
 

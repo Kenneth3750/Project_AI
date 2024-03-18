@@ -1,5 +1,16 @@
 let statusMic;
 
+var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', function() {
+    console.log('Conectado al servidor SocketIO');
+});
+
+// Escuchar el evento enviado desde el servidor y mostrar la información en la página
+socket.on('informacion_del_servidor', function(data) {
+    console.log('Informacion del servidor recibida:', data.data);
+    document.getElementById("status").innerHTML = `Status: ${data.data}`;
+});
 
 
 function startEndListen() {
