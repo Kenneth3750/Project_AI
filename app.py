@@ -134,6 +134,7 @@ def index():
             threading.Thread(target=main, args=(tiny_model,)).start()
         else:
             is_running = False
+            socketio.emit('informacion_del_servidor', {'data': 'Sleeping...'})  
             lock.acquire()
             if ai_response_running:
                 conditional_lock.wait()
