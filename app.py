@@ -10,14 +10,16 @@ from flask_socketio import SocketIO
 import threading
 import os
 from dotenv import load_dotenv
-
+import datetime
+import pytz
+from function import get_time
 
 
 # Load environment variables from .env file
 load_dotenv()
 
-os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-tiny_model = whisper.load_model('tiny')
+os.environ['REPLICATE_API_TOKEN'] = "r8_4hbW6HNjNb9lGMl1Yzc8HJImd0DfWrJ2hrZyL"
+tiny_model = whisper.load_model('small')
 is_running = False
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -41,7 +43,8 @@ def generate_response(prompt):
     return output
 
 def generate_mixtral_response(prompt_input):
-    string_dialogue = """You are a electronic engineer with a PhD, that enjoys to feel superior to other people.
+    string_dialogue = """You are a helpful assitant, working a the reception of a hotel.
+    Make your response in the same language as the user prompt.
     User:   """
     
     output = replicate.run("mistralai/mixtral-8x7b-instruct-v0.1", 
@@ -78,8 +81,6 @@ def AI_response(filename, tiny_model):
         full_respone = ''
         #for item in response:
             #full_respone += item
-        print(f"AI: {full_respone}")
-        speak_text(full_respone)
         print(f"AI: {message}")
         socketio.emit('informacion_del_servidor', {'data': 'Talking...'})
         speak_text(message)
@@ -134,11 +135,11 @@ def index():
             threading.Thread(target=main, args=(tiny_model,)).start()
         else:
             is_running = False
-            socketio.emit('informacion_del_servidor', {'data': 'Sleeping...'})  
             lock.acquire()
             if ai_response_running:
                 conditional_lock.wait()
             speak_text('Hasta luego')
+            socketio.emit('informacion_del_servidor', {'data': 'Sleeping...'})  
             lock.release()
             print('stop')
 
