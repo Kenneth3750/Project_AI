@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 from services.chat import Chat
 from tools.conversation import speak_text
+from mistralai.client import MistralClient
 
 
 
@@ -16,12 +17,13 @@ from tools.conversation import speak_text
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
+client = MistralClient(api_key=os.getenv('MISTRAL_API_TOKEN'))
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 socketio = SocketIO(app)
 lock = threading.Lock()
 conditional_lock = threading.Condition(lock)
-chat = Chat(tiny_model)
+chat = Chat(tiny_model, client)
 ai_response_running = None
 is_running = None
 
@@ -93,7 +95,7 @@ def index():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host='0.0.0.0')
    
 
 
