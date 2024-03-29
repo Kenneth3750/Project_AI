@@ -18,8 +18,8 @@ from function import get_time
 # Load environment variables from .env file
 load_dotenv()
 
-os.environ['REPLICATE_API_TOKEN'] = "r8_4hbW6HNjNb9lGMl1Yzc8HJImd0DfWrJ2hrZyL"
-tiny_model = whisper.load_model('small')
+os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
+tiny_model = whisper.load_model('tiny')
 is_running = False
 app = Flask(__name__)
 socketio = SocketIO(app)
