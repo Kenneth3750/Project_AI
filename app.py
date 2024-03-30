@@ -2,7 +2,7 @@ from os import system
 import speech_recognition as sr
 import whisper
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
 import threading
 import os
@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from services.chat import Chat
 from tools.conversation import speak_text
 from mistralai.client import MistralClient
+import subprocess
 
 
 
@@ -90,6 +91,31 @@ def index():
             print('stop')
 
     return render_template('index.html')
+
+@app.route('/audio', methods=['GET', 'POST'])
+def recibir_audio():
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No se proporcionó ningún archivo de audio'}), 400
+
+    audio_file = request.files['audio']
+
+    # Guardar el archivo de audio temporalmente
+    audio_path = 'audio.mp3'
+    audio_file.save(audio_path)
+
+    # Convertir el audio a formato WAV usando FFmpeg
+    try:
+        output_path = 'audio_convertido.wav'
+        subprocess.run(['ffmpeg', '-i', audio_path, output_path])
+    except Exception as e:
+        return jsonify({'error': f'Error al convertir el audio: {str(e)}'}), 500
+
+    # Eliminar el archivo de audio temporal
+    # Aquí puedes comentar o eliminar esta línea si deseas conservar el archivo temporal
+    # import os
+    # os.remove(audio_path)
+
+    return jsonify({'mensaje': 'Audio convertido y guardado como .wav correctamente'}), 200
 
 
 
