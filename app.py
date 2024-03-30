@@ -13,7 +13,7 @@ from mistralai.client import MistralClient
 
 
 
-# Load environment variables from .env file
+# Load environment variables from .env file a
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
