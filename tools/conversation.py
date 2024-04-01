@@ -42,6 +42,6 @@ def remove_audio(audio_path, output_path):
 def listen_to_user(audio_file):
     audio_path = 'audio.mp3'
     audio_file.save(audio_path)
-    output_path = 'audio_convertido.wav'
-    subprocess.run(["ffmpeg",  "-i", "audio.mp3", "audio_convertido.wav"])    
+    output_path = 'audio_converted.wav'
+    subprocess.run(["ffmpeg",  "-i", "audio.mp3", "audio_converted.wav"])    
     return output_path
