@@ -1,8 +1,7 @@
 #this script contains the main tools to handle a chat conversation between the user and the bot
 import pyttsx3
-import replicate
-import speech_recognition as sr
-from mistralai.client import MistralClient
+import os
+import subprocess
 from mistralai.models.chat_completion import ChatMessage
 
 def speak_text(text):
@@ -33,10 +32,16 @@ def generate_response(client, messages):
         )
     return chat_response.choices[0].message.content
 
+def remove_audio(audio_path, output_path):
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
+    if os.path.exists(output_path):
+        os.remove(output_path)
+ 
 
-def listen_to_user():
-    with sr.Microphone() as source:
-        recognizer = sr.Recognizer()
-        source.pause_threshold = 2
-        audio = recognizer.listen(source, phrase_time_limit=None, timeout=None)
-    return audio
+def listen_to_user(audio_file):
+    audio_path = 'audio.mp3'
+    audio_file.save(audio_path)
+    output_path = 'audio_convertido.wav'
+    subprocess.run(["ffmpeg",  "-i", "audio.mp3", "audio_convertido.wav"])    
+    return output_path

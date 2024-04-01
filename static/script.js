@@ -18,39 +18,22 @@ socket.on('informacion_del_servidor', function(data) {
     document.getElementById("status").innerHTML = `Status: ${data.data}`;
 });
 
+function toggleRecording() {
+    let boton = document.getElementById("recordButton");
 
-function startEndListen() {
-    var boton = document.getElementById("micButton");
-    if (statusMic == null) {
-        statusMic = 'start';
+    if (boton.dataset.recording === "false" || !boton.dataset.recording) {
+        boton.dataset.recording = "true";
+        boton.textContent = "Detener Grabación";
         boton.className = "btn btn-danger";
-
-    }
-    else if (statusMic == 'start') {
-        statusMic = 'end';
+        startRecording();
+    } else {
+        boton.dataset.recording = "false";
+        boton.textContent = "Comenzar Grabación";
         boton.className = "btn btn-primary";
-
+        stopRecording();
     }
-    else {
-        statusMic = 'start';
-        boton.className = "btn btn-danger";
-
-    }
-
-    $.ajax({
-        url: '/',
-        type: 'POST',
-        data: {
-           status: statusMic
-        },
-        success: function(response) {
-            console.log(response);
-        },
-        error: function(error) {
-            console.log(error);
-        }
-    })
 }
+
 
 
 let audioStream;
@@ -58,33 +41,45 @@ let mediaRecorder;
 let chunks = [];
 
 // Comenzar la grabación al presionar el botón "Comenzar Grabación"
-$('#startRecording').click(async () => {
+async function startRecording() {
+    chunks = [];
     try {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
+        // Solicitar permiso al usuario para acceder al micrófono
+        const permission = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Si el permiso fue concedido, comenzar la grabación
+        if (permission) {
+            audioStream = permission;
+            mediaRecorder = new MediaRecorder(audioStream);
 
-        mediaRecorder.ondataavailable = function(e) {
-            chunks.push(e.data);
-        };
+            mediaRecorder.ondataavailable = function(e) {
+                chunks.push(e.data);
+            };
 
-        mediaRecorder.onstop = function() {
-            const audioBlob = new Blob(chunks, { 'type' : 'audio/wav' });
-            sendAudio(audioBlob);
-        };
+            mediaRecorder.onstop = function() {
+                const audioBlob = new Blob(chunks, { 'type' : 'audio/wav' });
+                sendAudio(audioBlob);
+            };
 
-        mediaRecorder.start();
+            mediaRecorder.start();
+        } else {
+            console.error('El usuario denegó el acceso al micrófono.');
+        }
     } catch (err) {
         console.error('Error al obtener acceso al micrófono:', err);
     }
-});
+}
+
 
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
-$('#stopRecording').click(() => {
+function stopRecording() {
+
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         audioStream.getTracks().forEach(track => track.stop());
     }
-});
+
+}
 
 // Función para enviar el audio grabado a través de AJAX usando jQuery
 function sendAudio(audioBlob) {

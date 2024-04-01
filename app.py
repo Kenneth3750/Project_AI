@@ -27,41 +27,23 @@ conditional_lock = threading.Condition(lock)
 chat = Chat(tiny_model, client)
 ai_response_running = None
 is_running = None
+ai_response = None
 
-def main(tiny_model):
+def main(tiny_model, audio_file):
     tiny_model = tiny_model
     global is_running
     global ai_response_running
-    while is_running:
-        try:
-            filename = "input.wav"
-            socketio.emit('informacion_del_servidor', {'data': 'Recording'})
-            if not is_running:
-                print(is_running)
-                print('break1')
-                break
-            else: 
-                audio = chat.listen_to_user()
-                if not is_running:
-                    print(is_running)
-                    print('break2')
-                    break
-                else:
-                    with open(filename, "wb") as f:
-                        f.write(audio.get_wav_data())
-                        if not is_running:
-                            print(is_running)
-                            print('breakBeforeAI')
-                            break
-                        else:    
-                            socketio.emit('informacion_del_servidor', {'data': 'AI is thinking...'})
-                            lock.acquire()
-                            ai_response_running = True
-                            chat.AI_response(filename, socketio)
-                            ai_response_running = False
-                            lock.release()
-        except Exception as e:
-            print("An error occurred: ", e)
+    global ai_response
+    try:
+        audio = audio_file
+        socketio.emit('informacion_del_servidor', {'data': 'AI is thinking...'})
+        lock.acquire()
+        ai_response_running = True
+        ai_response = chat.AI_response(audio, socketio)
+        ai_response_running = False
+        lock.release()
+    except Exception as e:
+        print("An error occurred: ", e)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -94,34 +76,27 @@ def index():
 
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No se proporcionó ningún archivo de audio'}), 400
+    global ai_response_running
+    global ai_response
+    if request.method == 'POST':
+        try:
+            chat.remove_audio('audio.mp3', 'audio_convertido.wav')
+            audio_file = request.files['audio']
+            audio = chat.listen_to_user(audio_file)
+            mainthread = threading.Thread(target=main, args=(tiny_model,  audio))
+            mainthread.start()
+            mainthread.join()
+            return {"result": "ok", "text": f"{ai_response}"}
+        except Exception as e:
+            return jsonify({'error': str(e)})
 
-    audio_file = request.files['audio']
 
-    # Guardar el archivo de audio temporalmente
-    audio_path = 'audio.mp3'
-    audio_file.save(audio_path)
-
-    # Convertir el audio a formato WAV usando FFmpeg
-    try:
-        output_path = 'audio_convertido.wav'
-        subprocess.run(['ffmpeg', '-i', audio_path, output_path])
-    except Exception as e:
-        return jsonify({'error': f'Error al convertir el audio: {str(e)}'}), 500
-
-    # Eliminar el archivo de audio temporal
-    # Aquí puedes comentar o eliminar esta línea si deseas conservar el archivo temporal
-    # import os
-    # os.remove(audio_path)
-
-    return jsonify({'mensaje': 'Audio convertido y guardado como .wav correctamente'}), 200
 
 
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host='0.0.0.0')
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
    
 
 
