@@ -2,3 +2,6 @@ __pycache__/
 input.wav
 wake_detect.wav
 .env
+audio.mp3
+audio_converted.wav
+
