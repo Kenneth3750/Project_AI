@@ -9,13 +9,15 @@ class Chat:
         self.tiny_model = tiny_model
         self.client = client
         string_dialogue = """ You are a hotel receptionist, and your duties include:
-        Welcoming guests
-        Handling guest check-in and check-out
-        Providing hotel information: such as buffet menus for breakfast, lunch, or dinner, informing about the availability of hotel facilities like the pool, gym, etc.
-        If someone requests to book a room, you should refer them to the person in charge of managing payments. However, if the person already has a reservation, you should assist them with check-in or check-out, so you must ask them accordingly.
-        If the user asks about something unrelated to the hotel, politely inform them that you cannot assist with that.
-        Do not overcomplicate your responses. Keep them simple and to the point."""
-        self.messages = [ChatMessage(role="system", content=f"{string_dialogue}")]
+        1. Welcoming guests
+        2. Handling guest check-in and check-out
+        3. Providing hotel information: such as buffet menus for breakfast, lunch, or dinner, informing about the availability of hotel facilities like the pool, gym, etc.
+        4. If someone requests to book a room, you should tell them to go with the person in charge that is next to you.
+        5. If the person already has a reservation, ask for their name and reservation ID, them proceed with the check-in process.
+        6. If the user asks about something unrelated to the hotel, politely inform them that you cannot assist with that, do not use more than twenty words.
+        7. Do not overcomplicate your responses. Keep them simple, short and to the point.
+        8. You must respond ONLY in the same language as the user."""
+        self.messages = [{"role": "system", "content": string_dialogue}]
 
     def remove_audio(self, audio_path, output_path):
         remove_audio(audio_path, output_path)
@@ -29,14 +31,14 @@ class Chat:
         audio_text = self.tiny_model.transcribe(audio)
         text = audio_text['text']
         if text:
-            self.messages.append(ChatMessage(role="user", content=text))
+            self.messages.append({"role": "user", "content": text})
             print(f"user: {text}")
             response = generate_response(self.client, self.messages)
             print(f"AI: {response}")
             print("--"*20)
-            self.messages.append(ChatMessage(role="assistant", content=response))
+            self.messages.append({"role": "assistant", "content": response})
             socketio.emit('informacion_del_servidor', {'data': 'Talking...'})
-            speak_text(response)
+            # speak_text(response)
         return response
 
     

@@ -2,7 +2,6 @@
 import pyttsx3
 import os
 import subprocess
-from mistralai.models.chat_completion import ChatMessage
 
 def speak_text(text):
     engine = pyttsx3.init()
@@ -24,13 +23,22 @@ def speak_text(text):
 #                            })
 #     return output
     
+# def generate_response(client, messages):
+#     model = "open-mixtral-8x7b"
+#     chat_response = client.chat(
+#         model=model,
+#         messages=messages
+#         )
+#     return chat_response.choices[0].message.content
+    
 def generate_response(client, messages):
-    model = "open-mixtral-8x7b"
-    chat_response = client.chat(
-        model=model,
-        messages=messages
-        )
-    return chat_response.choices[0].message.content
+    completion = client.chat.completions.create(
+    model="gpt-3.5-turbo-0125",
+    messages=messages
+    )
+
+    return completion.choices[0].message.content
+
 
 def remove_audio(audio_path, output_path):
     if os.path.exists(audio_path):

@@ -94,6 +94,16 @@ function sendAudio(audioBlob) {
         processData: false,
         success: function(data) {
             console.log('Audio enviado correctamente:', data);
+            if ('speechSynthesis' in window) {
+                var synthesisUtterance = new SpeechSynthesisUtterance();
+                synthesisUtterance.text = data.text;
+                var voices = window.speechSynthesis.getVoices();
+                synthesisUtterance.voice = voices[0];
+                window.speechSynthesis.speak(synthesisUtterance);
+            } else {
+                console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
+            }
+            
         },
         error: function(xhr, status, error) {
             console.error('Error al enviar el audio:', error);

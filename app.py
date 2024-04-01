@@ -1,16 +1,12 @@
-from os import system
-import speech_recognition as sr
 import whisper
-import os
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
 import threading
 import os
 from dotenv import load_dotenv
 from services.chat import Chat
-from tools.conversation import speak_text
 from mistralai.client import MistralClient
-import subprocess
+from openai import OpenAI
 
 
 
@@ -18,7 +14,7 @@ import subprocess
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-client = MistralClient(api_key=os.getenv('MISTRAL_API_TOKEN'))
+client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -48,30 +44,6 @@ def main(tiny_model, audio_file):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    global is_running
-    global ai_response_running
-
-    ai_response_running = False
-    is_running = False
-    print(ai_response_running)
-    print(is_running)
-    if request.method == 'POST':
-        data = request.form['status']
-        print(data)
-        if data == 'start':
-            is_running = True
-            speak_text('Bienvenido, Kenneth')
-            threading.Thread(target=main, args=(tiny_model,)).start()
-        else:
-            is_running = False
-            lock.acquire()
-            if ai_response_running:
-                conditional_lock.wait()
-            speak_text('Hasta luego')
-            socketio.emit('informacion_del_servidor', {'data': 'Sleeping...'})  
-            lock.release()
-            print('stop')
-
     return render_template('index.html')
 
 @app.route('/audio', methods=['GET', 'POST'])
