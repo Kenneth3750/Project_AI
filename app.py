@@ -52,7 +52,6 @@ def recibir_audio():
     global ai_response
     if request.method == 'POST':
         try:
-            chat.remove_audio('audio.mp3', 'audio_converted.wav')
             audio_file = request.files['audio']
             audio = chat.listen_to_user(audio_file)
             mainthread = threading.Thread(target=main, args=(tiny_model,  audio))

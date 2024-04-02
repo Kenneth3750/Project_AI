@@ -1,12 +1,12 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
-from tools.conversation import speak_text, generate_response, listen_to_user, remove_audio
+from tools.conversation import  generate_response, listen_to_user, remove_audio, speech_to_text
 from mistralai.models.chat_completion import ChatMessage 
 
 
 
 class Chat:
-    def __init__(self, tiny_model, client):
-        self.tiny_model = tiny_model
+    def __init__(self, text_model, client):
+        self.text_model = text_model
         self.client = client
         string_dialogue = """ You are a hotel receptionist, and your duties include:
         1. Welcoming guests
@@ -22,13 +22,14 @@ class Chat:
     def remove_audio(self, audio_path, output_path):
         remove_audio(audio_path, output_path)
 
-    def listen_to_user(self, request):
-        audio = listen_to_user(request)
+    def listen_to_user(self, audio_file):
+        audio = listen_to_user(audio_file)
         return audio
 
     def AI_response(self, audio, socketio):
         print("--"*20)
-        audio_text = self.tiny_model.transcribe(audio)
+        remove_audio('audio.mp3', 'audio_converted.wav')
+        audio_text = speech_to_text(self.text_model, audio)
         text = audio_text['text']
         if text:
             self.messages.append({"role": "user", "content": text})

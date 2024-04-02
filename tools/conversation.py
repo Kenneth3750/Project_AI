@@ -53,3 +53,7 @@ def listen_to_user(audio_file):
     output_path = 'audio_converted.wav'
     subprocess.run(["ffmpeg",  "-i", "audio.mp3", "audio_converted.wav"])    
     return output_path
+
+def speech_to_text(model, audio):
+    text = model.transcribe(audio)
+    return text
