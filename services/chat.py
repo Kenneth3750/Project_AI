@@ -1,6 +1,5 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
-from tools.conversation import  generate_response, listen_to_user, remove_audio, speech_to_text
-from mistralai.models.chat_completion import ChatMessage 
+from tools.conversation import  generate_response, listen_to_user, remove_audio, speech_to_text, translate_from_whisper_api
 
 
 
@@ -8,29 +7,25 @@ class Chat:
     def __init__(self, text_model, client):
         self.text_model = text_model
         self.client = client
-        string_dialogue = """ You are a hotel receptionist, and your duties include:
-        1. Welcoming guests
-        2. Handling guest check-in and check-out
-        3. Providing hotel information: such as buffet menus for breakfast, lunch, or dinner, informing about the availability of hotel facilities like the pool, gym, etc.
-        4. If someone requests to book a room, you should tell them to go with the person in charge that is next to you.
-        5. If the person already has a reservation, ask for their name and reservation ID, them proceed with the check-in process.
-        6. If the user asks about something unrelated to the hotel, politely inform them that you cannot assist with that, do not use more than twenty words.
-        7. Do not overcomplicate your responses. Keep them simple, short and to the point.
-        8. You must respond ONLY in the same language as the user."""
+        string_dialogue = """"You are an assistant that relies on writing and research support for a researcher. 
+Your tasks involve assisting the person speaking with you in drafting writings, reading documents, providing accurate information, suggesting ideas, and always being ready to help. 
+You are not limited to answering questions outside the context of research or writing, but you will only do so if the user requests it. Remember, you must always respond in the same language the user speaks."""
+
         self.messages = [{"role": "system", "content": string_dialogue}]
 
     def remove_audio(self, audio_path, output_path):
         remove_audio(audio_path, output_path)
 
     def listen_to_user(self, audio_file):
+        remove_audio('audio.mp3', 'audio_converted.wav')
         audio = listen_to_user(audio_file)
         return audio
 
     def AI_response(self, audio, socketio):
         print("--"*20)
-        remove_audio('audio.mp3', 'audio_converted.wav')
-        audio_text = speech_to_text(self.text_model, audio)
-        text = audio_text['text']
+        # audio_text = speech_to_text(self.text_model, audio)
+        # text = audio_text['text']
+        text = translate_from_whisper_api(self.client, audio)
         if text:
             self.messages.append({"role": "user", "content": text})
             print(f"user: {text}")
