@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat
 from mistralai.client import MistralClient
 from openai import OpenAI
+from services.database import Database
 
 
 
@@ -15,6 +16,7 @@ load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -44,6 +46,13 @@ def main(tiny_model, audio_file):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    history = db.init_conversation(1)
+    if history:
+        chat.history = history
+        print("History: ", history)
+        chat.print_history()
+    else:
+        print("No history")
     return render_template('index.html')
 
 @app.route('/audio', methods=['GET', 'POST'])
@@ -60,9 +69,6 @@ def recibir_audio():
             return {"result": "ok", "text": f"{ai_response}"}
         except Exception as e:
             return jsonify({'error': str(e)})
-
-
-
 
 
 

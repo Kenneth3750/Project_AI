@@ -59,10 +59,11 @@ def speech_to_text(model, audio):
     return text
 
 def translate_from_whisper_api(client, audio_file):
-    audio= open(audio_file, "rb")
+    audio = open(audio_file, "rb")
     transcription = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file=audio, 
-)
+        model="whisper-1", 
+        file=audio, 
+    )
+    audio.close()
     print("respuesta desde la api")
     return transcription.text
