@@ -40,14 +40,14 @@ def generate_response(client, messages):
     return completion.choices[0].message.content
 
 
-def remove_audio(audio_path, output_path):
+def remove_audio_tool(audio_path, output_path):
     if os.path.exists(audio_path):
         os.remove(audio_path)
     if os.path.exists(output_path):
         os.remove(output_path)
  
 
-def listen_to_user(audio_file):
+def listen_to_user_tool(audio_file):
     audio_path = 'audio.mp3'
     audio_file.save(audio_path)
     output_path = 'audio_converted.wav'
