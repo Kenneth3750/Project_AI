@@ -1,10 +1,12 @@
 let statusMic;
+let silenceThreshold = 3000; // 3 segundos de silencio
+let silenceTimer;
+let lastAudioActivityTime = Date.now();
 
 navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia);
-
 
 var socket = io.connect('http://' + document.domain + ':' + location.port);
 
@@ -34,8 +36,6 @@ function toggleRecording() {
     }
 }
 
-
-
 let audioStream;
 let mediaRecorder;
 let chunks = [];
@@ -46,7 +46,7 @@ async function startRecording() {
     try {
         // Solicitar permiso al usuario para acceder al micrófono
         const permission = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
+
         // Si el permiso fue concedido, comenzar la grabación
         if (permission) {
             audioStream = permission;
@@ -54,14 +54,18 @@ async function startRecording() {
 
             mediaRecorder.ondataavailable = function(e) {
                 chunks.push(e.data);
+                lastAudioActivityTime = Date.now();
+                restartSilenceTimer();
+
             };
 
             mediaRecorder.onstop = function() {
-                const audioBlob = new Blob(chunks, { 'type' : 'audio/wav' });
+                const audioBlob = new Blob(chunks, { 'type': 'audio/wav' });
                 sendAudio(audioBlob);
             };
 
             mediaRecorder.start();
+
         } else {
             console.error('El usuario denegó el acceso al micrófono.');
         }
@@ -70,14 +74,20 @@ async function startRecording() {
     }
 }
 
-
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
 
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         audioStream.getTracks().forEach(track => track.stop());
+        clearTimeout(silenceTimer);
+
     }
+
+    let boton = document.getElementById("recordButton");
+    boton.dataset.recording = "false";
+    boton.textContent = "Comenzar Grabación";
+    boton.className = "btn btn-primary";
 
 }
 
@@ -103,10 +113,27 @@ function sendAudio(audioBlob) {
             } else {
                 console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
             }
-            
+
         },
         error: function(xhr, status, error) {
             console.error('Error al enviar el audio:', error);
         }
     });
+}
+
+function checkSilence() {
+    const currentTime = Date.now();
+    const timeSinceLastActivity = currentTime - lastAudioActivityTime;
+
+    if (timeSinceLastActivity >= silenceThreshold) {
+        stopRecording(); // Detener la grabación si ha transcurrido un período prolongado de silencio
+    } else {
+        restartSilenceTimer(); // Reiniciar el temporizador de silencio si no ha pasado el umbral
+    }
+}
+
+function restartSilenceTimer() {
+    clearTimeout(silenceTimer);
+    const remainingTime = silenceThreshold - (Date.now() - lastAudioActivityTime);
+    silenceTimer = setTimeout(checkSilence, remainingTime > 0 ? remainingTime : 0);
 }
