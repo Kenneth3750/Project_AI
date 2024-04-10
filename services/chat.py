@@ -29,11 +29,11 @@ def listen_to_user(audio_file):
     audio = listen_to_user_tool(audio_file)
     return audio
 
-def AI_response(client, audio, socketio, messages):
+def AI_response(client, user_input, socketio, messages):
     print("--"*20)
     # audio_text = speech_to_text(self.text_model, audio)
     # text = audio_text['text']
-    text = translate_from_whisper_api(client, audio)
+    text = user_input
     if text:
         messages.append({"role": "user", "content": text})
         print(f"user: {text}")

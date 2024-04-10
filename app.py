@@ -29,17 +29,17 @@ ai_response_running = None
 is_running = None
 ai_response = None
 
-def main(client, tiny_model, audio_file, messages):
+def main(client, tiny_model, user_input, messages):
     tiny_model = tiny_model
     global is_running
     global ai_response_running
     global ai_response
     try:
-        audio = audio_file
+        user_input = user_input
         socketio.emit('informacion_del_servidor', {'data': 'AI is thinking...'})
         lock.acquire()
         ai_response_running = True
-        ai_response = AI_response(client, audio, socketio, messages)
+        ai_response = AI_response(client, user_input, socketio, messages)
         ai_response_running = False
         lock.release()
     except Exception as e:
@@ -58,10 +58,11 @@ def recibir_audio():
     global ai_response
     if request.method == 'POST':
         try:
-            audio_file = request.files['audio']
+            user_input = request.form['user']
+            print(user_input)
             messages = json.loads(session['chat'])
-            audio = listen_to_user(audio_file)
-            mainthread = threading.Thread(target=main, args=(client, tiny_model,  audio, messages))
+
+            mainthread = threading.Thread(target=main, args=(client, tiny_model,  user_input, messages))
             mainthread.start()
             mainthread.join()        
             session['chat'] = json.dumps(messages)

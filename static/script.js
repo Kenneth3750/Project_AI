@@ -1,7 +1,17 @@
 let statusMic;
-let silenceThreshold = 3000; // 3 segundos de silencio
-let silenceTimer;
-let lastAudioActivityTime = Date.now();
+let silenceTimeout;
+let audioStream;
+let mediaRecorder;
+let chunks = [];
+let conversation;
+
+
+const NO_SPEECH_DETECTED = 'No se detectó voz';
+
+// Comenzar la grabación al presionar el botón "Comenzar Grabación"
+
+let audioContext = new AudioContext();
+let analyser = audioContext.createAnalyser();
 
 navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
@@ -20,59 +30,96 @@ socket.on('informacion_del_servidor', function(data) {
     document.getElementById("status").innerHTML = `Status: ${data.data}`;
 });
 
+
+async function startRecordingLoop() {
+    while (conversation) {
+        try {
+            const transcript = await startRecording();
+            if (transcript !== NO_SPEECH_DETECTED) {
+                console.log('Transcripción:', transcript);
+                const formData = {'user': transcript};
+                $.ajax({
+                    url: '/audio',
+                    type: 'POST',
+                    data: formData,
+                    success: function(data) {
+                        console.log('Audio enviado correctamente:', data);
+                        if ('speechSynthesis' in window) {
+                            var synthesisUtterance = new SpeechSynthesisUtterance();
+                            synthesisUtterance.text = data.text;
+                            var voices = window.speechSynthesis.getVoices();
+                            synthesisUtterance.voice = voices[0];
+                            window.speechSynthesis.speak(synthesisUtterance);
+                        } else {
+                            console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al enviar el audio:', error);
+                    }
+                });
+            } else {
+                console.log('No se detectó voz.');
+            }
+        } catch (error) {
+            console.log('Error al iniciar el reconocimiento de voz:', error);
+           
+ 
+        }
+    }
+}
+
+
+
+
 function toggleRecording() {
     let boton = document.getElementById("recordButton");
 
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
         boton.dataset.recording = "true";
+        boton.dataset.conversation = "true";
         boton.textContent = "Detener Grabación";
         boton.className = "btn btn-danger";
-        startRecording();
+        conversation = true;
+        startRecordingLoop();
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Comenzar Grabación";
         boton.className = "btn btn-primary";
+        boton.dataset.conversation = "false";
+        conversation = false;
         stopRecording();
     }
 }
 
-let audioStream;
-let mediaRecorder;
-let chunks = [];
-
 // Comenzar la grabación al presionar el botón "Comenzar Grabación"
 async function startRecording() {
-    chunks = [];
-    try {
-        // Solicitar permiso al usuario para acceder al micrófono
-        const permission = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return new Promise(async (resolve, reject) => {
+        let recognition = null;
 
-        // Si el permiso fue concedido, comenzar la grabación
-        if (permission) {
-            audioStream = permission;
-            mediaRecorder = new MediaRecorder(audioStream);
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.start();
 
-            mediaRecorder.ondataavailable = function(e) {
-                chunks.push(e.data);
-                lastAudioActivityTime = Date.now();
-                restartSilenceTimer();
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            resolve(transcript);
 
-            };
-
-            mediaRecorder.onstop = function() {
-                const audioBlob = new Blob(chunks, { 'type': 'audio/wav' });
-                sendAudio(audioBlob);
-            };
-
-            mediaRecorder.start();
-
-        } else {
-            console.error('El usuario denegó el acceso al micrófono.');
-        }
-    } catch (err) {
-        console.error('Error al obtener acceso al micrófono:', err);
+        };
+        recognition.onerror = function(event) {
+            console.error('Error en el reconocimiento de voz:', event.error);
+            resolve(NO_SPEECH_DETECTED);
+        };
+    } else {
+        console.log('Lo siento, tu navegador no soporta la API de reconocimiento de voz.');
     }
+    recognition.onend = function() {
+        resolve(NO_SPEECH_DETECTED);
+    };
+    });
 }
+
+
 
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
@@ -80,7 +127,6 @@ function stopRecording() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         audioStream.getTracks().forEach(track => track.stop());
-        clearTimeout(silenceTimer);
 
     }
 
@@ -121,19 +167,8 @@ function sendAudio(audioBlob) {
     });
 }
 
-function checkSilence() {
-    const currentTime = Date.now();
-    const timeSinceLastActivity = currentTime - lastAudioActivityTime;
-
-    if (timeSinceLastActivity >= silenceThreshold) {
-        stopRecording(); // Detener la grabación si ha transcurrido un período prolongado de silencio
-    } else {
-        restartSilenceTimer(); // Reiniciar el temporizador de silencio si no ha pasado el umbral
-    }
-}
-
-function restartSilenceTimer() {
-    clearTimeout(silenceTimer);
-    const remainingTime = silenceThreshold - (Date.now() - lastAudioActivityTime);
-    silenceTimer = setTimeout(checkSilence, remainingTime > 0 ? remainingTime : 0);
+function isSilent(audioData) {
+    const averageAmplitude = audioData.reduce((acc, val) => acc + val, 0) / audioData.length;
+    const threshold = 128; // Umbral para considerar silencio
+    return averageAmplitude < threshold;
 }
