@@ -8,10 +8,12 @@ let conversation;
 
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
-// Comenzar la grabación al presionar el botón "Comenzar Grabación"
+const recognition = new webkitSpeechRecognition();
+recognition.continuous = false;
+recognition.interimResults = false;
+recognition.maxAlternatives = 1;
 
-let audioContext = new AudioContext();
-let analyser = audioContext.createAnalyser();
+const synth = window.speechSynthesis;
 
 navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
@@ -31,43 +33,48 @@ socket.on('informacion_del_servidor', function(data) {
 });
 
 
-async function startRecordingLoop() {
-    while (conversation) {
-        try {
-            const transcript = await startRecording();
-            if (transcript !== NO_SPEECH_DETECTED) {
-                console.log('Transcripción:', transcript);
-                const formData = {'user': transcript};
-                $.ajax({
-                    url: '/audio',
-                    type: 'POST',
-                    data: formData,
-                    success: function(data) {
-                        console.log('Audio enviado correctamente:', data);
-                        if ('speechSynthesis' in window) {
-                            var synthesisUtterance = new SpeechSynthesisUtterance();
-                            synthesisUtterance.text = data.text;
-                            var voices = window.speechSynthesis.getVoices();
-                            synthesisUtterance.voice = voices[0];
-                            window.speechSynthesis.speak(synthesisUtterance);
-                        } else {
-                            console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error al enviar el audio:', error);
-                    }
-                });
+function sendTranscript(formData) {
+    $.ajax({
+        url: '/audio',
+        type: 'POST',
+        data: formData,
+        success: function(data) {
+            console.log('Audio enviado correctamente:', data);
+            if ('speechSynthesis' in window) {
+                const synthesisUtterance = new SpeechSynthesisUtterance();
+                synthesisUtterance.text = data.text;
+                const voices = window.speechSynthesis.getVoices();
+                synthesisUtterance.voice = voices[0];
+                synthesisUtterance.onend = function(event) {
+                    console.log('Finalizó la síntesis de voz:', event);
+                    recognition.start();
+                };
+                window.speechSynthesis.speak(synthesisUtterance);
             } else {
-                console.log('No se detectó voz.');
+                console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
             }
-        } catch (error) {
-            console.log('Error al iniciar el reconocimiento de voz:', error);
-           
- 
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al enviar el audio:', error);
+
+        }
+    });
+
+}
+
+
+
+recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    console.log('Transcripción:', transcript);
+    if (transcript){
+        recognition.stop();
+        let formData = {'user': transcript}
+        if (conversation){
+            sendTranscript(formData);
         }
     }
-}
+};
 
 
 
@@ -81,7 +88,7 @@ function toggleRecording() {
         boton.textContent = "Detener Grabación";
         boton.className = "btn btn-danger";
         conversation = true;
-        startRecordingLoop();
+        recognition.start();
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Comenzar Grabación";
@@ -95,13 +102,16 @@ function toggleRecording() {
 // Comenzar la grabación al presionar el botón "Comenzar Grabación"
 async function startRecording() {
     return new Promise(async (resolve, reject) => {
-        let recognition = null;
+
+    let recognition = null;
 
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuos = false;
         recognition.start();
 
         recognition.onresult = function(event) {
+         
             const transcript = event.results[0][0].transcript;
             resolve(transcript);
 
@@ -110,13 +120,17 @@ async function startRecording() {
             console.error('Error en el reconocimiento de voz:', event.error);
             resolve(NO_SPEECH_DETECTED);
         };
+
+        recognition.onspeechend = function() {
+            recognition.stop();
+        };
+        
     } else {
         console.log('Lo siento, tu navegador no soporta la API de reconocimiento de voz.');
     }
-    recognition.onend = function() {
-        resolve(NO_SPEECH_DETECTED);
-    };
+ 
     });
+    
 }
 
 
@@ -124,11 +138,7 @@ async function startRecording() {
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
 
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        audioStream.getTracks().forEach(track => track.stop());
-
-    }
+    recognition.stop();
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
@@ -137,38 +147,3 @@ function stopRecording() {
 
 }
 
-// Función para enviar el audio grabado a través de AJAX usando jQuery
-function sendAudio(audioBlob) {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'audio.wav');
-
-    $.ajax({
-        url: '/audio',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        success: function(data) {
-            console.log('Audio enviado correctamente:', data);
-            if ('speechSynthesis' in window) {
-                var synthesisUtterance = new SpeechSynthesisUtterance();
-                synthesisUtterance.text = data.text;
-                var voices = window.speechSynthesis.getVoices();
-                synthesisUtterance.voice = voices[0];
-                window.speechSynthesis.speak(synthesisUtterance);
-            } else {
-                console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
-            }
-
-        },
-        error: function(xhr, status, error) {
-            console.error('Error al enviar el audio:', error);
-        }
-    });
-}
-
-function isSilent(audioData) {
-    const averageAmplitude = audioData.reduce((acc, val) => acc + val, 0) / audioData.length;
-    const threshold = 128; // Umbral para considerar silencio
-    return averageAmplitude < threshold;
-}
