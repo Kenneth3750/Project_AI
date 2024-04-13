@@ -17,7 +17,6 @@ load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 app.secret_key = "hola34"
@@ -48,7 +47,13 @@ def main(client, tiny_model, user_input, messages):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    chat = Chat()
+    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+    conversation = db.init_conversation(1)
+    if conversation:
+        chat = Chat(conversation)
+    else:
+        chat = Chat()
+    print("conversation: ", conversation)
     session['chat'] = chat.get_messages()
     return render_template('index.html')
 

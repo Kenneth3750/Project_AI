@@ -1,4 +1,4 @@
-from tools.database_tools import database_connection, get_last_conversation, save_conversation, update_conversation
+from tools.database_tools import database_connection,  save_conversation, update_conversation, get_last_conversation_resume
 
 
 
@@ -11,7 +11,7 @@ class Database:
     
     def init_conversation(self, user_id):
         connection = self.connect()
-        conversation = get_last_conversation(connection, user_id)
+        conversation = get_last_conversation_resume(connection, user_id)
         connection.close()
         if conversation:
             return conversation

@@ -9,9 +9,10 @@ let conversation;
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
 const recognition = new webkitSpeechRecognition();
-recognition.continuous = false;
+recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
+
 
 const synth = window.speechSynthesis;
 
@@ -29,7 +30,7 @@ socket.on('connect', function() {
 // Escuchar el evento enviado desde el servidor y mostrar la información en la página
 socket.on('informacion_del_servidor', function(data) {
     console.log('Informacion del servidor recibida:', data.data);
-    document.getElementById("status").innerHTML = `Status: ${data.data}`;
+    
 });
 
 
@@ -47,8 +48,12 @@ function sendTranscript(formData) {
                 synthesisUtterance.voice = voices[0];
                 synthesisUtterance.onend = function(event) {
                     console.log('Finalizó la síntesis de voz:', event);
-                    recognition.start();
+                    if (conversation){
+                        recognition.start();
+                        document.getElementById("status").innerHTML = `Status: Listening...`;
+                    }
                 };
+                document.getElementById("status").innerHTML = `Status: Speaking...`;
                 window.speechSynthesis.speak(synthesisUtterance);
             } else {
                 console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
@@ -69,6 +74,8 @@ recognition.onresult = (e) => {
     console.log('Transcripción:', transcript);
     if (transcript){
         recognition.stop();
+        document.getElementById("status").innerHTML = `Status: AI is thinking...`;
+
         let formData = {'user': transcript}
         if (conversation){
             sendTranscript(formData);
@@ -89,6 +96,7 @@ function toggleRecording() {
         boton.className = "btn btn-danger";
         conversation = true;
         recognition.start();
+        document.getElementById("status").innerHTML = `Status: Listening...`;
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Comenzar Grabación";
@@ -139,6 +147,7 @@ async function startRecording() {
 function stopRecording() {
 
     recognition.stop();
+    document.getElementById("status").innerHTML = `Status: Sleeping...`;
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
