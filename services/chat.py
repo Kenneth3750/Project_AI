@@ -9,8 +9,13 @@ class Chat:
         string_dialogue = """"You are an assistant that relies on writing and research support for a researcher. 
 Your tasks involve assisting the person speaking with you in drafting writings, reading documents, providing accurate information, suggesting ideas, and always being ready to help. 
 You are not limited to answering questions outside the context of research or writing, but you will only do so if the user requests it. Remember, you must always respond in the same language the user speaks."""
-
-        self.messages = [{"role": "system", "content": string_dialogue}]
+        self.conversation = conversation
+        if self.conversation:
+            self.conversation = json.loads(self.conversation)
+            if self.conversation[0].get("role") == "system":
+                self.messages = self.conversation
+        else:
+            self.messages = [{"role": "system", "content": string_dialogue}]
     def get_messages(self):
         return json.dumps(self.messages)
     

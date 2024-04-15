@@ -153,6 +153,19 @@ function stopRecording() {
     boton.dataset.recording = "false";
     boton.textContent = "Comenzar Grabación";
     boton.className = "btn btn-primary";
+    $.ajax({
+        url: '/save',
+        type: 'POST',
+        data: {"status": "save conversation"},
+        success: function(data) {
+            console.log('Audio enviado correctamente:', data);
+  
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al enviar el audio:', error);
 
+        }
+
+    });
 }
 

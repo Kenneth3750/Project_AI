@@ -1,5 +1,5 @@
 import pymysql
-
+from datetime import datetime
 
 def database_connection(db_data):
     try:
@@ -52,11 +52,21 @@ def get_last_conversation_resume(connection, user_id):
     
 def save_conversation(connection, user_id, conversation):
     try: 
+
         cursor = connection.cursor()
-        sql = "INSERT INTO user_conversations (user_id, conversations) VALUES (%s, %s)"
-        cursor.execute(sql, (user_id, conversation))
-        connection.commit()
-        return True
+        sql = "select created_at from user_conversations where user_id = (%s) order by id desc limit 1"
+        cursor.execute(sql, (user_id,))
+        result = cursor.fetchone()
+        current_date = datetime.now().date()
+        if result:
+            if result[0] == current_date:
+                update_conversation(connection, user_id, conversation)
+                return True
+            else:
+                sql = "INSERT INTO user_conversations (user_id, conversations, created_at) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (user_id, conversation, datetime.now().date()))
+                connection.commit()
+                return True
     except Exception as e:
         print(f"Error: {e}")
         return False
@@ -71,4 +81,6 @@ def update_conversation(connection, user_id, conversation):
     except Exception as e:
         print(f"Error: {e}")
         return False
+    
+
     

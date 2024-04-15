@@ -2,6 +2,7 @@
 import pyttsx3
 import os
 import subprocess
+import openai
 
 def speak_text(text):
     engine = pyttsx3.init()

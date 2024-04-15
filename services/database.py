@@ -17,3 +17,9 @@ class Database:
             return conversation
         else:
             return None
+        
+    def save_current_conversation(self, user_id, conversation):
+        connection = self.connect()
+        save_conversation(connection, user_id, conversation)
+        connection.close()
+        

@@ -49,6 +49,8 @@ def main(client, tiny_model, user_input, messages):
 def index():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
     conversation = db.init_conversation(1)
+    print("conversation: ", conversation)
+    print("type: ", type(conversation))
     if conversation:
         chat = Chat(conversation)
     else:
@@ -74,6 +76,19 @@ def recibir_audio():
 
 
             return {"result": "ok", "text": f"{ai_response}"}
+        except Exception as e:
+            return jsonify({'error': str(e)})
+        
+
+
+@app.route('/save', methods=['GET', 'POST'])
+def save():
+    if request.method == 'POST':
+        try:
+            db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+            conversation = session['chat']
+            db.save_current_conversation(1, conversation)
+            return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
 
