@@ -3,6 +3,9 @@ import pyttsx3
 import os
 import subprocess
 import openai
+import json
+
+import tiktoken
 
 def speak_text(text):
     engine = pyttsx3.init()
@@ -68,3 +71,21 @@ def translate_from_whisper_api(client, audio_file):
     audio.close()
     print("respuesta desde la api")
     return transcription.text
+
+def make_resume_prompt(conversation):
+    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
+    token_count = len(encoding.encode(conversation))
+    print(f"Token count: {token_count}")
+    if token_count > 1000:
+        conversation = json.loads(conversation)
+        if conversation[0].get("role") == "system":
+            conversation.pop(0)
+        conversation.append({"role": "user", "content": "Make a resume of the conversation. Do not forget the user's name."})
+        return conversation
+    else:
+        return None
+    
+def count_tokens(text):
+    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
+    token_count = len(encoding.encode(text))
+    return token_count

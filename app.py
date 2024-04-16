@@ -48,14 +48,11 @@ def main(client, tiny_model, user_input, messages):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-    conversation = db.init_conversation(1)
-    print("conversation: ", conversation)
-    print("type: ", type(conversation))
+    conversation, resume = db.init_conversation(1, client)
     if conversation:
-        chat = Chat(conversation)
+        chat = Chat(conversation=conversation, client=client, resume = resume)
     else:
-        chat = Chat()
-    print("conversation: ", conversation)
+        chat = Chat(client=client)
     session['chat'] = chat.get_messages()
     return render_template('index.html')
 
