@@ -7,6 +7,8 @@ import json
 
 import tiktoken
 
+max_tokens = 1000
+
 def speak_text(text):
     engine = pyttsx3.init()
     engine.say(text)
@@ -76,7 +78,7 @@ def make_resume_prompt(conversation):
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
     token_count = len(encoding.encode(conversation))
     print(f"Token count: {token_count}")
-    if token_count > 1000:
+    if token_count > max_tokens:
         conversation = json.loads(conversation)
         if conversation[0].get("role") == "system":
             conversation.pop(0)
@@ -89,3 +91,15 @@ def count_tokens(text):
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
     token_count = len(encoding.encode(text))
     return token_count
+
+def check_conversation_length(messages):
+    tokens = count_tokens(messages)
+    print(f"Tokens_verification: {tokens}")
+    if tokens > max_tokens:
+        return True
+    else:
+        return False
+def get_role_prompt(comversation):
+    json_conversation = json.loads(comversation)
+    role_prompt = [json_conversation[0]]
+    return role_prompt

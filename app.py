@@ -4,7 +4,8 @@ from flask_socketio import SocketIO
 import threading
 import os
 from dotenv import load_dotenv
-from services.chat import Chat, listen_to_user, AI_response
+from services.chat import Chat, listen_to_user, AI_response, check_current_conversation
+from services.roles import return_role
 from mistralai.client import MistralClient
 from openai import OpenAI
 from services.database import Database
@@ -48,18 +49,22 @@ def main(client, tiny_model, user_input, messages):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-    conversation, resume = db.init_conversation(1, client)
+    conversation, resume = db.init_conversation(1, client, 2)
+    system_prompt = return_role(2)
     if conversation:
-        chat = Chat(conversation=conversation, client=client, resume = resume)
+        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
     else:
-        chat = Chat(client=client)
+        chat = Chat(client=client, system_prompt=system_prompt)
     session['chat'] = chat.get_messages()
+
+
     return render_template('index.html')
 
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
     global ai_response_running
     global ai_response
+    print("session chat:", session['chat'])
     if request.method == 'POST':
         try:
             user_input = request.form['user']
@@ -84,11 +89,12 @@ def save():
         try:
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(1, conversation)
+            db.save_current_conversation(1, conversation, 2)
+            new_chat = check_current_conversation(conversation, client, db, 1, 2)
+            session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
-
 
 
 if __name__ == "__main__":

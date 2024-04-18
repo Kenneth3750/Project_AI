@@ -8,22 +8,34 @@ create table if not exists users (
     user_name varchar(50) not null
 );
 
+
+create table if not exists roles (
+    id int primary key auto_increment,
+    role_name varchar(50) not null
+);
+
 create table if not exists user_conversations (
     id int primary key auto_increment,
     user_id int not null,
+    role_id int not null,
     conversations json not null,
     created_at date not null,
-    foreign key (user_id) references users(id) on delete cascade
+    foreign key (user_id) references users(id) on delete cascade,
+    foreign key (role_id) references roles(id) on delete cascade
 );
 
 create table if not exists user_conversation_history (
     id int primary key auto_increment,
     user_id int not null,
+    role_id int not null,
     user_resume text not null,
     created_at date not null,
-    foreign key (user_id) references users(id) on delete cascade
+    foreign key (user_id) references users(id) on delete cascade,
+    foreign key (role_id) references roles(id) on delete cascade
 );
 
 
 
+
+insert into roles (role_name) values ('Investigator');
 insert into users (user_name) values ('Kenneth');

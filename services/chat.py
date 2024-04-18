@@ -1,17 +1,14 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
-from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, make_resume_prompt
-from .database import Database
+from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, check_conversation_length, make_resume_prompt, get_role_prompt
+
 import json
 import tiktoken
 
 
 class Chat:
-    def __init__(self, conversation=None, client=None, resume=None):
+    def __init__(self, conversation=None, client=None, resume=None, system_prompt=None):
         self.client = client
-        string_dialogue = """"You are an assistant that relies on writing and research support for a researcher. 
-Your tasks involve assisting the person speaking with you in drafting writings, reading documents, providing accurate information, suggesting ideas, and always being ready to help. 
-You are not limited to answering questions outside the context of research or writing, but you will only do so if the user requests it. Remember, you must always respond in the same language the user speaks.
-Make your response short and concise, except it is the user request a draft or a long response. Always ask for the user's name if you don't know it."""
+        string_dialogue = system_prompt
         self.resume = resume
         self.is_conversation = conversation
         if self.is_conversation:
@@ -61,4 +58,16 @@ def AI_response(client, user_input, socketio, messages):
         # speak_text(response)
     return response
 
+def check_current_conversation(messages, client, db, user_id, role_id):
+    is_to_long = check_conversation_length(messages)
+    if is_to_long:
+        make_resume = make_resume_prompt(messages)
+        new_resume = generate_response(client, make_resume)
+        db.save_conversation_historic(user_id, new_resume, role_id)
+        role_prompt = get_role_prompt(messages)
+        new_chat = role_prompt
+        new_chat.append({"role": "user", "content": f"here is a resume of pasts conversations: {new_resume}"})
+        return new_chat
+    else:
+        return None
 
