@@ -5,7 +5,8 @@ use prueba_ai;
 
 create table if not exists users (
     id int primary key auto_increment,
-    user_name varchar(50) not null
+    user_name varchar(50) not null,
+    user_password varchar(50) not null
 );
 
 
@@ -38,4 +39,6 @@ create table if not exists user_conversation_history (
 
 
 insert into roles (role_name) values ('Investigator');
-insert into users (user_name) values ('Kenneth');
+insert into roles (role_name) values ('Hotel');
+insert into users (user_name, user_password) values ('Kenneth', '123456');
+insert into users (user_name, user_password) values ('Jhon', '123456');

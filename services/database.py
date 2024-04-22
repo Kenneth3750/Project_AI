@@ -1,4 +1,4 @@
-from tools.database_tools import database_connection,  save_conversation, update_conversation, get_last_conversation_resume, save_conversation_history
+from tools.database_tools import database_connection,  save_conversation, update_conversation, get_last_conversation_resume, save_conversation_history, is_valid_user
 from tools.conversation import generate_response,  make_resume_prompt
 import json
 class Database:
@@ -38,3 +38,9 @@ class Database:
         connection = self.connect()
         save_conversation_history(connection, user_id, conversation, role_id)
         connection.close()
+
+    def check_user(self, user_name, password):
+        connection = self.connect()
+        user_id = is_valid_user(connection, user_name, password)
+        connection.close()
+        return user_id

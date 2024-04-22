@@ -148,3 +148,16 @@ def upddate_conversation_history(connection, user_id, conversation, role_id):
     
 
     
+def is_valid_user(connection, username, password):
+    try:
+        cursor = connection.cursor()
+        sql = "select id from users where user_name = (%s) and user_password = (%s)"
+        cursor.execute(sql, (username, password))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None

@@ -1,5 +1,5 @@
 import whisper
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO
 import threading
 import os
@@ -47,6 +47,35 @@ def main(client, tiny_model, user_input, messages):
 
 
 @app.route('/', methods=['GET', 'POST'])
+def home():
+    if "user_id" in session:
+        return redirect(url_for("index"))
+    else:
+        return redirect(url_for("login"))
+    
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+    if request.method == 'POST':
+        user_name = request.form['username']
+        password = request.form['password']
+        try:
+            print(user_name, password)
+            user_id = db.check_user(user_name, password)
+            if user_id:
+                session['user_id'] = user_id
+                return redirect(url_for('index'))
+            else:
+                return render_template('login.html')
+        except Exception as e:
+            return jsonify({'error': str(e)})
+    return render_template('login.html')
+
+
+
+
+@app.route('/index', methods=['GET', 'POST'])
 def index():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
     conversation, resume = db.init_conversation(1, client, 1)
