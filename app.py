@@ -49,8 +49,8 @@ def main(client, tiny_model, user_input, messages):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-    conversation, resume = db.init_conversation(1, client, 2)
-    system_prompt = return_role(2)
+    conversation, resume = db.init_conversation(1, client, 1)
+    system_prompt = return_role(1)
     if conversation:
         chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
     else:
@@ -89,8 +89,8 @@ def save():
         try:
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(1, conversation, 2)
-            new_chat = check_current_conversation(conversation, client, db, 1, 2)
+            db.save_current_conversation(1, conversation, 1)
+            new_chat = check_current_conversation(conversation, client, db, 1, 1)
             session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
         except Exception as e:
