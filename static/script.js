@@ -84,6 +84,12 @@ recognition.onresult = (e) => {
 };
 
 
+recognition.onerror = (e) => {
+    console.error('Error en el reconocimiento de voz:', e.error);
+    toggleRecording();
+}
+
+
 
 
 function toggleRecording() {

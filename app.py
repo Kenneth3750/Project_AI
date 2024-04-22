@@ -36,7 +36,7 @@ def main(client, tiny_model, user_input, messages):
     global ai_response
     try:
         user_input = user_input
-        socketio.emit('informacion_del_servidor', {'data': 'AI is thinking...'})
+ 
         lock.acquire()
         ai_response_running = True
         ai_response = AI_response(client, user_input, socketio, messages)
