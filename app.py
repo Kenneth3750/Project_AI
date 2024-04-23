@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_socketio import SocketIO
 import threading
 import os
+from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, listen_to_user, AI_response, check_current_conversation
 from services.roles import return_role
@@ -12,6 +13,22 @@ from services.database import Database
 import json
 
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def logout_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' in session:
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Load environment variables from .env file a
 load_dotenv()
@@ -55,6 +72,7 @@ def home():
     
 
 @app.route('/login', methods=['GET', 'POST'])
+@logout_required
 def login():
     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
     if request.method == 'POST':
@@ -76,17 +94,18 @@ def login():
 
 
 @app.route('/index', methods=['GET', 'POST'])
+@login_required
 def index():
-    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-    conversation, resume = db.init_conversation(1, client, 1)
-    system_prompt = return_role(1)
-    if conversation:
-        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
-    else:
-        chat = Chat(client=client, system_prompt=system_prompt)
-    session['chat'] = chat.get_messages()
-
-
+    if request.method == 'POST':
+        user_id = session['user_id']
+        db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+        conversation, resume = db.init_conversation(user_id, client, 1)
+        system_prompt = return_role(1)
+        if conversation:
+            chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
+        else:
+            chat = Chat(client=client, system_prompt=system_prompt)
+        session['chat'] = chat.get_messages()
     return render_template('index.html')
 
 @app.route('/audio', methods=['GET', 'POST'])
@@ -116,14 +135,26 @@ def recibir_audio():
 def save():
     if request.method == 'POST':
         try:
+            user_id = session['user_id']
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(1, conversation, 1)
-            new_chat = check_current_conversation(conversation, client, db, 1, 1)
-            session['chat'] = json.dumps(new_chat)
+            db.save_current_conversation(user_id, conversation, 1)
+            new_chat = check_current_conversation(conversation, client, db, user_id, 1)
+            if new_chat:
+                session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    if request.method == 'POST':
+        session.clear()
+        return redirect(url_for('login'))
+
+@app.route('/check_session')
+def check_session():
+    return jsonify({'logged_in': 'user_id' in session})
 
 
 if __name__ == "__main__":

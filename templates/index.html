@@ -16,6 +16,9 @@
     <h6 id="status">Status: Sleeping...</h6>
     <div class="container">
 
+      <form action="{{ url_for('logout') }}" method="post">
+        <button class="btn btn-primary">LogOut</button>
+      </form>
         <div class="row mt-3 px-3">
             <div class="container">
                 <img src="static/img/avatar.png" />   

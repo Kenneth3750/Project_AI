@@ -101,6 +101,7 @@ function toggleRecording() {
         boton.textContent = "Detener Grabación";
         boton.className = "btn btn-danger";
         conversation = true;
+        initConversation();
         recognition.start();
         document.getElementById("status").innerHTML = `Status: Listening...`;
     } else {
@@ -174,4 +175,31 @@ function stopRecording() {
 
     });
 }
+
+
+function initConversation() {
+    $.ajax({
+        url: '/index',
+        type: 'POST',
+        data: {"status": "start conversation"},
+        success: function(data) {
+            console.log("conversation started");
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al enviar el audio:', error);
+
+        }
+
+    });
+}
+
+
+
+setInterval(function() {
+    $.get('/check_session', function(data) {
+        if (data.logged_in === false) {
+            window.location.href = '/login';
+        }
+    });
+}, 5000);
 
