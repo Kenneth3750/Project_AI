@@ -30,6 +30,10 @@ class Database:
         
     def save_current_conversation(self, user_id, conversation, role_id):
         connection = self.connect()
+        conversation = json.loads(conversation)
+        if conversation[0].get("role") == "system":
+            conversation.pop(0)
+        conversation = json.dumps(conversation)
         save_conversation(connection, user_id, conversation, role_id)
         connection.close()
 

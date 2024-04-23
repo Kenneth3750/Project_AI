@@ -108,6 +108,8 @@ def index():
         session['chat'] = chat.get_messages()
     return render_template('index.html')
 
+
+
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
     global ai_response_running

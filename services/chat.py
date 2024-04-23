@@ -18,6 +18,7 @@ class Chat:
                 self.messages = self.conversation
             else:
                 self.messages = json.loads(conversation)
+                self.messages.insert(0, {"role": "system", "content": string_dialogue})
         else:
             self.messages = [{"role": "system", "content": string_dialogue}]
         print("--"*20)
