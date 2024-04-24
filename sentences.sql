@@ -40,5 +40,8 @@ create table if not exists user_conversation_history (
 
 insert into roles (role_name) values ('Investigator');
 insert into roles (role_name) values ('Hotel');
+insert into roles (role_name) values ('Trainer');
+insert into roles (role_name) values ('PersonalAssistant');
+insert into roles (role_name) values ('Tutor');
 insert into users (user_name, user_password) values ('Kenneth', '123456');
 insert into users (user_name, user_password) values ('Jhon', '123456');

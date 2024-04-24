@@ -45,6 +45,7 @@ conditional_lock = threading.Condition(lock)
 ai_response_running = None
 is_running = None
 ai_response = None
+role_id = 5
 
 def main(client, tiny_model, user_input, messages):
     tiny_model = tiny_model
@@ -96,11 +97,12 @@ def login():
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
+    global role_id
     if request.method == 'POST':
         user_id = session['user_id']
         db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-        conversation, resume = db.init_conversation(user_id, client, 1)
-        system_prompt = return_role(1)
+        conversation, resume = db.init_conversation(user_id, client, role_id)
+        system_prompt = return_role(role_id)
         if conversation:
             chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
         else:
@@ -135,13 +137,14 @@ def recibir_audio():
 
 @app.route('/save', methods=['GET', 'POST'])
 def save():
+    global role_id
     if request.method == 'POST':
         try:
             user_id = session['user_id']
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(user_id, conversation, 1)
-            new_chat = check_current_conversation(conversation, client, db, user_id, 1)
+            db.save_current_conversation(user_id, conversation, role_id)
+            new_chat = check_current_conversation(conversation, client, db, user_id, role_id)
             if new_chat:
                 session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
