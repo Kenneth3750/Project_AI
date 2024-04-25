@@ -1,16 +1,17 @@
 import whisper
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO
+from flask_session import Session
 import threading
 import os
 from functools import wraps
 from dotenv import load_dotenv
-from services.chat import Chat, listen_to_user, AI_response, check_current_conversation
+from services.chat import Chat, AI_response, check_current_conversation
 from services.roles import return_role
-from mistralai.client import MistralClient
 from openai import OpenAI
 from services.database import Database
 import json
+from redis import Redis
 
 
 
@@ -39,6 +40,13 @@ tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 app.secret_key = "hola34"
 socketio = SocketIO(app)
+
+SESSION_TYPE = 'redis'
+SESSION_REDIS = Redis(host='localhost', port=6379)
+app.config.from_object(__name__)
+Session(app)
+
+
 lock = threading.Lock()
 conditional_lock = threading.Condition(lock)
 
@@ -127,7 +135,6 @@ def recibir_audio():
             mainthread.start()
             mainthread.join()        
             session['chat'] = json.dumps(messages)
-
 
             return {"result": "ok", "text": f"{ai_response}"}
         except Exception as e:

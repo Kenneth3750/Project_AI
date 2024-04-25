@@ -2,7 +2,7 @@
 from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, check_conversation_length, make_resume_prompt, get_role_prompt
 
 import json
-import tiktoken
+
 
 
 class Chat:

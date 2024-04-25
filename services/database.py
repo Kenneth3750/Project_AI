@@ -1,4 +1,4 @@
-from tools.database_tools import database_connection,  save_conversation, update_conversation, get_last_conversation_resume, save_conversation_history, is_valid_user
+from tools.database_tools import database_connection,  save_conversation, get_last_conversation_resume, save_conversation_history, is_valid_user
 from tools.conversation import generate_response,  make_resume_prompt
 import json
 class Database:
