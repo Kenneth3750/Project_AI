@@ -53,7 +53,7 @@ conditional_lock = threading.Condition(lock)
 ai_response_running = None
 is_running = None
 ai_response = None
-role_id = 5
+role_id = 4
 
 def main(client, tiny_model, user_input, messages):
     tiny_model = tiny_model

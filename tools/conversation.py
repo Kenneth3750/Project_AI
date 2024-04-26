@@ -82,7 +82,7 @@ def make_resume_prompt(conversation):
         conversation = json.loads(conversation)
         if conversation[0].get("role") == "system":
             conversation.pop(0)
-        conversation.append({"role": "user", "content": "Make a resume of the conversation. Do not forget the user's name."})
+        conversation.append({"role": "user", "content": "Make a resume of the conversation of no more than 250 words. Put at first the user's name if you know it."})
         return conversation
     else:
         return None
