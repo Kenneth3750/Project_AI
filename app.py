@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation
 from services.roles import return_role
 from openai import OpenAI
+from groq import Groq
 from services.database import Database
 import json
 from redis import Redis
@@ -35,6 +36,10 @@ def logout_required(f):
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
+# client =  Groq(
+#     api_key=os.environ.get("GROP_API_TOKEN"),
+# )
+
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
@@ -53,7 +58,7 @@ conditional_lock = threading.Condition(lock)
 ai_response_running = None
 is_running = None
 ai_response = None
-role_id = 4
+role_id = 1
 
 def main(client, tiny_model, user_input, messages):
     tiny_model = tiny_model
@@ -170,7 +175,8 @@ def check_session():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000, 
+                 ssl_context=('cert.pem', 'key.pem'))
    
 
 
