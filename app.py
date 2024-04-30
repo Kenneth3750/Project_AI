@@ -143,7 +143,7 @@ def index():
                 print("el nombre es:", name)
                 db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                 conversation, resume = db.init_conversation(user_id, client, role_id)
-                system_prompt = return_role(role_id)
+                system_prompt = return_role(role_id, name)
                 if conversation:
                     chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
                 else:
