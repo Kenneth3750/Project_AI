@@ -8,11 +8,14 @@ from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation
 from services.roles import return_role
+from services.vision import Vision
 from openai import OpenAI
 from groq import Groq
 from services.database import Database
 import json
 from redis import Redis
+import requests
+
 
 
 
@@ -78,11 +81,28 @@ def main(client, tiny_model, user_input, messages):
 
 
 @app.route('/', methods=['GET', 'POST'])
-def home():
+def root():
     if "user_id" in session:
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))
     else:
         return redirect(url_for("login"))
+    
+
+
+@app.route('/home', methods=['GET', 'POST'])
+@login_required
+def home():
+    vision = Vision()
+    if request.method == 'POST':
+        file = request.files['image']
+        name = request.form['personName']
+        if file:
+            image = vision.manage_image(file, name)
+            if image:
+                return jsonify({'result': 'ok'})
+            else:
+                return jsonify({'error': 'Error saving image'})
+    return render_template('home.html')
     
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -93,11 +113,10 @@ def login():
         user_name = request.form['username']
         password = request.form['password']
         try:
-            print(user_name, password)
             user_id = db.check_user(user_name, password)
             if user_id:
                 session['user_id'] = user_id
-                return redirect(url_for('index'))
+                return redirect(url_for('login'))
             else:
                 return render_template('login.html')
         except Exception as e:
@@ -107,20 +126,27 @@ def login():
 
 
 
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/chat', methods=['GET', 'POST'])
 @login_required
 def index():
+    vision = Vision()
     global role_id
     if request.method == 'POST':
-        user_id = session['user_id']
-        db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-        conversation, resume = db.init_conversation(user_id, client, role_id)
-        system_prompt = return_role(role_id)
-        if conversation:
-            chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
-        else:
-            chat = Chat(client=client, system_prompt=system_prompt)
-        session['chat'] = chat.get_messages()
+        if 'image' in request.files:
+            image_file = request.files['image']  
+            image = vision.current_image(image_file)
+            if image:
+                user_id = session['user_id']
+                db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+                conversation, resume = db.init_conversation(user_id, client, role_id)
+                system_prompt = return_role(role_id)
+                if conversation:
+                    chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
+                else:
+                    chat = Chat(client=client, system_prompt=system_prompt)
+                session['chat'] = chat.get_messages()
+            else:
+                return jsonify({'stop': 'stop'})
     return render_template('index.html')
 
 

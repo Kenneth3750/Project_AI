@@ -102,8 +102,6 @@ function toggleRecording() {
         boton.className = "btn btn-danger";
         conversation = true;
         initConversation();
-        recognition.start();
-        document.getElementById("status").innerHTML = `Status: Listening...`;
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Comenzar Grabación";
@@ -114,39 +112,7 @@ function toggleRecording() {
     }
 }
 
-// Comenzar la grabación al presionar el botón "Comenzar Grabación"
-async function startRecording() {
-    return new Promise(async (resolve, reject) => {
 
-    let recognition = null;
-
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuos = false;
-        recognition.start();
-
-        recognition.onresult = function(event) {
-         
-            const transcript = event.results[0][0].transcript;
-            resolve(transcript);
-
-        };
-        recognition.onerror = function(event) {
-            console.error('Error en el reconocimiento de voz:', event.error);
-            resolve(NO_SPEECH_DETECTED);
-        };
-
-        recognition.onspeechend = function() {
-            recognition.stop();
-        };
-        
-    } else {
-        console.log('Lo siento, tu navegador no soporta la API de reconocimiento de voz.');
-    }
- 
-    });
-    
-}
 
 
 
@@ -178,28 +144,54 @@ function stopRecording() {
 
 
 function initConversation() {
-    $.ajax({
-        url: '/index',
-        type: 'POST',
-        data: {"status": "start conversation"},
-        success: function(data) {
-            console.log("conversation started");
-        },
-        error: function(xhr, status, error) {
-            console.error('Error al enviar el audio:', error);
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
 
-        }
+            video.onloadedmetadata = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-    });
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob((blob) => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'image.png');
+
+                    $.ajax({
+                        url: '/chat',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(data) {
+                            console.log('Image sent successfully:', data);
+                            if(data.stop == "stop"){
+                                stopRecording();
+                            }else{
+                                recognition.start();
+                                document.getElementById("status").innerHTML = `Status: Listening...`;
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error sending image:', error);
+                        }
+                    });
+                }, 'image/png');
+
+                stream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+            };
+        })
+        .catch(function(error) {
+            console.error('Error accessing camera:', error);
+        });
 }
 
 
-
-setInterval(function() {
-    $.get('/check_session', function(data) {
-        if (data.logged_in === false) {
-            window.location.href = '/login';
-        }
-    });
-}, 5000);
 
