@@ -1,6 +1,5 @@
 import whisper
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_socketio import SocketIO
 from flask_session import Session
 import threading
 import os
@@ -8,7 +7,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation
 from services.roles import return_role
-from services.vision import Vision
+from services.vision import Vision, manage_image
 from openai import OpenAI
 from groq import Groq
 from services.database import Database
@@ -31,7 +30,7 @@ def logout_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' in session:
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -47,7 +46,7 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 tiny_model = whisper.load_model('tiny')
 app = Flask(__name__)
 app.secret_key = "hola34"
-socketio = SocketIO(app)
+
 
 SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
@@ -73,7 +72,7 @@ def main(client, tiny_model, user_input, messages):
  
         lock.acquire()
         ai_response_running = True
-        ai_response = AI_response(client, user_input, socketio, messages)
+        ai_response = AI_response(client, user_input, messages)
         ai_response_running = False
         lock.release()
     except Exception as e:
@@ -92,14 +91,18 @@ def root():
 @app.route('/home', methods=['GET', 'POST'])
 @login_required
 def home():
-    vision = Vision()
-    if request.method == 'POST':
+    user_id = session['user_id']
+    if request.method == 'POST':    
         file = request.files['image']
         name = request.form['personName']
         if file:
-            image = vision.manage_image(file, name)
+            image = manage_image(file, name, user_id)
             if image:
-                return jsonify({'result': 'ok'})
+                vision = Vision(user_id)
+                if name in vision.known_face_names:
+                    return jsonify({'result': 'ok'})
+                else:
+                    return jsonify({'error': 'Error saving image'})
             else:
                 return jsonify({'error': 'Error saving image'})
     return render_template('home.html')
@@ -129,14 +132,15 @@ def login():
 @app.route('/chat', methods=['GET', 'POST'])
 @login_required
 def index():
-    vision = Vision()
+    user_id = session['user_id']
+    vision = Vision(user_id)
     global role_id
     if request.method == 'POST':
         if 'image' in request.files:
-            image_file = request.files['image']  
-            image = vision.current_image(image_file)
-            if image:
-                user_id = session['user_id']
+            image_file = request.files['image'] 
+            name = vision.start_image_recognition(image_file, user_id)
+            if name:
+                print("el nombre es:", name)
                 db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                 conversation, resume = db.init_conversation(user_id, client, role_id)
                 system_prompt = return_role(role_id)
@@ -201,7 +205,7 @@ def check_session():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000, 
+    app.run(debug=True, host='0.0.0.0', port=5000, 
                  ssl_context=('cert.pem', 'key.pem'))
    
 

@@ -15,10 +15,13 @@
     <h1>Hola mundo</h1>
     <h6 id="status">Status: Sleeping...</h6>
     <div class="container">
+      <div class="container" style="display: flex;">
+        <a href="/home" class="btn btn-primary">Ir a home</a>
 
-      <form action="{{ url_for('logout') }}" method="post">
-        <button class="btn btn-primary">LogOut</button>
-      </form>
+        <form action="{{ url_for('logout') }}" method="post">
+          <button class="btn btn-primary">LogOut</button>
+        </form>
+      </div>
         <div class="row mt-3 px-3">
             <div class="container">
                 <img src="static/img/avatar.png" />   

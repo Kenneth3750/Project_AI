@@ -60,6 +60,11 @@ document.getElementById('send').addEventListener('click', () => {
             contentType: false,
             success: function(data) {
                 console.log('Imagen enviada correctamente:', data);
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Imagen enviada correctamente.');
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error al enviar la imagen:', error);

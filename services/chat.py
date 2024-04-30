@@ -43,7 +43,7 @@ def listen_to_user(audio_file):
     audio = listen_to_user_tool(audio_file)
     return audio
 
-def AI_response(client, user_input, socketio, messages):
+def AI_response(client, user_input, messages):
     print("--"*20)
     # audio_text = speech_to_text(self.text_model, audio)
     # text = audio_text['text']
@@ -55,7 +55,6 @@ def AI_response(client, user_input, socketio, messages):
         print(f"AI: {response}")
         print("--"*20)
         messages.append({"role": "assistant", "content": response})
-        socketio.emit('informacion_del_servidor', {'data': 'Talking...'})
         # speak_text(response)
     return response
 

@@ -21,18 +21,6 @@ navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia);
 
-var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-socket.on('connect', function() {
-    console.log('Conectado al servidor SocketIO');
-});
-
-// Escuchar el evento enviado desde el servidor y mostrar la información en la página
-socket.on('informacion_del_servidor', function(data) {
-    console.log('Informacion del servidor recibida:', data.data);
-    
-});
-
 
 function sendTranscript(formData) {
     $.ajax({
@@ -173,8 +161,10 @@ function initConversation() {
                             if(data.stop == "stop"){
                                 stopRecording();
                             }else{
-                                recognition.start();
-                                document.getElementById("status").innerHTML = `Status: Listening...`;
+                                if (conversation){
+                                    recognition.start();
+                                    document.getElementById("status").innerHTML = `Status: Listening...`;
+                                }
                             }
                         },
                         error: function(xhr, status, error) {

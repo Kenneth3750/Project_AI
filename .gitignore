@@ -8,4 +8,5 @@ audio_converted.wav
 key.pem
 cert.pem
 
-know_people/
+known_people/
+current/

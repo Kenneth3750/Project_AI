@@ -25,8 +25,13 @@
     <h4>Put your name here</h4>
     <input type="text" id="person_name">
 
-    <button id="send" class="btn btn-primary">Enviar</button>
-   
+    <div class="container" style="display: flex;">
+        <button id="send" class="btn btn-primary">Enviar</button>
+        <a href="/chat" class="btn btn-primary">Ir a chat</a>
+        <form action="{{ url_for('logout') }}" method="post">
+            <button class="btn btn-primary">LogOut</button>
+        </form>
+    </div>
 
     <script src="static/check_login.js"></script>
     <script src="static/camera.js"></script>
