@@ -3,6 +3,8 @@ from PIL import Image
 import os
 import requests
 import face_recognition
+import base64 
+
 
 
 
@@ -93,6 +95,45 @@ def compare_faces(known_face_encodings, known_face_names, user_id):
         print(f"Found {name} in the photo!")
 
     return name
+
+
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+  
+
+def image_to_text(api_key, image_path):
+    base64_image = encode_image(image_path)
+    headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {api_key}"
+    }
+    payload = {
+        "model": "gpt-4-turbo",
+        "messages": [
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "If there is a person in the image, please describe him/her. If there is no person, please type 'No person in the image. If there is a group of people, please describe the group.'"
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64_image}"
+                }
+                }
+            ]
+            }
+        ],
+        "max_tokens": 300
+    }
+  
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    
+    return response.json().get('choices')[0].get('message').get('content')
+
 
 
 

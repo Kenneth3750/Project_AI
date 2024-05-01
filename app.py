@@ -139,11 +139,13 @@ def index():
         if 'image' in request.files:
             image_file = request.files['image'] 
             name = vision.start_image_recognition(image_file, user_id)
+            vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
+            print("vision prompt:", vision_prompt)
             if name:
                 print("el nombre es:", name)
                 db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                 conversation, resume = db.init_conversation(user_id, client, role_id)
-                system_prompt = return_role(role_id, name)
+                system_prompt = return_role(role_id, name, vision_prompt)
                 if conversation:
                     chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
                 else:
@@ -163,7 +165,6 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_input = request.form['user']
-            print(user_input)
             messages = json.loads(session['chat'])
 
             mainthread = threading.Thread(target=main, args=(client, tiny_model,  user_input, messages))

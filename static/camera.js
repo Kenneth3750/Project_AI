@@ -1,15 +1,22 @@
-// Acceder al video y al botón de captura
 const video = document.getElementById('video');
 const captureBtn = document.getElementById('capture-btn');
+const takeBtn = document.getElementById('take-btn');
 
-// Obtener acceso a la cámara
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-        video.srcObject = stream;
-    })
-    .catch(error => {
-        console.error('Error al acceder a la cámara: ', error);
-    });
+takeBtn.addEventListener('click', () => {
+    // Show the video element
+    video.style.display = 'block';
+
+    // Request access to the camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(error => {
+            console.error('Error accessing camera: ', error);
+        });
+});
+
+
 
 // Capturar la foto cuando se hace clic en el botón
 captureBtn.addEventListener('click', () => {
@@ -23,9 +30,16 @@ captureBtn.addEventListener('click', () => {
     // Dibujar el video en el canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    // Eliminar la imagen anterior si existe
+    const previousImage = document.getElementById('captured-image');
+    if (previousImage) {
+        previousImage.remove();
+    }
+
     // Mostrar la imagen capturada en pantalla
     const image = new Image();
     image.src = canvas.toDataURL();
+    image.id = 'captured-image';
     document.body.appendChild(image);
 });
 
