@@ -1,3 +1,4 @@
+# Description: This file contains the Vision class which is responsible for image recognition and the management of images
 from tools.vision_tools import save_image, save_current_image, upload_configurations, compare_faces
 
 class Vision():
