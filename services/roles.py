@@ -12,6 +12,8 @@ def return_role(role_id, name, vision_prompt):
         return Tutor(name).get_info()
     else:
         return None
+
+roles_list = [1, 2, 3, 4, 5]
     
 
 

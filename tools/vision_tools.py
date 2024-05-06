@@ -22,16 +22,19 @@ import base64
 
 
 def save_image(file, name, user_id):
-    if not os.path.exists(f"known_people/user_{user_id}/{name}"):
-        os.makedirs(f"known_people/user_{user_id}/{name}")
-    image = Image.open(file)
-    image = image.convert("RGB")
-    image.save(f'known_people/user_{user_id}/{name}/image.jpg')
-    if os.path.exists(f'known_people/user_{user_id}/{name}/image.jpg'):
-        return True
-    else:
+    try:
+        if not os.path.exists(f"known_people/user_{user_id}/{name}"):
+            os.makedirs(f"known_people/user_{user_id}/{name}")
+        image = Image.open(file)
+        image = image.convert("RGB")
+        image.save(f'known_people/user_{user_id}/{name}/image.jpg')
+        if os.path.exists(f'known_people/user_{user_id}/{name}/image.jpg'):
+            return True
+        else:
+            return False
+    except Exception as e:
+        print("An error occurred: ", e)
         return False
-    
 
 
     
@@ -75,8 +78,8 @@ def upload_configurations(user_id):
                             face_encoding = face_encodings[0]  
                             known_face_encodings.append(face_encoding)
                             known_face_names.append(person_name)  
-    print("known_face_encodings:", known_face_encodings)
-    print("known_face_names:", known_face_names)
+    # print("known_face_encodings:", known_face_encodings)
+    # print("known_face_names:", known_face_names)
     return known_face_encodings, known_face_names
 
 
@@ -91,8 +94,6 @@ def compare_faces(known_face_encodings, known_face_names, user_id):
         if True in results:
             first_match_index = results.index(True)
             name = known_face_names[first_match_index]
-
-        print(f"Found {name} in the photo!")
 
     return name
 

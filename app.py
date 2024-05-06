@@ -6,7 +6,7 @@ import os
 from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation
-from services.roles import return_role
+from services.roles import return_role, roles_list
 from services.vision import Vision, manage_image
 from openai import OpenAI
 from groq import Groq
@@ -60,7 +60,7 @@ conditional_lock = threading.Condition(lock)
 ai_response_running = None
 is_running = None
 ai_response = None
-role_id = 1
+
 
 def main(client, tiny_model, user_input, messages):
     tiny_model = tiny_model
@@ -129,12 +129,14 @@ def login():
 
 
 
-@app.route('/chat', methods=['GET', 'POST'])
+@app.route('/chat/<int:role_id>', methods=['GET', 'POST'])
 @login_required
-def index():
+def index(role_id):
     user_id = session['user_id']
     vision = Vision(user_id)
-    global role_id
+    role_id = int(role_id)
+    if role_id not in roles_list:
+        return redirect(url_for('role_error'))
     if request.method == 'POST':
         if 'image' in request.files:
             image_file = request.files['image'] 
@@ -146,6 +148,7 @@ def index():
                 db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                 conversation, resume = db.init_conversation(user_id, client, role_id)
                 system_prompt = return_role(role_id, name, vision_prompt)
+                print("system prompt:", system_prompt)
                 if conversation:
                     chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
                 else:
@@ -180,8 +183,8 @@ def recibir_audio():
 
 @app.route('/save', methods=['GET', 'POST'])
 def save():
-    global role_id
     if request.method == 'POST':
+        role_id = int(request.form['role_id'])
         try:
             user_id = session['user_id']
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
@@ -194,7 +197,7 @@ def save():
         except Exception as e:
             return jsonify({'error': str(e)})
 
-@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/logout', methods=['POST'])
 def logout():
     if request.method == 'POST':
         session.clear()
@@ -204,6 +207,14 @@ def logout():
 def check_session():
     return jsonify({'logged_in': 'user_id' in session})
 
+@app.route("/role_error")
+def role_error():
+    return "<h1>Role not valid </h1>"
+
+@app.route("/chat")
+@login_required
+def chat_error():
+    return redirect(url_for('role-error'))
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000, 

@@ -13,6 +13,7 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
+document.getElementById("role").innerHTML = "Role: " + getRoleId();
 
 const synth = window.speechSynthesis;
 
@@ -106,7 +107,6 @@ function toggleRecording() {
 
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
-
     recognition.stop();
     document.getElementById("status").innerHTML = `Status: Sleeping...`;
 
@@ -117,19 +117,21 @@ function stopRecording() {
     $.ajax({
         url: '/save',
         type: 'POST',
-        data: {"status": "save conversation"},
+        data: {"status": "save conversation", "role_id": getRoleId()},
         success: function(data) {
             console.log('Audio enviado correctamente:', data);
-  
         },
         error: function(xhr, status, error) {
             console.error('Error al enviar el audio:', error);
-
         }
-
     });
 }
 
+function getRoleId() {
+    const path = window.location.pathname;
+    const parts = path.split('/');
+    return parts[parts.length - 1];
+}
 
 function initConversation() {
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -182,6 +184,7 @@ function initConversation() {
             console.error('Error accessing camera:', error);
         });
 }
+
 
 
 
