@@ -102,7 +102,7 @@ def home():
                 if name in vision.known_face_names:
                     return jsonify({'result': 'ok'})
                 else:
-                    return jsonify({'error': 'Error saving image'})
+                    return jsonify({'error': 'No face detected in the image'})
             else:
                 return jsonify({'error': 'Error saving image'})
     return render_template('home.html')

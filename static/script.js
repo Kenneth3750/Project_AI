@@ -4,7 +4,7 @@ let audioStream;
 let mediaRecorder;
 let chunks = [];
 let conversation;
-
+let modal = document.getElementById("modal");
 
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
@@ -136,6 +136,9 @@ function getRoleId() {
 function initConversation() {
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
+
+            role_id = getRoleId();
+            modal.style.display = "block";
             const video = document.createElement('video');
             video.srcObject = stream;
             video.play();
@@ -153,12 +156,13 @@ function initConversation() {
                     formData.append('image', blob, 'image.png');
 
                     $.ajax({
-                        url: '/chat',
+                        url: `/chat/${role_id}`,
                         type: 'POST',
                         data: formData,
                         processData: false,
                         contentType: false,
                         success: function(data) {
+                            modal.style.display = "none";
                             console.log('Image sent successfully:', data);
                             if(data.stop == "stop"){
                                 stopRecording();
@@ -170,6 +174,7 @@ function initConversation() {
                             }
                         },
                         error: function(xhr, status, error) {
+                            modal.style.display = "none";
                             console.error('Error sending image:', error);
                         }
                     });
