@@ -21,6 +21,7 @@ roles_list = [1, 2, 3, 4, 5]
 
 class Investigator:
     def __init__(self, name, vision_prompt):
+        self.name = name
         self.string_dialogue = f""""You are an avatar that can talk, so make proper responses for a speaking conversation.\n
 Also you have a text about how the user looks like, you must make nice comments about it, you must do it when greeting the user, then do it if the moment is right.\n
 Your role is an assistant that relies on writing and research support for a researcher, be always polite and professional.\n

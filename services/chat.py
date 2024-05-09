@@ -6,19 +6,26 @@ import json
 
 
 class Chat:
-    def __init__(self, conversation=None, client=None, resume=None, system_prompt=None):
+    def __init__(self, conversation=None, client=None, resume=None, system_prompt=None, name=None):
         self.client = client
+        self.name = name
         string_dialogue = system_prompt
         self.resume = resume
         self.is_conversation = conversation
         if self.is_conversation:
             if resume:
+                name_content = f"My name is {name}"
+                resume_content= f"here is a resume of pasts conversations: {conversation}"
                 self.conversation = [{"role": "system", "content": string_dialogue}]
-                self.conversation.append({"role": "user", "content": f"here is a resume of pasts conversations: {conversation}"})
+                self.conversation.append({"role": "user", "content": name_content})
+                self.conversation.append({"role": "user", "content": resume_content})
                 self.messages = self.conversation
             else:
+                name_content = f"My name is {name}"
                 self.messages = json.loads(conversation)
                 self.messages.insert(0, {"role": "system", "content": string_dialogue})
+                self.messages.append({"role": "user", "content": name_content})
+
         else:
             self.messages = [{"role": "system", "content": string_dialogue}]
         print("--"*20)

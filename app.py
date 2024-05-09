@@ -150,9 +150,9 @@ def index(role_id):
                 system_prompt = return_role(role_id, name, vision_prompt)
                 print("system prompt:", system_prompt)
                 if conversation:
-                    chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt)
+                    chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
                 else:
-                    chat = Chat(client=client, system_prompt=system_prompt)
+                    chat = Chat(client=client, system_prompt=system_prompt, name=name)
                 session['chat'] = chat.get_messages()
             else:
                 return jsonify({'stop': 'stop'})
