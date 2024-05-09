@@ -31,7 +31,7 @@ def get_last_conversation_resume(connection, user_id, role_id):
             conversation = None
             resume = None
             tokens = count_tokens(result_complete[1])
-            print(f"Tokens de la db: {tokens}")
+            print(f"Tokens de la db, conversacion completa: {tokens}")
             if result_complete:
                 historic_date = result[0]
                 complete_date = result_complete[0]
@@ -76,7 +76,7 @@ def save_conversation(connection, user_id, conversation, role_id):
         if result:
             if result[1] == current_date:
                 tokens = count_tokens(result[0])
-                if tokens > 1000:
+                if tokens > max_tokens:
                     sql = "INSERT INTO user_conversations (user_id, conversations, created_at, role_id) VALUES (%s, %s, %s, %s)"
                     cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
                     connection.commit()

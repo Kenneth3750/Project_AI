@@ -14,14 +14,14 @@ class Chat:
         self.is_conversation = conversation
         if self.is_conversation:
             if resume:
-                name_content = f"My name is {name}"
+                name_content = f"Now you are talking to {name}"
                 resume_content= f"here is a resume of pasts conversations: {conversation}"
                 self.conversation = [{"role": "system", "content": string_dialogue}]
                 self.conversation.append({"role": "user", "content": name_content})
                 self.conversation.append({"role": "user", "content": resume_content})
                 self.messages = self.conversation
             else:
-                name_content = f"My name is {name}"
+                name_content = f"Now you are talking to {name}"
                 self.messages = json.loads(conversation)
                 self.messages.insert(0, {"role": "system", "content": string_dialogue})
                 self.messages.append({"role": "user", "content": name_content})
@@ -66,6 +66,10 @@ def AI_response(client, user_input, messages):
     return response
 
 def check_current_conversation(messages, client, db, user_id, role_id):
+    messages = json.loads(messages)
+    if messages[0].get("role") == "system":
+        messages.pop(0)
+    messages = json.dumps(messages)
     is_to_long = check_conversation_length(messages)
     if is_to_long:
         make_resume = make_resume_prompt(messages)

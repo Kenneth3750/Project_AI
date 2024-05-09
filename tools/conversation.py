@@ -77,7 +77,6 @@ def translate_from_whisper_api(client, audio_file):
 def make_resume_prompt(conversation):
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
     token_count = len(encoding.encode(conversation))
-    print(f"Token count: {token_count}")
     if token_count > max_tokens:
         conversation = json.loads(conversation)
         if conversation[0].get("role") == "system":
