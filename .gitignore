@@ -5,4 +5,8 @@ wake_detect.wav
 audio.mp3
 audio_converted.wav
 
+key.pem
+cert.pem
 
+known_people/
+current/

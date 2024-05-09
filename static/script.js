@@ -4,7 +4,7 @@ let audioStream;
 let mediaRecorder;
 let chunks = [];
 let conversation;
-
+let modal = document.getElementById("modal");
 
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
@@ -13,6 +13,7 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
+document.getElementById("role").innerHTML = "Role: " + getRoleId();
 
 const synth = window.speechSynthesis;
 
@@ -20,18 +21,6 @@ navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia);
-
-var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-socket.on('connect', function() {
-    console.log('Conectado al servidor SocketIO');
-});
-
-// Escuchar el evento enviado desde el servidor y mostrar la información en la página
-socket.on('informacion_del_servidor', function(data) {
-    console.log('Informacion del servidor recibida:', data.data);
-    
-});
 
 
 function sendTranscript(formData) {
@@ -84,6 +73,12 @@ recognition.onresult = (e) => {
 };
 
 
+recognition.onerror = (e) => {
+    console.error('Error en el reconocimiento de voz:', e.error);
+    toggleRecording();
+}
+
+
 
 
 function toggleRecording() {
@@ -95,8 +90,7 @@ function toggleRecording() {
         boton.textContent = "Detener Grabación";
         boton.className = "btn btn-danger";
         conversation = true;
-        recognition.start();
-        document.getElementById("status").innerHTML = `Status: Listening...`;
+        initConversation();
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Comenzar Grabación";
@@ -107,45 +101,12 @@ function toggleRecording() {
     }
 }
 
-// Comenzar la grabación al presionar el botón "Comenzar Grabación"
-async function startRecording() {
-    return new Promise(async (resolve, reject) => {
 
-    let recognition = null;
-
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuos = false;
-        recognition.start();
-
-        recognition.onresult = function(event) {
-         
-            const transcript = event.results[0][0].transcript;
-            resolve(transcript);
-
-        };
-        recognition.onerror = function(event) {
-            console.error('Error en el reconocimiento de voz:', event.error);
-            resolve(NO_SPEECH_DETECTED);
-        };
-
-        recognition.onspeechend = function() {
-            recognition.stop();
-        };
-        
-    } else {
-        console.log('Lo siento, tu navegador no soporta la API de reconocimiento de voz.');
-    }
- 
-    });
-    
-}
 
 
 
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
-
     recognition.stop();
     document.getElementById("status").innerHTML = `Status: Sleeping...`;
 
@@ -156,16 +117,79 @@ function stopRecording() {
     $.ajax({
         url: '/save',
         type: 'POST',
-        data: {"status": "save conversation"},
+        data: {"status": "save conversation", "role_id": getRoleId()},
         success: function(data) {
             console.log('Audio enviado correctamente:', data);
-  
         },
         error: function(xhr, status, error) {
             console.error('Error al enviar el audio:', error);
-
         }
-
     });
 }
+
+function getRoleId() {
+    const path = window.location.pathname;
+    const parts = path.split('/');
+    return parts[parts.length - 1];
+}
+
+function initConversation() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+
+            role_id = getRoleId();
+            modal.style.display = "block";
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+
+            video.onloadedmetadata = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob((blob) => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'image.png');
+
+                    $.ajax({
+                        url: `/chat/${role_id}`,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(data) {
+                            modal.style.display = "none";
+                            console.log('Image sent successfully:', data);
+                            if(data.stop == "stop"){
+                                stopRecording();
+                            }else{
+                                if (conversation){
+                                    recognition.start();
+                                    document.getElementById("status").innerHTML = `Status: Listening...`;
+                                }
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            modal.style.display = "none";
+                            console.error('Error sending image:', error);
+                        }
+                    });
+                }, 'image/png');
+
+                stream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+            };
+        })
+        .catch(function(error) {
+            console.error('Error accessing camera:', error);
+        });
+}
+
+
+
 
