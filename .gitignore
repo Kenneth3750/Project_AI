@@ -12,7 +12,8 @@ known_people/
 current/
 
 
-
+frontend/dist
+frontend/node_modules
 # Logs
 logs
 *.log
