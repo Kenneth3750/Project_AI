@@ -1,5 +1,5 @@
 import whisper
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_session import Session
 import threading
 import os
@@ -44,7 +44,7 @@ os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 tiny_model = whisper.load_model('tiny')
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
 
 
@@ -105,7 +105,7 @@ def home():
                     return jsonify({'error': 'No face detected in the image'})
             else:
                 return jsonify({'error': 'Error saving image'})
-    return render_template('home.html')
+    return send_from_directory(app.static_folder, 'templates/home.html')
     
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -121,10 +121,10 @@ def login():
                 session['user_id'] = user_id
                 return redirect(url_for('login'))
             else:
-                return render_template('login.html')
+                return send_from_directory(app.static_folder,'templates/login.html')
         except Exception as e:
             return jsonify({'error': str(e)})
-    return render_template('login.html')
+    return send_from_directory(app.static_folder,'templates/login.html')
 
 
 
@@ -156,7 +156,7 @@ def index(role_id):
                 session['chat'] = chat.get_messages()
             else:
                 return jsonify({'stop': 'stop'})
-    return render_template('index.html')
+    return send_from_directory(app.static_folder,'templates/chat.html')
 
 
 
@@ -215,6 +215,22 @@ def role_error():
 @login_required
 def chat_error():
     return redirect(url_for('role-error'))
+
+
+@app.route('/avatar')
+def avatar_index():
+    return send_from_directory(os.path.join(app.static_folder, 'dist'), 'index.html')
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'dist', 'assets'), filename)
+@app.route('/models/<path:filename>')
+def serve_models(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'dist', 'models'), filename)
+@app.route('/animations/<path:filename>')
+def serve_animations(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'dist', 'animations'), filename)
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000, 
