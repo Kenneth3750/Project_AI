@@ -93,7 +93,7 @@ def count_tokens(text):
 
 def check_conversation_length(messages):
     tokens = count_tokens(messages)
-    print(f"Tokens_verification: {tokens}")
+    print(f"Tokens de la conversación: {tokens}")
     if tokens > max_tokens:
         return True
     else:
@@ -101,4 +101,5 @@ def check_conversation_length(messages):
 def get_role_prompt(comversation):
     json_conversation = json.loads(comversation)
     role_prompt = [json_conversation[0]]
+    print("role prompt:", role_prompt)
     return role_prompt

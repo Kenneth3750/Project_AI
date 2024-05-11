@@ -134,11 +134,11 @@ function getRoleId() {
 }
 
 function initConversation() {
+    modal.style.display = "block";
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
 
             role_id = getRoleId();
-            modal.style.display = "block";
             const video = document.createElement('video');
             video.srcObject = stream;
             video.play();

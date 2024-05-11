@@ -14,6 +14,9 @@ from services.database import Database
 import json
 from redis import Redis
 import requests
+import mimetypes
+
+mimetypes.add_type('application/javascript', '.js')
 
 
 
@@ -148,7 +151,6 @@ def index(role_id):
                 db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                 conversation, resume = db.init_conversation(user_id, client, role_id)
                 system_prompt = return_role(role_id, name, vision_prompt)
-                print("system prompt:", system_prompt)
                 if conversation:
                     chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
                 else:
@@ -219,18 +221,21 @@ def chat_error():
 
 @app.route('/avatar')
 def avatar_index():
-    return send_from_directory(os.path.join(app.static_folder, 'dist'), 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/assets/<path:filename>')
 def serve_assets(filename):
-    return send_from_directory(os.path.join(app.static_folder, 'dist', 'assets'), filename)
+    return send_from_directory(os.path.join(app.static_folder, 'src', 'assets'), filename)
 @app.route('/models/<path:filename>')
 def serve_models(filename):
-    return send_from_directory(os.path.join(app.static_folder, 'dist', 'models'), filename)
+    return send_from_directory(os.path.join(app.static_folder, 'public', 'models'), filename)
 @app.route('/animations/<path:filename>')
 def serve_animations(filename):
-    return send_from_directory(os.path.join(app.static_folder, 'dist', 'animations'), filename)
+    return send_from_directory(os.path.join(app.static_folder, 'public', 'animations'), filename)
 
+@app.route('/src/<path:filename>')
+def serve_jsx(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'src'), filename, mimetype='application/javascript')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000, 

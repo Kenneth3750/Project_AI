@@ -66,6 +66,7 @@ def AI_response(client, user_input, messages):
     return response
 
 def check_current_conversation(messages, client, db, user_id, role_id):
+    message_for_role = messages
     messages = json.loads(messages)
     if messages[0].get("role") == "system":
         messages.pop(0)
@@ -73,12 +74,15 @@ def check_current_conversation(messages, client, db, user_id, role_id):
     is_to_long = check_conversation_length(messages)
     if is_to_long:
         make_resume = make_resume_prompt(messages)
-        new_resume = generate_response(client, make_resume)
-        db.save_conversation_historic(user_id, new_resume, role_id)
-        role_prompt = get_role_prompt(messages)
-        new_chat = role_prompt
-        new_chat.append({"role": "user", "content": f"here is a resume of pasts conversations: {new_resume}"})
-        return new_chat
+        if make_resume:
+            new_resume = generate_response(client, make_resume)
+            db.save_conversation_historic(user_id, new_resume, role_id)
+            role_prompt = get_role_prompt(message_for_role)
+            new_chat = role_prompt
+            new_chat.append({"role": "user", "content": f"here is a resume of pasts conversations: {new_resume}"})
+            return new_chat
+        else:
+            return None
     else:
         return None
 

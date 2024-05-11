@@ -4,7 +4,7 @@ import {
   Environment,
   Text,
 } from "@react-three/drei";
-import { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { Avatar } from "./Avatar";
 
