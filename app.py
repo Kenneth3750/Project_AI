@@ -5,7 +5,7 @@ import threading
 import os
 from functools import wraps
 from dotenv import load_dotenv
-from services.chat import Chat, AI_response, check_current_conversation
+from services.chat import Chat, AI_response, check_current_conversation, create_voice
 from services.roles import return_role, roles_list
 from services.vision import Vision, manage_image
 from openai import OpenAI
@@ -13,12 +13,30 @@ from groq import Groq
 from services.database import Database
 import json
 from redis import Redis
-import requests
+from elevenlabs.client import ElevenLabs
 import mimetypes
 
 mimetypes.add_type('application/javascript', '.js')
 
+load_dotenv()
 
+os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
+# client =  Groq(
+#     api_key=os.environ.get("GROP_API_TOKEN"),
+# )
+
+client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+voice_client = ElevenLabs(api_key=os.getenv('ELEVEN_LABS_API_KEY'))
+tiny_model = whisper.load_model('tiny')
+app = Flask(__name__, static_folder='frontend', static_url_path='/')
+app.secret_key = "hola34"
+
+SESSION_TYPE = 'redis'
+SESSION_REDIS = Redis(host='localhost', port=6379)
+app.config.from_object(__name__)
+Session(app)
+
+ai_response = None
 
 
 def login_required(f):
@@ -36,50 +54,6 @@ def logout_required(f):
             return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
-
-# Load environment variables from .env file a
-load_dotenv()
-
-os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-# client =  Groq(
-#     api_key=os.environ.get("GROP_API_TOKEN"),
-# )
-
-client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-tiny_model = whisper.load_model('tiny')
-app = Flask(__name__, static_folder='frontend', static_url_path='/')
-app.secret_key = "hola34"
-
-
-SESSION_TYPE = 'redis'
-SESSION_REDIS = Redis(host='localhost', port=6379)
-app.config.from_object(__name__)
-Session(app)
-
-
-lock = threading.Lock()
-conditional_lock = threading.Condition(lock)
-
-ai_response_running = None
-is_running = None
-ai_response = None
-
-
-def main(client, tiny_model, user_input, messages):
-    tiny_model = tiny_model
-    global is_running
-    global ai_response_running
-    global ai_response
-    try:
-        user_input = user_input
- 
-        lock.acquire()
-        ai_response_running = True
-        ai_response = AI_response(client, user_input, messages)
-        ai_response_running = False
-        lock.release()
-    except Exception as e:
-        print("An error occurred: ", e)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -164,17 +138,15 @@ def index(role_id):
 
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
-    global ai_response_running
     global ai_response
     print("session chat:", session['chat'])
     if request.method == 'POST':
         try:
+            user_id = session['user_id']
             user_input = request.form['user']
             messages = json.loads(session['chat'])
-
-            mainthread = threading.Thread(target=main, args=(client, tiny_model,  user_input, messages))
-            mainthread.start()
-            mainthread.join()        
+            ai_response = AI_response(client, user_input, messages)
+            create_voice(voice_client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
 
             return {"result": "ok", "text": f"{ai_response}"}

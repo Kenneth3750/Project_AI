@@ -4,6 +4,8 @@ import os
 import subprocess
 import openai
 import json
+import time
+from elevenlabs import play, save
 
 import tiktoken
 
@@ -103,3 +105,34 @@ def get_role_prompt(comversation):
     role_prompt = [json_conversation[0]]
     print("role prompt:", role_prompt)
     return role_prompt
+
+
+def create_voice_file(client, user_id, text):
+    try:
+        if not os.path.exists(f"audio/user_{user_id}"):
+            os.makedirs(f"audio/user_{user_id}")
+        audio = client.generate(
+            text = text,
+            voice = "Rachel",
+            model = "eleven_multilingual_v2"
+        )
+        save(audio, f"audio/user_{user_id}/audio.mp3")
+    except Exception as e:
+        print("Error al crear el audio:", e)
+        return None
+    
+def lipSync(user_id):
+    try:
+        start_time = time.time()
+        
+        # -y to overwrite the file
+        subprocess.run(f'ffmpeg -y -i audio/user_{user_id}/audio.mp3 audio/user_{user_id}/audio.wav', shell=True,  stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        print(f'Conversion done in {time.time() - start_time}ms')
+        
+        # -r phonetic is faster but less accurate
+        subprocess.run(f'.\\bin\\rhubarb.exe -f json -o audio\\user_{user_id}\\audio.json audio\\user_{user_id}\\audio.wav -r phonetic', shell=True)        
+        print(f'Lip sync done in {time.time() - start_time}ms')
+    
+    except Exception as e:
+        print("Error al hacer el lip sync:", e)
+        return None

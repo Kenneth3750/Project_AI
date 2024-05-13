@@ -10,8 +10,8 @@ cert.pem
 
 known_people/
 current/
-
-
+audio/
+bin/
 frontend/dist
 frontend/node_modules
 # Logs
