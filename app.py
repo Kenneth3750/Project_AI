@@ -146,10 +146,10 @@ def recibir_audio():
             user_input = request.form['user']
             messages = json.loads(session['chat'])
             ai_response = AI_response(client, user_input, messages)
-            create_voice(voice_client, user_id, ai_response)
+            audio, json_file = create_voice(voice_client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
 
-            return {"result": "ok", "text": f"{ai_response}"}
+            return {"result": "ok", "text": f"{ai_response}", "audio": f"{audio}", "json": f"{json_file}"}
         except Exception as e:
             return jsonify({'error': str(e)})
         

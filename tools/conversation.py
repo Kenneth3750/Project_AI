@@ -6,7 +6,7 @@ import openai
 import json
 import time
 from elevenlabs import play, save
-
+import base64 
 import tiktoken
 
 max_tokens = 1000
@@ -136,3 +136,11 @@ def lipSync(user_id):
     except Exception as e:
         print("Error al hacer el lip sync:", e)
         return None
+    
+def audio_file_to_base64(audio_file_path):
+    with open(audio_file_path, "rb") as audio_file:
+        return base64.b64encode(audio_file.read()).decode('utf-8')
+
+def read_json_transcript(json_file_path):
+    with open(json_file_path, "r") as json_file:
+        return json.load(json_file)

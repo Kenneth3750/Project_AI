@@ -1,6 +1,6 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
 from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, check_conversation_length, make_resume_prompt, get_role_prompt, create_voice_file
-from tools.conversation import lipSync
+from tools.conversation import lipSync, audio_file_to_base64, read_json_transcript
 import json
 
 
@@ -90,4 +90,9 @@ def check_current_conversation(messages, client, db, user_id, role_id):
 def create_voice(client, user_id, text ):
     create_voice_file(client, user_id, text)
     lipSync(user_id)
+    audio_file_path = f"audio/user_{user_id}/audio.wav"
+    audio = audio_file_to_base64(audio_file_path)
+    json_file_path = f"audio/user_{user_id}/audio.json"
+    json_transcript = read_json_transcript(json_file_path)
+    return audio, json_transcript
 
