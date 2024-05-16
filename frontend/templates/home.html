@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        #video {
+            width: 0%;
+            height: auto;
+        }
+        #canvas {
+            display: none;
+        }
+    </style>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Home</h1>
+    <p>Take or upload a photo</p>
+    <button id="upload-btn">Upload photo</button>
+    <button id="take-btn">Use the camera</button>
+    <button id="erase" style="display: none;">X</button>
+    <div id="video-image-container">
+        <video id="video" autoplay></video>
+        <button id="capture-btn" style="display: none;">Take a photo</button>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <img id="myImage" style="display: none;"/>
+    <h4>Put your name here</h4>
+    <input type="text" id="person_name">
+
+    <div class="container" style="display: flex;">
+        <button id="send" class="btn btn-primary">Send image</button>
+
+
+        <form action="/logout" method="post">
+            <button class="btn btn-primary">LogOut</button>
+        </form>
+    </div>
+
+    <div>
+     
+            <select id="select-role" name="select-role">
+                <option value="1" selected>Investigator</option>
+                <option value="2">Receptionist</option>
+                <option value="3">Personal Skills Trainer</option>
+                <option value="4">Personal Assistant </option>
+                <option value="5">Tutor</option>
+            </select>
+
+            <button class="btn btn-primary" onclick="goToChat()">Go to chat</button>
+
+    </div>
+
+    <script src="/static/check_login.js"></script>
+    <script src="/static/camera.js"></script>
+</body>
+</html>

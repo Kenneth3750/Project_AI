@@ -126,7 +126,7 @@ def save_conversation_history(connection, user_id, conversation, role_id):
 def update_conversation(connection, user_id, conversation, role_id):
     try:
         cursor = connection.cursor()
-        sql = "UPDATE user_conversations SET conversations = %s WHERE user_id = %s and created_at = %s and role_id = %s"
+        sql = "UPDATE user_conversations SET conversations = %s WHERE user_id = %s and created_at = %s and role_id = %s order by id desc limit 1"
         cursor.execute(sql, (conversation, user_id, datetime.now().date(), role_id))
         connection.commit()
         return True

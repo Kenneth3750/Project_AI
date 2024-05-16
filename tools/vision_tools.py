@@ -110,7 +110,7 @@ def image_to_text(api_key, image_path):
     "Authorization": f"Bearer {api_key}"
     }
     payload = {
-        "model": "gpt-4-turbo",
+        "model": "gpt-4o",
         "messages": [
             {
             "role": "user",
