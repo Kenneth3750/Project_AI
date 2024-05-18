@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice
 from services.roles import return_role, roles_list
 from services.vision import Vision, manage_image
+from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
 from services.database import Database
@@ -15,7 +16,7 @@ import json
 from redis import Redis
 from elevenlabs.client import ElevenLabs
 import mimetypes
-
+from flask_cors import CORS
 mimetypes.add_type('application/javascript', '.js')
 
 load_dotenv()
@@ -35,7 +36,7 @@ SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
 Session(app)
-
+CORS(app)
 ai_response = None
 
 
@@ -209,12 +210,24 @@ def serve_animations(filename):
 def serve_jsx(filename):
     return send_from_directory(os.path.join(app.static_folder, 'src'), filename, mimetype='application/javascript')
 
+
+@app.route('/audio_prueba', methods=['POST'])
+def audio_prueba():
+    message = request.get_json()
+    text = generate_response(client, [{"role": "user", "content": message["message"]}])
+    print("texto:", text)
+    audio, json_file = create_voice(voice_client, 1, text)
+    response =  [{
+        "text": text,
+        "audio": audio,
+        "lipsync": json_file,
+        "facialExpression": "default",
+        "animation": "Talking_1", 
+    }]
+
+    return jsonify(messages = response)
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000, 
-                 ssl_context=('cert.pem', 'key.pem'))
+    app.run(debug=True, host='0.0.0.0', port=5000,
+            ssl_context=('cert.pem', 'key.pem'))
    
-
-
-
-
-

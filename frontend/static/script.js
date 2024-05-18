@@ -1,3 +1,5 @@
+
+
 let statusMic;
 let silenceTimeout;
 let audioStream;
@@ -6,6 +8,7 @@ let chunks = [];
 let conversation;
 let modal = document.getElementById("modal");
 
+
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
 const recognition = new webkitSpeechRecognition();
@@ -13,7 +16,7 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
-document.getElementById("role").innerHTML = "Role: " + getRoleId();
+//document.getElementById("role").innerHTML = "Role: " + getRoleId();
 
 const synth = window.speechSynthesis;
 
@@ -79,7 +82,7 @@ recognition.onerror = (e) => {
 }
 
 
-
+document.getElementById("recordButton").addEventListener("click", toggleRecording);
 
 function toggleRecording() {
     let boton = document.getElementById("recordButton");
@@ -138,7 +141,7 @@ function initConversation() {
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
 
-            role_id = getRoleId();
+            let role_id = getRoleId();
             const video = document.createElement('video');
             video.srcObject = stream;
             video.play();
@@ -191,5 +194,5 @@ function initConversation() {
 }
 
 
-
+export default MyComponent;
 

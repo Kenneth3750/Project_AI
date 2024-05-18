@@ -1,16 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = "http://localhost:3000";
+
+//const backendUrl = "http://localhost:3000";
 
 const ChatContext = createContext();
+
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
-    const data = await fetch(`${backendUrl}/chat`, {
+    const data = await fetch("/audio_prueba", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+      "Content-Type": "application/json",
       },
       body: JSON.stringify({ message }),
     });
