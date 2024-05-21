@@ -108,11 +108,12 @@ export function Avatar(props) {
     "/models/64f1a714fe61576b46f27ca2.glb"
   );
 
-  const { message, onMessagePlayed, chat } = useChat();
+  const { message, messages, onMessagePlayed, chat } = useChat();
 
   const [lipsync, setLipsync] = useState();
 
   useEffect(() => {
+    console.log(message);
     if (!message) {
       setAnimation("Idle");
       return;
@@ -120,7 +121,16 @@ export function Avatar(props) {
     setAnimation(message.animation);
     setFacialExpression(message.facialExpression);
     setLipsync(message.lipsync);
-  }, [message]);
+    const audio = new Audio("data:audio/mp3;base64," + message.audio);
+    audio.play();
+    setAudio(audio);
+    audio.onended = () => {
+      onMessagePlayed();
+      if (messages.length === 1) {
+        window.initRecognition(); // Suponiendo que esta es la función que deseas llamar
+      }
+    };
+  }, [message, messages]);
 
   const { animations } = useGLTF("/models/animations.glb");
 

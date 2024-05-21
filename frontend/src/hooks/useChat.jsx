@@ -28,16 +28,7 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (messages.length > 0) {
-      const message = messages[0];
-      setMessage(message);
-      const audio = new Audio("data:audio/mp3;base64," + message.audio);
-      audio.play();
-      audio.onended = () => {
-        onMessagePlayed();
-        if (messages.length === 1) {
-          window.initRecognition(); // Suponiendo que esta es la función que deseas llamar
-        }
-      };
+      setMessage(messages[0]);
     } else {
       setMessage(null);
     }
@@ -48,6 +39,7 @@ export const ChatProvider = ({ children }) => {
       value={{
         chat,
         message,
+        messages,
         onMessagePlayed,
         loading,
         cameraZoomed,

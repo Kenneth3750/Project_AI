@@ -229,6 +229,7 @@ def audio_prueba():
     text = generate_response(client, [{"role": "system", "content":  system_prompt}
                                       ,{"role": "user", "content": message["message"]}])
     print("texto:", text)
+    print(type(text))
     message_response = create_voice(voice_client, 1, text)
 
     return jsonify(messages = message_response)
