@@ -7,7 +7,7 @@ const ChatContext = createContext();
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
-    const data = await fetch("/audio_prueba", {
+    const data = await fetch("/audio", {
       method: "POST",
       headers: {
       "Content-Type": "application/json",

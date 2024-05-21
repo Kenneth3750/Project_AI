@@ -144,20 +144,14 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_id = session['user_id']
-            user_input = request.get_json()
+            user_input = request.get_json().get('message')
             messages = json.loads(session['chat'])
             ai_response = AI_response(client, user_input, messages)
-            audio, json_file = create_voice(voice_client, user_id, ai_response)
+            message_response = create_voice(voice_client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
-            response =  [{
-                "text": ai_response,
-                "audio": audio,
-                "lipsync": json_file,
-                "facialExpression": "default",
-                "animation": "Talking_1", 
-            }]
 
-            return jsonify(messages = response)
+
+            return jsonify(messages = message_response)
         except Exception as e:
             return jsonify({'error': str(e)})
         
@@ -228,8 +222,7 @@ def audio_prueba():
         The different animations are: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, and Angry. """
     text = generate_response(client, [{"role": "system", "content":  system_prompt}
                                       ,{"role": "user", "content": message["message"]}])
-    print("texto:", text)
-    print(type(text))
+
     message_response = create_voice(voice_client, 1, text)
 
     return jsonify(messages = message_response)

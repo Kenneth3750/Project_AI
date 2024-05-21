@@ -9,7 +9,7 @@ from elevenlabs import play, save
 import base64 
 import tiktoken
 
-max_tokens = 1000
+max_tokens = 5000
 
 def speak_text(text):
     engine = pyttsx3.init()

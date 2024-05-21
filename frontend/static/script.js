@@ -97,9 +97,7 @@ function toggleRecording() {
         boton.textContent = "Stop conversation";
         boton.className = "btn btn-danger";
         conversation = true;
-        //initConversation();
-        recognition.start();
-        document.getElementById("status").innerHTML = `Status: Listening...`;
+        initConversation();
     } else {
         boton.dataset.recording = "false";
         boton.textContent = "Start conversation";
