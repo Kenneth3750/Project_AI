@@ -1,5 +1,3 @@
-
-
 let statusMic;
 let silenceTimeout;
 let audioStream;
@@ -8,7 +6,6 @@ let chunks = [];
 let conversation;
 let modal = document.getElementById("modal");
 
-
 const NO_SPEECH_DETECTED = 'No se detectó voz';
 
 const recognition = new webkitSpeechRecognition();
@@ -16,7 +13,7 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
-//document.getElementById("role").innerHTML = "Role: " + getRoleId();
+document.getElementById("role").innerHTML = "Role: " + getRoleId();
 
 const synth = window.speechSynthesis;
 
@@ -70,10 +67,17 @@ recognition.onresult = (e) => {
 
         let formData = {'user': transcript}
         if (conversation){
-            sendTranscript(formData);
+            const event = new CustomEvent('chat', { detail: transcript });
+            window.dispatchEvent(event);
+
         }
     }
 };
+
+window.initRecognition = function() {
+    recognition.start();
+    document.getElementById("status").innerHTML = `Status: Listening...`;
+  };
 
 
 recognition.onerror = (e) => {
@@ -82,7 +86,7 @@ recognition.onerror = (e) => {
 }
 
 
-document.getElementById("recordButton").addEventListener("click", toggleRecording);
+
 
 function toggleRecording() {
     let boton = document.getElementById("recordButton");
@@ -90,13 +94,15 @@ function toggleRecording() {
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
         boton.dataset.recording = "true";
         boton.dataset.conversation = "true";
-        boton.textContent = "Detener Grabación";
+        boton.textContent = "Stop conversation";
         boton.className = "btn btn-danger";
         conversation = true;
-        initConversation();
+        //initConversation();
+        recognition.start();
+        document.getElementById("status").innerHTML = `Status: Listening...`;
     } else {
         boton.dataset.recording = "false";
-        boton.textContent = "Comenzar Grabación";
+        boton.textContent = "Start conversation";
         boton.className = "btn btn-primary";
         boton.dataset.conversation = "false";
         conversation = false;
@@ -115,7 +121,7 @@ function stopRecording() {
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
-    boton.textContent = "Comenzar Grabación";
+    boton.textContent = "Start conversation";
     boton.className = "btn btn-primary";
     $.ajax({
         url: '/save',
@@ -141,7 +147,7 @@ function initConversation() {
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
 
-            let role_id = getRoleId();
+            role_id = getRoleId();
             const video = document.createElement('video');
             video.srcObject = stream;
             video.play();
@@ -192,7 +198,3 @@ function initConversation() {
             console.error('Error accessing camera:', error);
         });
 }
-
-
-export default MyComponent;
-

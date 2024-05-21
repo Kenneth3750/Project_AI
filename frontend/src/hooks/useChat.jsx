@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-
 //const backendUrl = "http://localhost:3000";
 
 const ChatContext = createContext();
-
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
@@ -30,7 +28,16 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (messages.length > 0) {
-      setMessage(messages[0]);
+      const message = messages[0];
+      setMessage(message);
+      const audio = new Audio("data:audio/mp3;base64," + message.audio);
+      audio.play();
+      audio.onended = () => {
+        onMessagePlayed();
+        if (messages.length === 1) {
+          window.initRecognition(); // Suponiendo que esta es la función que deseas llamar
+        }
+      };
     } else {
       setMessage(null);
     }
@@ -58,4 +65,22 @@ export const useChat = () => {
     throw new Error("useChat must be used within a ChatProvider");
   }
   return context;
+};
+
+export const ChatEventListener = () => {
+  const { chat } = useContext(ChatContext);
+
+  useEffect(() => {
+    const handleChatEvent = async (event) => {
+     await chat(event.detail);
+    };
+
+    window.addEventListener('chat', handleChatEvent);
+
+    return () => {
+      window.removeEventListener('chat', handleChatEvent);
+    };
+  }, [chat]);
+
+  return null; // Este componente no necesita renderizar nada
 };

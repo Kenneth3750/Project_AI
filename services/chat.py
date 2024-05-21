@@ -88,11 +88,17 @@ def check_current_conversation(messages, client, db, user_id, role_id):
     
 
 def create_voice(client, user_id, text ):
-    create_voice_file(client, user_id, text)
-    lipSync(user_id)
-    audio_file_path = f"audio/user_{user_id}/audio.wav"
-    audio = audio_file_to_base64(audio_file_path)
-    json_file_path = f"audio/user_{user_id}/audio.json"
-    json_transcript = read_json_transcript(json_file_path)
-    return audio, json_transcript
+    messages = json.loads(text)
+    if "messages" in messages:
+        messages = message["messages"]
+    for i, message in enumerate(messages):
+        # generate audio file
+        text_input = message['text']
+        create_voice_file(client, user_id, text_input, i)
+        # generate lipsync
+        lipSync(user_id, i)
+  
+        message['audio'] = audio_file_to_base64(f"audio/user_{user_id}/audio_{i}.wav")
+        message['lipsync'] = read_json_transcript(f"audio/user_{user_id}/audio_{i}.json")
+    return messages
 

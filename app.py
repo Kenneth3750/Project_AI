@@ -133,7 +133,7 @@ def index(role_id):
                 session['chat'] = chat.get_messages()
             else:
                 return jsonify({'stop': 'stop'})
-    return send_from_directory(app.static_folder,'templates/chat.html')
+    return send_from_directory(app.static_folder,'index.html')
 
 
 
@@ -144,13 +144,20 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_id = session['user_id']
-            user_input = request.form['user']
+            user_input = request.get_json()
             messages = json.loads(session['chat'])
             ai_response = AI_response(client, user_input, messages)
             audio, json_file = create_voice(voice_client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
+            response =  [{
+                "text": ai_response,
+                "audio": audio,
+                "lipsync": json_file,
+                "facialExpression": "default",
+                "animation": "Talking_1", 
+            }]
 
-            return {"result": "ok", "text": f"{ai_response}", "audio": f"{audio}", "json": f"{json_file}"}
+            return jsonify(messages = response)
         except Exception as e:
             return jsonify({'error': str(e)})
         
@@ -214,18 +221,17 @@ def serve_jsx(filename):
 @app.route('/audio_prueba', methods=['POST'])
 def audio_prueba():
     message = request.get_json()
-    text = generate_response(client, [{"role": "user", "content": message["message"]}])
+    system_prompt ="""You are an avatar virtual assistant named NAIA.
+        You will always reply with a JSON array of messages. With a maximum of 3 messages.
+        Each message has a text, facialExpression, and animation property.
+        The different facial expressions are: smile, sad, angry, surprised, funnyFace, and default.
+        The different animations are: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, and Angry. """
+    text = generate_response(client, [{"role": "system", "content":  system_prompt}
+                                      ,{"role": "user", "content": message["message"]}])
     print("texto:", text)
-    audio, json_file = create_voice(voice_client, 1, text)
-    response =  [{
-        "text": text,
-        "audio": audio,
-        "lipsync": json_file,
-        "facialExpression": "default",
-        "animation": "Talking_1", 
-    }]
+    message_response = create_voice(voice_client, 1, text)
 
-    return jsonify(messages = response)
+    return jsonify(messages = message_response)
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000,
