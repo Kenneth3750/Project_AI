@@ -1,4 +1,3 @@
-import whisper
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_session import Session
 import threading
@@ -28,7 +27,7 @@ os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv('ELEVEN_LABS_API_KEY'))
-tiny_model = whisper.load_model('tiny')
+# tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
 
@@ -147,7 +146,7 @@ def recibir_audio():
             user_input = request.get_json().get('message')
             messages = json.loads(session['chat'])
             ai_response = AI_response(client, user_input, messages)
-            message_response = create_voice(voice_client, user_id, ai_response)
+            message_response = create_voice(client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
 
 
