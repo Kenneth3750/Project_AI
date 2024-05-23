@@ -1,4 +1,3 @@
-import whisper
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_session import Session
 import threading
@@ -8,6 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice
 from services.roles import return_role, roles_list
 from services.vision import Vision, manage_image
+from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
 from services.database import Database
@@ -15,7 +15,7 @@ import json
 from redis import Redis
 from elevenlabs.client import ElevenLabs
 import mimetypes
-
+from flask_cors import CORS
 mimetypes.add_type('application/javascript', '.js')
 
 load_dotenv()
@@ -27,7 +27,7 @@ os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv('ELEVEN_LABS_API_KEY'))
-tiny_model = whisper.load_model('tiny')
+# tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
 
@@ -35,7 +35,7 @@ SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
 Session(app)
-
+CORS(app)
 ai_response = None
 
 
@@ -132,7 +132,7 @@ def index(role_id):
                 session['chat'] = chat.get_messages()
             else:
                 return jsonify({'stop': 'stop'})
-    return send_from_directory(app.static_folder,'templates/chat.html')
+    return send_from_directory(app.static_folder,'index.html')
 
 
 
@@ -143,13 +143,14 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_id = session['user_id']
-            user_input = request.form['user']
+            user_input = request.get_json().get('message')
             messages = json.loads(session['chat'])
             ai_response = AI_response(client, user_input, messages)
-            audio, json_file = create_voice(voice_client, user_id, ai_response)
+            message_response = create_voice(client, user_id, ai_response)
             session['chat'] = json.dumps(messages)
 
-            return {"result": "ok", "text": f"{ai_response}", "audio": f"{audio}", "json": f"{json_file}"}
+
+            return jsonify(messages = message_response)
         except Exception as e:
             return jsonify({'error': str(e)})
         
@@ -209,12 +210,23 @@ def serve_animations(filename):
 def serve_jsx(filename):
     return send_from_directory(os.path.join(app.static_folder, 'src'), filename, mimetype='application/javascript')
 
+
+@app.route('/audio_prueba', methods=['POST'])
+def audio_prueba():
+    message = request.get_json()
+    system_prompt ="""You are an avatar virtual assistant named NAIA.
+        You will always reply with a JSON array of messages. With a maximum of 3 messages.
+        Each message has a text, facialExpression, and animation property.
+        The different facial expressions are: smile, sad, angry, surprised, funnyFace, and default.
+        The different animations are: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, and Angry. """
+    text = generate_response(client, [{"role": "system", "content":  system_prompt}
+                                      ,{"role": "user", "content": message["message"]}])
+
+    message_response = create_voice(voice_client, 1, text)
+
+    return jsonify(messages = message_response)
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000, 
-                 ssl_context=('cert.pem', 'key.pem'))
+    app.run(debug=True, host='0.0.0.0', port=5000,
+            ssl_context=('cert.pem', 'key.pem'))
    
-
-
-
-
-

@@ -40,6 +40,10 @@ module.exports = {
   output: {
     filename: 'main.js',
     path: path.resolve(__dirname, 'compiled'),
+    libraryTarget: 'module',
+  },
+  experiments: {
+    outputModule: true, 
   },
   mode: 'production',
 };

@@ -67,10 +67,17 @@ recognition.onresult = (e) => {
 
         let formData = {'user': transcript}
         if (conversation){
-            sendTranscript(formData);
+            const event = new CustomEvent('chat', { detail: transcript });
+            window.dispatchEvent(event);
+
         }
     }
 };
+
+window.initRecognition = function() {
+    recognition.start();
+    document.getElementById("status").innerHTML = `Status: Listening...`;
+  };
 
 
 recognition.onerror = (e) => {
@@ -87,13 +94,13 @@ function toggleRecording() {
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
         boton.dataset.recording = "true";
         boton.dataset.conversation = "true";
-        boton.textContent = "Detener Grabación";
+        boton.textContent = "Stop conversation";
         boton.className = "btn btn-danger";
         conversation = true;
         initConversation();
     } else {
         boton.dataset.recording = "false";
-        boton.textContent = "Comenzar Grabación";
+        boton.textContent = "Start conversation";
         boton.className = "btn btn-primary";
         boton.dataset.conversation = "false";
         conversation = false;
@@ -112,7 +119,7 @@ function stopRecording() {
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
-    boton.textContent = "Comenzar Grabación";
+    boton.textContent = "Start conversation";
     boton.className = "btn btn-primary";
     $.ajax({
         url: '/save',
@@ -189,7 +196,3 @@ function initConversation() {
             console.error('Error accessing camera:', error);
         });
 }
-
-
-
-

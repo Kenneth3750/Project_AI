@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = "http://localhost:3000";
+//const backendUrl = "http://localhost:3000";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
   const chat = async (message) => {
     setLoading(true);
-    const data = await fetch(`${backendUrl}/chat`, {
+    const data = await fetch("/audio", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+      "Content-Type": "application/json",
       },
       body: JSON.stringify({ message }),
     });
@@ -39,6 +39,7 @@ export const ChatProvider = ({ children }) => {
       value={{
         chat,
         message,
+        messages,
         onMessagePlayed,
         loading,
         cameraZoomed,
@@ -56,4 +57,22 @@ export const useChat = () => {
     throw new Error("useChat must be used within a ChatProvider");
   }
   return context;
+};
+
+export const ChatEventListener = () => {
+  const { chat } = useContext(ChatContext);
+
+  useEffect(() => {
+    const handleChatEvent = async (event) => {
+     await chat(event.detail);
+    };
+
+    window.addEventListener('chat', handleChatEvent);
+
+    return () => {
+      window.removeEventListener('chat', handleChatEvent);
+    };
+  }, [chat]);
+
+  return null; // Este componente no necesita renderizar nada
 };
