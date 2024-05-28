@@ -13,6 +13,7 @@ current/
 audio/
 bin/
 frontend/dist
+frontend/compiled
 frontend/node_modules
 # Logs
 logs
