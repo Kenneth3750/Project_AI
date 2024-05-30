@@ -97,8 +97,30 @@ def create_voice(client, user_id, text ):
         create_voice_file(client, user_id, text_input, i)
         # generate lipsync
         lipSync(user_id, i)
+        if message['animation'] == "smile":
+            message["animation"] = "Talking_1"
   
-        message['audio'] = audio_file_to_base64(f"audio/user_{user_id}/audio_{i}.wav")
+        message['audio'] = audio_file_to_base64(f"audio/user_{user_id}/audio_{i}.mp3")
         message['lipsync'] = read_json_transcript(f"audio/user_{user_id}/audio_{i}.json")
     return messages
+
+def send_intro():
+    message = [{
+        "text": "Bienvenido. Me llamo Naia, tu asistente virtual. ¿con qué puedo ayudarte hoy?",
+        "facialExpression": "default",
+        "audio": audio_file_to_base64("audio/intro2.wav"),
+        "lipsync": read_json_transcript("audio/intro2.json"),
+        "animation": "Talking_0"
+
+    }]
+    return message
+def send_bye():
+    message = [{
+        "text": "Hasta luego, un placer haber hablado contigo, nos vemos pronto.",
+        "facialExpression": "default",
+        "audio": audio_file_to_base64("audio/Bye.wav"),
+        "lipsync": read_json_transcript("audio/Bye.json"),
+        "animation": "Talking_2"
+    }]
+    return message
 

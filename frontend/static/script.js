@@ -75,8 +75,10 @@ recognition.onresult = (e) => {
 };
 
 window.initRecognition = function() {
-    recognition.start();
-    document.getElementById("status").innerHTML = `Status: Listening...`;
+    if (conversation){
+        recognition.start();
+        document.getElementById("status").innerHTML = `Status: Listening...`;
+    }
   };
 
 
@@ -116,6 +118,9 @@ function toggleRecording() {
 function stopRecording() {
     recognition.stop();
     document.getElementById("status").innerHTML = `Status: Sleeping...`;
+
+    const event = new CustomEvent('chat', { detail: "goodbye" });
+    window.dispatchEvent(event);
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
@@ -175,8 +180,9 @@ function initConversation() {
                                 stopRecording();
                             }else{
                                 if (conversation){
-                                    recognition.start();
-                                    document.getElementById("status").innerHTML = `Status: Listening...`;
+                                    const event = new CustomEvent('chat', { detail: "welcome" });
+                                    window.dispatchEvent(event);
+
                                 }
                             }
                         },

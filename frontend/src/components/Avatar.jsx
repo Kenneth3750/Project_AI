@@ -1,8 +1,8 @@
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { button, useControls } from "leva";
-import React, { useEffect, useRef, useState } from "react";
-
+import React, { useEffect, useRef, useState, useContext } from "react";
+import SubtitlesContext from './subtitiles'; 
 import * as THREE from "three";
 import { useChat } from "../hooks/useChat";
 
@@ -111,7 +111,7 @@ export function Avatar(props) {
   const { message, messages, onMessagePlayed, chat } = useChat();
 
   const [lipsync, setLipsync] = useState();
-
+  const { setSubtitles } = useContext(SubtitlesContext);
   useEffect(() => {
     console.log(message);
     if (!message) {
@@ -124,12 +124,16 @@ export function Avatar(props) {
     const audio = new Audio("data:audio/mp3;base64," + message.audio);
     audio.play();
     setAudio(audio);
+    setSubtitles(message.text); 
     audio.onended = () => {
       onMessagePlayed();
       if (messages.length === 1) {
-        window.initRecognition(); // Suponiendo que esta es la función que deseas llamar
+        window.initRecognition();
       }
+      setSubtitles('');
+  
     };
+
   }, [message, messages]);
 
   const { animations } = useGLTF("/models/animations.glb");
