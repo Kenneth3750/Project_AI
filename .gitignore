@@ -39,3 +39,10 @@ dist-ssr
 *.sln
 *.sw?
 
+prueba/
+prueba.py
+config.js
+
+frontend/compiled/
+
+

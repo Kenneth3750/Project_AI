@@ -94,14 +94,14 @@ def create_voice(client, user_id, text ):
     for i, message in enumerate(messages):
         # generate audio file
         text_input = message['text']
-        create_voice_file(client, user_id, text_input, i)
+        #create_voice_file(client, user_id, text_input, i)
         # generate lipsync
-        lipSync(user_id, i)
+        #lipSync(user_id, i)
         if message['animation'] == "smile":
             message["animation"] = "Talking_1"
   
-        message['audio'] = audio_file_to_base64(f"audio/user_{user_id}/audio_{i}.mp3")
-        message['lipsync'] = read_json_transcript(f"audio/user_{user_id}/audio_{i}.json")
+        message['audio'] = None
+        message['lipsync'] = read_json_transcript(f"audio/default.json")
     return messages
 
 def send_intro():

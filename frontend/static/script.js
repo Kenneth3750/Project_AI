@@ -182,6 +182,7 @@ function initConversation() {
                                 if (conversation){
                                     const event = new CustomEvent('chat', { detail: "welcome" });
                                     window.dispatchEvent(event);
+                                    
 
                                 }
                             }
