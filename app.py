@@ -21,11 +21,9 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-# client =  Groq(
-#     api_key=os.environ.get("GROP_API_TOKEN"),
-# )
+client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+#client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 # tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
