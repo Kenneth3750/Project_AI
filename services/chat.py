@@ -110,7 +110,7 @@ def send_intro():
         "facialExpression": "default",
         "audio": audio_file_to_base64("audio/intro2.wav"),
         "lipsync": read_json_transcript("audio/intro2.json"),
-        "animation": "Talking_0"
+        "animation": "Talking_1"
 
     }]
     return message

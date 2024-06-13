@@ -41,7 +41,7 @@ def speak_text(text):
     
 def generate_response(client, messages):
     completion = client.chat.completions.create(
-    model="llama3-70b-8192",
+    model="gpt-4o",
     messages=messages
     )
 
