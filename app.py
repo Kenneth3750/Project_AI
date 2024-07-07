@@ -4,7 +4,7 @@ import threading
 import os
 from functools import wraps
 from dotenv import load_dotenv
-from services.chat import Chat, AI_response, check_current_conversation, create_voice
+from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list
 from services.vision import Vision, manage_image
 from tools.conversation import generate_response
@@ -21,12 +21,10 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-# client =  Groq(
-#     api_key=os.environ.get("GROP_API_TOKEN"),
-# )
+client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-voice_client = ElevenLabs(api_key=os.getenv('ELEVEN_LABS_API_KEY'))
+#client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 # tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
@@ -144,13 +142,18 @@ def recibir_audio():
         try:
             user_id = session['user_id']
             user_input = request.get_json().get('message')
-            messages = json.loads(session['chat'])
-            ai_response = AI_response(client, user_input, messages)
-            message_response = create_voice(client, user_id, ai_response)
-            session['chat'] = json.dumps(messages)
+            if user_input == "welcome":
+                 return jsonify(messages = send_intro())
+            elif user_input == "goodbye":
+                return jsonify(messages = send_bye())
+            else:
+                messages = json.loads(session['chat'])
+                ai_response = AI_response(client, user_input, messages)
+                message_response = create_voice(voice_client, user_id, ai_response)
+                session['chat'] = json.dumps(messages)
 
 
-            return jsonify(messages = message_response)
+                return jsonify(messages = message_response)
         except Exception as e:
             return jsonify({'error': str(e)})
         
@@ -228,5 +231,5 @@ def audio_prueba():
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000,
-            ssl_context=('cert.pem', 'key.pem'))
+           ssl_context=('cert.pem', 'key.pem') )
    

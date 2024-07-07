@@ -41,10 +41,10 @@ def speak_text(text):
     
 def generate_response(client, messages):
     completion = client.chat.completions.create(
-    model="gpt-4o",
+    model="llama3-70b-8192",
     messages=messages
     )
-
+#llama3-70b-8192
     return completion.choices[0].message.content
 
 
@@ -111,12 +111,12 @@ def create_voice_file(client, user_id, text, index):
     try:
         if not os.path.exists(f"audio/user_{user_id}"):
             os.makedirs(f"audio/user_{user_id}")
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice="nova",
-            input=text
+        response = client.generate(
+            model="eleven_multilingual_v2",
+            voice ="Rachel",
+            text = text
         )
-        response.stream_to_file( f"audio/user_{user_id}/audio_{index}.wav")
+        save(response, f"audio/user_{user_id}/audio_{index}.mp3")
     except Exception as e:
         print("Error al crear el audio:", e)
         return None
@@ -126,7 +126,7 @@ def lipSync(user_id, index):
         start_time = time.time()
         
         # -y to overwrite the file
-        # subprocess.run(f'ffmpeg -y -i audio/user_{user_id}/audio_{index}.mp3 audio/user_{user_id}/audio_{index}.wav', shell=True)
+        subprocess.run(f'ffmpeg -y -i audio/user_{user_id}/audio_{index}.mp3 audio/user_{user_id}/audio_{index}.wav', shell=True)
         print(f'Conversion done in {time.time() - start_time}ms')
         #,  stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
         # -r phonetic is faster but less accurate

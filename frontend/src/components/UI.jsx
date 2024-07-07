@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
+import React, { useRef, useContext } from "react";
 import { useChat } from "../hooks/useChat";
-
+import SubtitlesContext from './subtitiles'; 
 
 export const sendMessage = (text, chat) => {
   if (!chat.loading && !chat.message) {
@@ -12,6 +12,7 @@ export const sendMessage = (text, chat) => {
 export const UI = ({ hidden, ...props }) => {
   const input = useRef();
   const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+  const { subtitles } = useContext(SubtitlesContext);
 
   const sendMessageHandler = () => {
     const text = input.current.value;
@@ -27,8 +28,15 @@ export const UI = ({ hidden, ...props }) => {
       <div className="fixed top-0 left-0 right-0 bottom-0 z-10 flex justify-between p-4 flex-col pointer-events-none">
         <div className="self-start backdrop-blur-md bg-white bg-opacity-50 p-4 rounded-lg">
           <h1 className="font-black text-xl">NAIA</h1>
+          
         </div>
+
+        <div className="flex items-center justify-center h-full">
+          <p className="text-center text-white bg-black bg-opacity-50 p-2 rounded-md text-2xl font-semibold">{subtitles}</p>
+        </div>
+
         <div className="w-full flex flex-col items-end justify-center gap-4">
+
           <button
             onClick={() => setCameraZoomed(!cameraZoomed)}
             className="pointer-events-auto bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-md"
@@ -65,7 +73,6 @@ export const UI = ({ hidden, ...props }) => {
               </svg>
             )}
           </button>
-          
         </div>
       </div>
     </>

@@ -11,7 +11,7 @@ export const ChatProvider = ({ children }) => {
       method: "POST",
       headers: {
       "Content-Type": "application/json",
-      },
+      }, 
       body: JSON.stringify({ message }),
     });
     const resp = (await data.json()).messages;

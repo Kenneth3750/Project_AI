@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/main.jsx',
@@ -46,4 +47,11 @@ module.exports = {
     outputModule: true, 
   },
   mode: 'production',
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'ELEVEN_LABS_API_KEY': JSON.stringify(process.env.ELEVEN_LABS_API_KEY)
+      }
+    })
+  ],
 };
