@@ -42,7 +42,7 @@ dist-ssr
 prueba/
 prueba.py
 config.js
-
+frontend/yarn.lock
 frontend/compiled/
 
 
