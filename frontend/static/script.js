@@ -27,26 +27,30 @@ function sendTranscript(formData) {
     $.ajax({
         url: '/audio',
         type: 'POST',
+        headers: {
+            "Content-Type": "application/json",
+        },
         data: formData,
         success: function(data) {
             console.log('Audio enviado correctamente:', data);
-            if ('speechSynthesis' in window) {
-                const synthesisUtterance = new SpeechSynthesisUtterance();
-                synthesisUtterance.text = data.text;
-                const voices = window.speechSynthesis.getVoices();
-                synthesisUtterance.voice = voices[0];
-                synthesisUtterance.onend = function(event) {
-                    console.log('Finalizó la síntesis de voz:', event);
-                    if (conversation){
-                        recognition.start();
-                        document.getElementById("status").innerHTML = `Status: Listening...`;
-                    }
-                };
-                document.getElementById("status").innerHTML = `Status: Speaking...`;
-                window.speechSynthesis.speak(synthesisUtterance);
-            } else {
-                console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
-            }
+            // if ('speechSynthesis' in window) {
+            //     const synthesisUtterance = new SpeechSynthesisUtterance();
+            //     synthesisUtterance.text = data.text;
+            //     const voices = window.speechSynthesis.getVoices();
+            //     synthesisUtterance.voice = voices[0];
+            //     synthesisUtterance.onend = function(event) {
+            //         console.log('Finalizó la síntesis de voz:', event);
+            //         if (conversation){
+            //             recognition.start();
+            //             document.getElementById("status").innerHTML = `Status: Listening...`;
+            //         }
+            //     };
+            //     document.getElementById("status").innerHTML = `Status: Speaking...`;
+            //     window.speechSynthesis.speak(synthesisUtterance);
+            // } else {
+            //     console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
+            // }
+            recognition.start();
         },
         error: function(xhr, status, error) {
             console.error('Error al enviar el audio:', error);
@@ -65,10 +69,11 @@ recognition.onresult = (e) => {
         recognition.stop();
         document.getElementById("status").innerHTML = `Status: AI is thinking...`;
 
-        let formData = {'user': transcript}
+        let formData = JSON.stringify({ "message": transcript})
         if (conversation){
-            const event = new CustomEvent('chat', { detail: transcript });
-            window.dispatchEvent(event);
+            // const event = new CustomEvent('chat', { detail: transcript });
+            // window.dispatchEvent(event);
+            sendTranscript(formData)
 
         }
     }

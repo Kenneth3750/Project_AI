@@ -5,7 +5,7 @@ import os
 from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
-from services.roles import return_role, roles_list
+from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
 from tools.conversation import generate_response
 from openai import OpenAI
@@ -21,9 +21,9 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
+#client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
-#client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 # tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
@@ -34,7 +34,7 @@ SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
 Session(app)
 CORS(app)
-ai_response = None
+
 
 
 def login_required(f):
@@ -110,6 +110,7 @@ def index(role_id):
     user_id = session['user_id']
     vision = Vision(user_id)
     role_id = int(role_id)
+    session['role_id'] = role_id
     if role_id not in roles_list:
         return redirect(url_for('role_error'))
     if request.method == 'POST':
@@ -136,19 +137,20 @@ def index(role_id):
 
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
-    global ai_response
-    print("session chat:", session['chat'])
+    role_id = session['role_id']
+    tools, available_functions = return_tools(role_id)
     if request.method == 'POST':
         try:
             user_id = session['user_id']
             user_input = request.get_json().get('message')
+            print("el mensaje es:", user_input)
             if user_input == "welcome":
                  return jsonify(messages = send_intro())
             elif user_input == "goodbye":
                 return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
-                ai_response = AI_response(client, user_input, messages)
+                ai_response = AI_response(client, user_input, messages, tools, available_functions)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
 

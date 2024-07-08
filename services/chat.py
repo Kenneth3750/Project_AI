@@ -1,5 +1,5 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
-from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, check_conversation_length, make_resume_prompt, get_role_prompt, create_voice_file
+from tools.conversation import  generate_response, check_conversation_length, make_resume_prompt, get_role_prompt, generate_response_with_tools
 from tools.conversation import lipSync, audio_file_to_base64, read_json_transcript
 import json
 
@@ -35,35 +35,21 @@ class Chat:
     def get_messages(self):
         return json.dumps(self.messages)
     
-# def print_history(self):
-#     history = self.history
-#     messages = self.messages
-#     print(history)
-#     print(type(history))
-#     print(type(messages))
 
-def remove_audio(audio_path, output_path):
-    remove_audio_tool(audio_path, output_path)
 
-def listen_to_user(audio_file):
-    remove_audio('audio.mp3', 'audio_converted.wav')
-    audio = listen_to_user_tool(audio_file)
-    return audio
-
-def AI_response(client, user_input, messages):
+def AI_response(client, user_input, messages, tools, available_functions):
     print("--"*20)
-    # audio_text = speech_to_text(self.text_model, audio)
-    # text = audio_text['text']
     text = user_input
     if text:
         messages.append({"role": "user", "content": text})
         print(f"user: {text}")
-        response = generate_response(client, messages)
+        response = generate_response_with_tools(client, messages, tools, available_functions)
         print(f"AI: {response}")
         print("--"*20)
         messages.append({"role": "assistant", "content": response})
-        # speak_text(response)
     return response
+
+
 
 def check_current_conversation(messages, client, db, user_id, role_id):
     message_for_role = messages
@@ -114,6 +100,7 @@ def send_intro():
 
     }]
     return message
+
 def send_bye():
     message = [{
         "text": "Hasta luego, un placer haber hablado contigo, nos vemos pronto.",

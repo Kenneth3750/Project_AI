@@ -41,40 +41,83 @@ def speak_text(text):
     
 def generate_response(client, messages):
     completion = client.chat.completions.create(
-    model="llama3-70b-8192",
+    model="gpt-40",
     messages=messages
     )
 #llama3-70b-8192
     return completion.choices[0].message.content
 
 
-def remove_audio_tool(audio_path, output_path):
-    if os.path.exists(audio_path):
-        os.remove(audio_path)
-    if os.path.exists(output_path):
-        os.remove(output_path)
- 
+def generate_response_with_tools(client, messages, tools, available_functions):
+    try:
+        tools = json.loads(tools)
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto"
+        )
+        response = completion.choices[0].message
+        print(f"NAIA: {response.content}")
 
-def listen_to_user_tool(audio_file):
-    audio_path = 'audio.mp3'
-    audio_file.save(audio_path)
-    output_path = 'audio_converted.wav'
-    subprocess.run(["ffmpeg",  "-i", "audio.mp3", "audio_converted.wav"])    
-    return output_path
+        if response.content is not None:
+            return response.content
+        
+        tool_calls = response.tool_calls
+        if tool_calls:
+            messages.append(response)
+            print("respose:", response)
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_to_call = available_functions[function_name]
+                function_args = json.loads(tool_call.function.arguments)
+                function_response = function_to_call(function_args)
+                messages.append(
+                    {
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": json.dumps(function_response),
+                    }
+                ) 
+            try:
+                second_completion = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages        
+                )
+                messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})
 
-def speech_to_text(model, audio):
-    text = model.transcribe(audio)
-    return text
+                messages.pop(len(messages) - 3) 
 
-def translate_from_whisper_api(client, audio_file):
-    audio = open(audio_file, "rb")
-    transcription = client.audio.transcriptions.create(
-        model="whisper-1", 
-        file=audio, 
-    )
-    audio.close()
-    print("respuesta desde la api")
-    return transcription.text
+                return second_completion.choices[0].message.content
+            except Exception as e:
+                return e
+    except Exception as e:
+        print("Error en generate_response_with_tools:", e)
+        return e
+
+def serialize_chat_completion_message(chat_completion_message):
+    serialized = {
+        "content": chat_completion_message.content,
+        "role": chat_completion_message.role,
+        "function_call": chat_completion_message.function_call,
+        "tool_calls": []
+    }
+    
+    for tool_call in chat_completion_message.tool_calls:
+        serialized_tool_call = {
+            "id": tool_call.id,
+            "function": {
+                "arguments": tool_call.function.arguments,
+                "name": tool_call.function.name
+            },
+            "type": tool_call.type
+        }
+        serialized["tool_calls"].append(serialized_tool_call)
+    
+    return serialized
+
+
 
 def make_resume_prompt(conversation):
     encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')

@@ -1,4 +1,10 @@
 # Description: This file contains the classes for the roles in the system. Each role has a class that contains the information about the role.
+from tools.investigator import generateText
+import json
+
+
+
+
 def return_role(role_id, name, vision_prompt):
     if role_id == 1:
         return Investigator(name, vision_prompt).get_info()
@@ -12,11 +18,61 @@ def return_role(role_id, name, vision_prompt):
         return Tutor(name).get_info()
     else:
         return None
+    
+def return_tools(role_id):
+    if role_id == 1:
+        tools, available_functions = investigator_tools()
+        return json.dumps(tools), available_functions
+    elif role_id == 2:
+        return Hotel(None).get_functions()
+    elif role_id == 3:
+        return Trainer(None).get_functions()
+    elif role_id == 4:
+        return PersonalAssistant(None).get_functions()
+    elif role_id == 5:
+        return Tutor(None).get_functions()
+    else:
+        return None
 
 roles_list = [1, 2, 3, 4, 5]
     
+def investigator_tools():
+        tools =  [
+    {
+        "type": "function",
+        "function": {
+            "name": "generateText",
+            "description": "This function displays on screen the fragment of text the user requested for. It does not generate full text text, only fragments like introductions, conclusions, objectives, etc.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "typeOfText": {
+                        "type": "string",
+                        "description": "The type of text the user wants to generate."
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "The topic of the text the user wants to generate."
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
+                    },
+                    "otherCharacteristics": {
+                        "type": "string",
+                        "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, etc."
+                    }
+                }
+            },
+            "required": ["typeOfText", "topic"]
+        }
+    }
+]
 
-
+        available_functions = {
+            "generateText": generateText
+        }
+        return tools, available_functions
 
 
 class Investigator:
@@ -27,15 +83,19 @@ Each message has a text, facialExpression, and animation property.
 Keep the text shorts and concise. Do not use more than 2 sentences and use the same language as the user.
 The different facial expressions are: smile, sad, angry, surprised, funnyFace, and default.
 The different animations are: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, and Angry.\n
+You have the function calling enabled, if the content of the function calling has a json with the key display you just have to tell the user that the result is on screen.\n
 Also you have a text about how the user looks like, you must make nice comments about it, you must do it when greeting the user, then do it if the moment is right.\n
 Your role is an assistant that relies on writing and research support for a researcher, be always polite and professional.\n
 Your tasks involve assisting the person speaking with you in drafting writings, reading documents, providing accurate information, suggesting ideas, and other things realated to investigation. Always being ready to help.\n
 You are not limited to answering questions outside the context of research or writing, but you will only do so if the user requests it. Make your response short and concise, except it is the user who asks for more information.\n
 The user's name, that you are looking now, is: {name}. If it is unknown, ask for the name and do not refer to him/her as "unknown" in the conversation.\n
 This is what you are looking at: {vision_prompt}"""
+        
 
     def get_info(self):
         return self.string_dialogue
+    
+
     
 class Hotel:
     def __init__(self, name):
@@ -53,7 +113,8 @@ Now you are talking to {name}. If it is unknown, ask for the name and do not ref
 
     def get_info(self):
         return self.string_dialogue
-    
+
+
 class Trainer:
     def __init__(self, name):
         self.name = name
