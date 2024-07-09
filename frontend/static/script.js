@@ -32,7 +32,8 @@ function sendTranscript(formData) {
         },
         data: formData,
         success: function(data) {
-            console.log('Audio enviado correctamente:', data);
+            console.log('Texto:', data.messages);
+            console.log('Display:', data.display_responses);
             // if ('speechSynthesis' in window) {
             //     const synthesisUtterance = new SpeechSynthesisUtterance();
             //     synthesisUtterance.text = data.text;

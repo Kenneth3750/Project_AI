@@ -43,11 +43,11 @@ def AI_response(client, user_input, messages, tools, available_functions):
     if text:
         messages.append({"role": "user", "content": text})
         print(f"user: {text}")
-        response = generate_response_with_tools(client, messages, tools, available_functions)
+        response, display_responses = generate_response_with_tools(client, messages, tools, available_functions)
         print(f"AI: {response}")
         print("--"*20)
         messages.append({"role": "assistant", "content": response})
-    return response
+    return response, display_responses
 
 
 

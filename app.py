@@ -150,12 +150,13 @@ def recibir_audio():
                 return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
-                ai_response = AI_response(client, user_input, messages, tools, available_functions)
+                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
 
 
-                return jsonify(messages = message_response)
+
+                return jsonify(messages=message_response, display_responses=display_responses)
         except Exception as e:
             return jsonify({'error': str(e)})
         

@@ -8,6 +8,7 @@ import time
 from elevenlabs import play, save
 import base64 
 import tiktoken
+import re
 
 max_tokens = 5000
 
@@ -58,20 +59,24 @@ def generate_response_with_tools(client, messages, tools, available_functions):
             tool_choice="auto"
         )
         response = completion.choices[0].message
-        print(f"NAIA: {response.content}")
-
+        display_responses = []
         if response.content is not None:
-            return response.content
-        
+            first_response = extract_json(response.content)
+            return first_response, display_responses
+
+        i = 1
         tool_calls = response.tool_calls
         if tool_calls:
             messages.append(response)
             print("respose:", response)
             for tool_call in tool_calls:
+                i += 1
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
                 function_response = function_to_call(function_args)
+                if function_response.get("display"):
+                    display_responses.append(function_response)
                 messages.append(
                     {
                         "tool_call_id": tool_call.id,
@@ -87,14 +92,30 @@ def generate_response_with_tools(client, messages, tools, available_functions):
                 )
                 messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})
 
-                messages.pop(len(messages) - 3) 
+                second_response = second_completion.choices[0].message
 
-                return second_completion.choices[0].message.content
+                second_response = extract_json(second_response.content)
+            
+                try:
+                    remove_i_elements_from_penultimate(messages, i)
+                except:
+                    print("Error al remover elementos de la penúltima posición")
+                    pass
+
+
+
+                return second_response, display_responses
             except Exception as e:
                 return e
     except Exception as e:
         print("Error en generate_response_with_tools:", e)
         return e
+    
+def remove_i_elements_from_penultimate(messages, i):
+    penultimate_index = len(messages) - 2
+    start_index = max(penultimate_index - i + 1, 0)
+    del messages[start_index:penultimate_index + 1]
+
 
 def serialize_chat_completion_message(chat_completion_message):
     serialized = {
@@ -116,6 +137,14 @@ def serialize_chat_completion_message(chat_completion_message):
         serialized["tool_calls"].append(serialized_tool_call)
     
     return serialized
+
+
+def extract_json(response):
+    clean_json = re.search(r'```json\n(.*?)\n```', response, flags=re.DOTALL)
+    if clean_json:
+        return clean_json.group(1)
+    else:
+        return response
 
 
 
