@@ -14,14 +14,22 @@ export const ChatProvider = ({ children }) => {
       }, 
       body: JSON.stringify({ message }),
     });
-    const resp = (await data.json()).messages;
-    setMessages((messages) => [...messages, ...resp]);
+    const resp = (await data.json());
+    const respMessages = resp.messages;
+    const respDisplayResponses = resp.display_responses;
+    console.log("mensajes:", respMessages);
+    console.log("display:", respDisplayResponses);
+    setMessages((messages) => [...messages, ...respMessages]);
+    if (respDisplayResponses.length > 0) {
+      setDisplayResponses(respDisplayResponses);
+    }
     setLoading(false);
   };
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState();
   const [loading, setLoading] = useState(false);
   const [cameraZoomed, setCameraZoomed] = useState(true);
+  const [displayResponses, setDisplayResponses] = useState([]);
   const onMessagePlayed = () => {
     setMessages((messages) => messages.slice(1));
   };
@@ -44,6 +52,7 @@ export const ChatProvider = ({ children }) => {
         loading,
         cameraZoomed,
         setCameraZoomed,
+        displayResponses,
       }}
     >
       {children}

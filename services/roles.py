@@ -1,5 +1,5 @@
 # Description: This file contains the classes for the roles in the system. Each role has a class that contains the information about the role.
-from tools.investigator import generateText
+from tools.investigator import investigator_tools
 import json
 
 
@@ -36,43 +36,6 @@ def return_tools(role_id):
 
 roles_list = [1, 2, 3, 4, 5]
     
-def investigator_tools():
-        tools =  [
-    {
-        "type": "function",
-        "function": {
-            "name": "generateText",
-            "description": "This function displays on screen the fragment of text the user requested for. It does not generate full text text, only fragments like introductions, conclusions, objectives, etc.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "typeOfText": {
-                        "type": "string",
-                        "description": "The type of text the user wants to generate."
-                    },
-                    "topic": {
-                        "type": "string",
-                        "description": "The topic of the text the user wants to generate."
-                    },
-                    "language": {
-                        "type": "string",
-                        "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
-                    },
-                    "otherCharacteristics": {
-                        "type": "string",
-                        "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, etc."
-                    }
-                }
-            },
-            "required": ["typeOfText", "topic"]
-        }
-    }
-]
-
-        available_functions = {
-            "generateText": generateText
-        }
-        return tools, available_functions
 
 
 class Investigator:

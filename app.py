@@ -154,7 +154,8 @@ def recibir_audio():
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
 
-
+                print("display responses:", display_responses)  
+                print(type(display_responses))
 
                 return jsonify(messages=message_response, display_responses=display_responses)
         except Exception as e:

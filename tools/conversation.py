@@ -117,6 +117,8 @@ def remove_i_elements_from_penultimate(messages, i):
     del messages[start_index:penultimate_index + 1]
 
 
+
+
 def serialize_chat_completion_message(chat_completion_message):
     serialized = {
         "content": chat_completion_message.content,

@@ -72,9 +72,9 @@ recognition.onresult = (e) => {
 
         let formData = JSON.stringify({ "message": transcript})
         if (conversation){
-            // const event = new CustomEvent('chat', { detail: transcript });
-            // window.dispatchEvent(event);
-            sendTranscript(formData)
+            const event = new CustomEvent('chat', { detail: transcript });
+            window.dispatchEvent(event);
+            // sendTranscript(formData)
 
         }
     }
@@ -86,7 +86,10 @@ window.initRecognition = function() {
         document.getElementById("status").innerHTML = `Status: Listening...`;
     }
   };
-
+  
+window.stopRecognition = function() {
+    stopRecording();
+  };
 
 recognition.onerror = (e) => {
     console.error('Error en el reconocimiento de voz:', e.error);
