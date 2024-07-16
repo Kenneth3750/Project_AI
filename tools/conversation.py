@@ -42,14 +42,16 @@ def speak_text(text):
     
 def generate_response(client, messages):
     completion = client.chat.completions.create(
-    model="gpt-40",
+    model="gpt-4o",
     messages=messages
     )
 #llama3-70b-8192
     return completion.choices[0].message.content
 
 
-def generate_response_with_tools(client, messages, tools, available_functions):
+def generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id):
+    user_id = user_id
+    role_id = role_id
     try:
         tools = json.loads(tools)
         completion = client.chat.completions.create(
@@ -74,9 +76,12 @@ def generate_response_with_tools(client, messages, tools, available_functions):
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
-                function_response = function_to_call(function_args)
+                function_response = function_to_call(function_args, user_id, role_id)
                 if function_response.get("display"):
                     display_responses.append(function_response)
+                if function_response.get("fragment"):
+                    display_responses.append(function_response)
+                print("function_response:", function_response)
                 messages.append(
                     {
                         "tool_call_id": tool_call.id,
@@ -96,13 +101,7 @@ def generate_response_with_tools(client, messages, tools, available_functions):
 
                 second_response = extract_json(second_response.content)
             
-                try:
-                    remove_i_elements_from_penultimate(messages, i)
-                except:
-                    print("Error al remover elementos de la penúltima posición")
-                    pass
-
-
+                remove_i_elements_from_penultimate(messages, i)
 
                 return second_response, display_responses
             except Exception as e:

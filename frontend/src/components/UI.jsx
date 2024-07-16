@@ -7,10 +7,12 @@ export const UI = ({ hidden, ...props }) => {
   const { subtitles } = useContext(SubtitlesContext);
   const [infoContent, setInfoContent] = useState("Initial content from server...");
   const [isOpen, setIsOpen] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+  const [uploadedPdf, setUploadedPdf] = useState(null);
 
   useEffect(() => {
     if (displayResponses && displayResponses.length > 0) {
-      const htmlContent = displayResponses[0].display;
+      const htmlContent = displayResponses.map(response => response.display || response.fragment).join('<br>');
       setInfoContent(htmlContent);
       setIsOpen(true); // Abre el cuadro automáticamente
     }
@@ -22,6 +24,34 @@ export const UI = ({ hidden, ...props }) => {
     // Replace <br> with newline characters
     const textContent = tempElement.textContent.replace(/<br\s*\/?>/gi, '\n') || tempElement.innerText.replace(/<br\s*\/?>/gi, '\n') || "";
     navigator.clipboard.writeText(textContent);
+  };
+
+  const handlePdfUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file.size > 30 * 1024 * 1024) { // 30 MB limit
+      setPdfError("The file exceeds the 30MB limit.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("pdf", file);
+
+    try {
+      const response = await fetch("/pdfreader", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setPdfError(errorData.error || "An error occurred while uploading the PDF.");
+      } else {
+        setUploadedPdf(file);
+        setPdfError(""); // Clear any previous errors
+      }
+    } catch (error) {
+      setPdfError("An error occurred while uploading the PDF.");
+    }
   };
 
   const toggleContent = () => {
@@ -65,16 +95,43 @@ export const UI = ({ hidden, ...props }) => {
           </button>
 
           {isOpen && (
-            <div className="mt-2 p-4 bg-gray-100 rounded-md w-64 h-48 overflow-y-auto pointer-events-auto">
-              <h2 className="font-semibold text-lg mb-2">Requested function</h2>
-              <div dangerouslySetInnerHTML={{ __html: infoContent }}></div>
-              <button
-                onClick={copyToClipboard}
-                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md pointer-events-auto"
-              >
-                Copy to clipboard
-              </button>
-            </div>
+            <>
+              <div className="mt-2 p-4 bg-gray-100 rounded-md w-64 h-48 overflow-y-auto pointer-events-auto">
+                <h2 className="font-semibold text-lg mb-2">Requested function</h2>
+                <div dangerouslySetInnerHTML={{ __html: infoContent }}></div>
+                <button
+                  onClick={copyToClipboard}
+                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-md pointer-events-auto"
+                >
+                  Copy to clipboard
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <h2 className="font-semibold text-lg mb-2">Upload PDF</h2>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handlePdfUpload}
+                  className="mb-2"
+                />
+                {pdfError && <p className="text-red-500">{pdfError}</p>}
+                {uploadedPdf && (
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      className="w-6 h-6 text-red-500 mr-2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9L14 4.54 8 9h3v9h2V9h3z" />
+                    </svg>
+                    <span>{uploadedPdf.name}</span>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
 

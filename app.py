@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
+from services.files_manager import save_pdf
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -114,23 +115,26 @@ def index(role_id):
     if role_id not in roles_list:
         return redirect(url_for('role_error'))
     if request.method == 'POST':
-        if 'image' in request.files:
-            image_file = request.files['image'] 
-            name = vision.start_image_recognition(image_file, user_id)
-            vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
-            print("vision prompt:", vision_prompt)
-            if name:
-                print("el nombre es:", name)
-                db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-                conversation, resume = db.init_conversation(user_id, client, role_id)
-                system_prompt = return_role(role_id, name, vision_prompt)
-                if conversation:
-                    chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
+        try:
+            if 'image' in request.files:
+                image_file = request.files['image'] 
+                name = vision.start_image_recognition(image_file, user_id)
+                vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
+                print("vision prompt:", vision_prompt)
+                if name:
+                    print("el nombre es:", name)
+                    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+                    conversation, resume = db.init_conversation(user_id, client, role_id)
+                    system_prompt = return_role(role_id, name, vision_prompt)
+                    if conversation:
+                        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
+                    else:
+                        chat = Chat(client=client, system_prompt=system_prompt, name=name)
+                    session['chat'] = chat.get_messages()
                 else:
-                    chat = Chat(client=client, system_prompt=system_prompt, name=name)
-                session['chat'] = chat.get_messages()
-            else:
-                return jsonify({'stop': 'stop'})
+                    return jsonify({'stop': 'stop'})
+        except Exception as e:
+            return jsonify({'error': str(e)})
     return send_from_directory(app.static_folder,'index.html')
 
 
@@ -150,7 +154,7 @@ def recibir_audio():
                 return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
-                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions)
+                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
 
@@ -233,6 +237,18 @@ def audio_prueba():
 
     return jsonify(messages = message_response)
 
+@app.route('/pdfreader', methods=['POST'])
+def pdfreader():
+    if request.method == 'POST':
+        try:
+            file = request.files['pdf']
+            user_id = session['user_id']
+            role_id = session['role_id']
+            save_pdf(user_id, file, role_id)
+            return jsonify({'result': 'ok'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000,
            ssl_context=('cert.pem', 'key.pem') )

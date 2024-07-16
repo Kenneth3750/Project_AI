@@ -4,28 +4,30 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from serpapi import GoogleSearch
+import time
+from tools.conversation import generate_response, extract_json
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-current_year = 2024
+current_year = int(time.strftime("%Y"))
 #response key is display
-def generateText(parameters):
-    typeOfText = parameters.get("typeOfText")
-    topic = parameters.get("topic")
-    language = parameters.get("language")
-    otherCharacteristics = parameters.get("otherCharacteristics")
-    system_prompt = """You are an expert writter. You will always reply a json with the key display and the value of the text you generated.
-    Do no add more keys, do not add more, do not even bother to say hello or goodbye. Just give the text."""
-    completion = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Generate a {typeOfText} about {topic} in {language} taking into account {otherCharacteristics}"}],
-    )
-    print(completion.choices[0].message.content)
-    text_json = json.loads(completion.choices[0].message.content) 
-    return text_json
+def generateText(parameters, user_id, role_id):
+    try:
+        typeOfText = parameters.get("typeOfText")
+        topic = parameters.get("topic")
+        language = parameters.get("language")
+        otherCharacteristics = parameters.get("otherCharacteristics")
+        system_prompt = """You are an expert writter. You will always reply a json with the key display and the value of the text you generated.
+        Do no add more keys, do not add more, do not even bother to say hello or goodbye. Just give the text."""
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Generate a {typeOfText} about {topic} in {language} taking into account {otherCharacteristics}"}]
+        response = generate_response(client, messages)
+        response = extract_json(response)
+        text_json = json.loads(response) 
+        return text_json
+    except Exception as e:
+        return {"error": str(e)}
 
-
-def getPapers(parameters):
+def getPapers(parameters, user_id, role_id):
     try:
         query = parameters.get("query")
         start_year = parameters.get("start_year")
@@ -62,47 +64,67 @@ def getPapers(parameters):
 
         return text_json
     except Exception as e:
-        return {"display": "An error occurred while trying to get the papers. Please try again later."}
+        return {"error": str(e)}
             
+
+def generatePdfInference(parameters, user_id, role_id):
+    try:
+        query = parameters.get("query")
+        system_prompt = """You are an expert reader that recieves a full pdf converted to text. You will always reply a json with the key fragment and the value of the text fragment that contains 
+        the answer to the question. Do no add more keys, do not add more text and anything except the json, do not even bother to say hello or goodbye. Just give the text. If the answer is not in the text, just say that you could not find it."""
+        text = ""
+        folder_path = f"pdf/user_{user_id}/role_{role_id}"
+        file_name = [file for file in os.listdir(folder_path) if file.endswith(".txt")][0]  
+        file_path = os.path.join(folder_path, file_name)
+
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read().replace('\n', ' ')
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Find the answer to the question: {query} on this text: {text}"}]
+        response = generate_response(client, messages)
+        response = extract_json(response)
+        print(response)
+        return json.loads(response)
+    except Exception as e:
+        return {'error': str(e)}
 
 
 def investigator_tools():
-        tools =  [
-    {
-        "type": "function",
-        "function": {
-            "name": "generateText",
-            "description": "This function displays on screen the fragment of text the user requested for. It does not generate full text text, only fragments like introductions, conclusions, objectives, etc.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "typeOfText": {
-                        "type": "string",
-                        "description": "The type of text the user wants to generate."
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "generateText",
+                "description": "Generate a any kind of text the user wants to generate. It can be an introduction, a conclusion, a summary, even an email.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "typeOfText": {
+                            "type": "string",
+                            "description": "The type of text the user wants to generate."
+                        },
+                        "topic": {
+                            "type": "string",
+                            "description": "The topic of the text the user wants to generate."
+                        },
+                        "language": {
+                            "type": "string",
+                            "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
+                        },
+                        "otherCharacteristics": {
+                            "type": "string",
+                            "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, etc."
+                        }
                     },
-                    "topic": {
-                        "type": "string",
-                        "description": "The topic of the text the user wants to generate."
-                    },
-                    "language": {
-                        "type": "string",
-                        "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
-                    },
-                    "otherCharacteristics": {
-                        "type": "string",
-                        "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, etc."
-                    }
-                },              
-                "required": ["typeOfText", "topic"]
+                    "required": ["typeOfText", "topic"]
+                }
             }
-        }
-    },
+        },
 
-    {
-         "type": "function",
-         "function": {
+        {
+            "type": "function",
+            "function": {
                 "name": "getPapers",
-                "description": "This function gives the user the articles or papers he/she requested fot. It does not display the full papers, only the title, the snippet, and the publication info.",
+                "description": "Search for papers (academic documents) based on the query the user specifies.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -115,14 +137,33 @@ def investigator_tools():
                             "description": "The start year of the papers the user wants to search for. If the user does not specify a start year use value None."
                         }
                     },
-                    "required": ["query"]   
+                    "required": ["query"]
+                }
+            }
+        },
+
+        {
+            "type": "function",
+            "function": {
+                "name": "generatePdfInference",
+                "description": "Get information from a pdf document based on the query the user specifies.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "What the users wants to know about the pdf document."
+                        }
+                    },
+                    "required": ["query"]
+                }
             }
         }
-    }
-]
+    ]
 
-        available_functions = {
-            "generateText": generateText,
-            "getPapers": getPapers
-        }
-        return tools, available_functions
+    available_functions = {
+        "generateText": generateText,
+        "getPapers": getPapers,
+        "generatePdfInference": generatePdfInference
+    }
+    return tools, available_functions

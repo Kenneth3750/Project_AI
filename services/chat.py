@@ -37,13 +37,13 @@ class Chat:
     
 
 
-def AI_response(client, user_input, messages, tools, available_functions):
+def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id):
     print("--"*20)
     text = user_input
     if text:
         messages.append({"role": "user", "content": text})
         print(f"user: {text}")
-        response, display_responses = generate_response_with_tools(client, messages, tools, available_functions)
+        response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id)
         print(f"AI: {response}")
         print("--"*20)
         messages.append({"role": "assistant", "content": response})

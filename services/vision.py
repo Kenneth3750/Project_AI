@@ -6,12 +6,16 @@ class Vision():
         self.user_id = user_id
 
     def start_image_recognition(self, file, user_id):
-        result = self.current_image(file, user_id)
-        if result:
-            name = self.get_user_name()
-            return name
-        else:
-            return None
+        try:
+            result = self.current_image(file, user_id)
+            if result:
+                name = self.get_user_name()
+                return name
+            else:
+                return None
+        except Exception as e:
+            print("An error occurred: ", e)
+            raise Exception("There was an error processing the image. Please try again.")
 
     def current_image(self, image_file, user_id):
         result = save_current_image(image_file, user_id)
