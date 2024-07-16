@@ -26,12 +26,16 @@ class Vision():
         return name
     
     def what_is_in_image(self, api_key, user_id):
-        image_path = f'current/user_{user_id}/image.jpg'
-        result = image_to_text(api_key, image_path)
-        if result:
-            return result
-        else:
-            return None
+        try:
+            image_path = f'current/user_{user_id}/image.jpg'
+            result = image_to_text(api_key, image_path)
+            if result:
+                return result
+            else:
+                return None
+        except Exception as e:
+            print("An error occurred: ", e)
+            raise Exception("There was an error trying to identify what is in the image. Please try again.")
     
 
 def manage_image(file, name, user_id):

@@ -150,7 +150,7 @@ def extract_json(response):
 
 
 def make_resume_prompt(conversation):
-    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
+    encoding = tiktoken.encoding_for_model('gpt-4')
     token_count = len(encoding.encode(conversation))
     if token_count > max_tokens:
         conversation = json.loads(conversation)
@@ -162,7 +162,7 @@ def make_resume_prompt(conversation):
         return None
     
 def count_tokens(text):
-    encoding = tiktoken.encoding_for_model('gpt-3.5-turbo')
+    encoding = tiktoken.encoding_for_model('gpt-4')
     token_count = len(encoding.encode(text))
     return token_count
 
