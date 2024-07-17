@@ -15,6 +15,13 @@ export const ChatProvider = ({ children }) => {
       body: JSON.stringify({ message }),
     });
     const resp = (await data.json());
+    if (resp.error) {
+      console.error(resp.error);
+      setLoading(false);
+      window.stopRecognition();
+      alert("An error ocurred: " + resp.error);
+      return;
+    }
     const respMessages = resp.messages;
     const respDisplayResponses = resp.display_responses;
     console.log("mensajes:", respMessages);

@@ -199,6 +199,7 @@ function initConversation() {
                         error: function(xhr, status, error) {
                             modal.style.display = "none";
                             console.error('Error sending image:', error);
+                            stopRecording();
                         }
                     });
                 }, 'image/png');
