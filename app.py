@@ -5,8 +5,9 @@ import os
 from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
-from services.roles import return_role, roles_list
+from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
+from services.files_manager import save_pdf
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -21,9 +22,9 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
+#client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
-#client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 # tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
@@ -34,7 +35,7 @@ SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
 Session(app)
 CORS(app)
-ai_response = None
+
 
 
 def login_required(f):
@@ -110,50 +111,57 @@ def index(role_id):
     user_id = session['user_id']
     vision = Vision(user_id)
     role_id = int(role_id)
+    session['role_id'] = role_id
     if role_id not in roles_list:
         return redirect(url_for('role_error'))
     if request.method == 'POST':
-        if 'image' in request.files:
-            image_file = request.files['image'] 
-            name = vision.start_image_recognition(image_file, user_id)
-            vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
-            print("vision prompt:", vision_prompt)
-            if name:
-                print("el nombre es:", name)
-                db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-                conversation, resume = db.init_conversation(user_id, client, role_id)
-                system_prompt = return_role(role_id, name, vision_prompt)
-                if conversation:
-                    chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
+        try:
+            if 'image' in request.files:
+                image_file = request.files['image'] 
+                name = vision.start_image_recognition(image_file, user_id)
+                vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
+                print("vision prompt:", vision_prompt)
+                if name:
+                    print("el nombre es:", name)
+                    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+                    conversation, resume = db.init_conversation(user_id, client, role_id)
+                    system_prompt = return_role(role_id, name, vision_prompt)
+                    if conversation:
+                        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
+                    else:
+                        chat = Chat(client=client, system_prompt=system_prompt, name=name)
+                    session['chat'] = chat.get_messages()
                 else:
-                    chat = Chat(client=client, system_prompt=system_prompt, name=name)
-                session['chat'] = chat.get_messages()
-            else:
-                return jsonify({'stop': 'stop'})
+                    return jsonify({'stop': 'stop'})
+        except Exception as e:
+            return jsonify({'error': str(e)})
     return send_from_directory(app.static_folder,'index.html')
 
 
 
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
-    global ai_response
-    print("session chat:", session['chat'])
+    role_id = session['role_id']
+    tools, available_functions = return_tools(role_id)
     if request.method == 'POST':
         try:
             user_id = session['user_id']
             user_input = request.get_json().get('message')
+            print("el mensaje es:", user_input)
             if user_input == "welcome":
                  return jsonify(messages = send_intro())
             elif user_input == "goodbye":
                 return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
-                ai_response = AI_response(client, user_input, messages)
+                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
 
+                print("display responses:", display_responses)  
+                print(type(display_responses))
 
-                return jsonify(messages = message_response)
+                return jsonify(messages=message_response, display_responses=display_responses)
         except Exception as e:
             return jsonify({'error': str(e)})
         
@@ -229,6 +237,18 @@ def audio_prueba():
 
     return jsonify(messages = message_response)
 
+@app.route('/pdfreader', methods=['POST'])
+def pdfreader():
+    if request.method == 'POST':
+        try:
+            file = request.files['pdf']
+            user_id = session['user_id']
+            role_id = session['role_id']
+            save_pdf(user_id, file, role_id)
+            return jsonify({'result': 'ok'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000,
            ssl_context=('cert.pem', 'key.pem') )

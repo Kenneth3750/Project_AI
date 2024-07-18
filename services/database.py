@@ -9,24 +9,28 @@ class Database:
         return database_connection(self.db_data)
     
     def init_conversation(self, user_id, client, role_id):
-        connection = self.connect()
-        conversation, is_resume = get_last_conversation_resume(connection, user_id, role_id)
-        print("La conversación es de la db:", conversation)
-        connection.close()
-        if conversation:
-            if is_resume:
-                resume = True
-                return conversation, resume
-            else:
-                need_a_resume = make_resume_prompt(conversation)
-                if need_a_resume:
-                    chat_resume = generate_response(client, need_a_resume)
-                    self.save_conversation_historic(user_id, chat_resume, role_id)
-                    return chat_resume, True
+        try:
+            connection = self.connect()
+            conversation, is_resume = get_last_conversation_resume(connection, user_id, role_id)
+            print("La conversación es de la db:", conversation)
+            connection.close()
+            if conversation:
+                if is_resume:
+                    resume = True
+                    return conversation, resume
                 else:
-                    return conversation, False
-        else:
-            return None, None
+                    need_a_resume = make_resume_prompt(conversation)
+                    if need_a_resume:
+                        chat_resume = generate_response(client, need_a_resume)
+                        self.save_conversation_historic(user_id, chat_resume, role_id)
+                        return chat_resume, True
+                    else:
+                        return conversation, False
+            else:
+                return None, None
+        except Exception as e:
+            print("An error occurred: ", e)
+            raise Exception("There was an error initializing the conversation. Please try again.")
         
     def save_current_conversation(self, user_id, conversation, role_id):
         connection = self.connect()

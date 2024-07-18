@@ -1,5 +1,5 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
-from tools.conversation import  generate_response, listen_to_user_tool, remove_audio_tool, check_conversation_length, make_resume_prompt, get_role_prompt, create_voice_file
+from tools.conversation import  generate_response, check_conversation_length, make_resume_prompt, get_role_prompt, generate_response_with_tools
 from tools.conversation import lipSync, audio_file_to_base64, read_json_transcript
 import json
 
@@ -35,74 +35,72 @@ class Chat:
     def get_messages(self):
         return json.dumps(self.messages)
     
-# def print_history(self):
-#     history = self.history
-#     messages = self.messages
-#     print(history)
-#     print(type(history))
-#     print(type(messages))
 
-def remove_audio(audio_path, output_path):
-    remove_audio_tool(audio_path, output_path)
 
-def listen_to_user(audio_file):
-    remove_audio('audio.mp3', 'audio_converted.wav')
-    audio = listen_to_user_tool(audio_file)
-    return audio
-
-def AI_response(client, user_input, messages):
-    print("--"*20)
-    # audio_text = speech_to_text(self.text_model, audio)
-    # text = audio_text['text']
-    text = user_input
-    if text:
-        messages.append({"role": "user", "content": text})
-        print(f"user: {text}")
-        response = generate_response(client, messages)
-        print(f"AI: {response}")
+def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id):
+    try:
         print("--"*20)
-        messages.append({"role": "assistant", "content": response})
-        # speak_text(response)
-    return response
+        text = user_input
+        if text:
+            messages.append({"role": "user", "content": text})
+            print(f"user: {text}")
+            response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id)
+            print(f"AI: {response}")
+            print("--"*20)
+            messages.append({"role": "assistant", "content": response})
+        return response, display_responses
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error generating the response. Please try again.")
+
+
 
 def check_current_conversation(messages, client, db, user_id, role_id):
-    message_for_role = messages
-    messages = json.loads(messages)
-    if messages[0].get("role") == "system":
-        messages.pop(0)
-    messages = json.dumps(messages)
-    is_to_long = check_conversation_length(messages)
-    if is_to_long:
-        make_resume = make_resume_prompt(messages)
-        if make_resume:
-            new_resume = generate_response(client, make_resume)
-            db.save_conversation_historic(user_id, new_resume, role_id)
-            role_prompt = get_role_prompt(message_for_role)
-            new_chat = role_prompt
-            new_chat.append({"role": "user", "content": f"here is a resume of pasts conversations: {new_resume}"})
-            return new_chat
+    try:
+        message_for_role = messages
+        messages = json.loads(messages)
+        if messages[0].get("role") == "system":
+            messages.pop(0)
+        messages = json.dumps(messages)
+        is_to_long = check_conversation_length(messages)
+        if is_to_long:
+            make_resume = make_resume_prompt(messages)
+            if make_resume:
+                new_resume = generate_response(client, make_resume)
+                db.save_conversation_historic(user_id, new_resume, role_id)
+                role_prompt = get_role_prompt(message_for_role)
+                new_chat = role_prompt
+                new_chat.append({"role": "user", "content": f"here is a resume of pasts conversations: {new_resume}"})
+                return new_chat
+            else:
+                return None
         else:
             return None
-    else:
-        return None
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error checking the conversation length. Please try again. Your next conversation can last longer than usual.")
     
 
 def create_voice(client, user_id, text ):
-    messages = json.loads(text)
-    if "messages" in messages:
-        messages = message["messages"]
-    for i, message in enumerate(messages):
-        # generate audio file
-        text_input = message['text']
-        #create_voice_file(client, user_id, text_input, i)
-        # generate lipsync
-        #lipSync(user_id, i)
-        if message['animation'] == "smile":
-            message["animation"] = "Talking_1"
-  
-        message['audio'] = None
-        message['lipsync'] = read_json_transcript(f"audio/default.json")
-    return messages
+    try:
+        messages = json.loads(text)
+        if "messages" in messages:
+            messages = message["messages"]
+        for i, message in enumerate(messages):
+            # generate audio file
+            text_input = message['text']
+            #create_voice_file(client, user_id, text_input, i)
+            # generate lipsync
+            #lipSync(user_id, i)
+            if message['animation'] == "smile":
+                message["animation"] = "Talking_1"
+    
+            message['audio'] = None
+            message['lipsync'] = read_json_transcript(f"audio/default.json")
+        return messages
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error elaborating the response. Please try again.")
 
 def send_intro():
     message = [{
@@ -114,6 +112,7 @@ def send_intro():
 
     }]
     return message
+
 def send_bye():
     message = [{
         "text": "Hasta luego, un placer haber hablado contigo, nos vemos pronto.",

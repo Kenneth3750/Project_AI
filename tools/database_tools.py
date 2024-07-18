@@ -96,7 +96,7 @@ def save_conversation(connection, user_id, conversation, role_id):
             return True
     except Exception as e:
         print(f"Error: {e}")
-        return False
+        raise Exception("There was an error saving the conversation. Please try again.")
 
 def save_conversation_history(connection, user_id, conversation, role_id):
     try:

@@ -45,4 +45,11 @@ config.js
 frontend/yarn.lock
 frontend/compiled/
 
+tools_prueba.py
+pdf/
+emails/
 
+client_secret_*
+credentials.json
+*.pickle
+tokens/

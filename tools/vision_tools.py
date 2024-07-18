@@ -117,7 +117,7 @@ def image_to_text(api_key, image_path):
             "content": [
                 {
                 "type": "text",
-                "text": "If there is a person in the image, please describe him/her. If there is no person, please type 'No person in the image. If there is a group of people, please describe the group.'"
+                "text": "If there is a person in the image, please describe him/her. If there is no person, please type No person in the image. If there is a group of people, please describe the group. Describe the sorroundings as well."
                 },
                 {
                 "type": "image_url",

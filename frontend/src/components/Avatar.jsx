@@ -2,7 +2,7 @@ import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { button, useControls } from "leva";
 import React, { useEffect, useRef, useState, useContext } from "react";
-import SubtitlesContext from './subtitiles'; 
+import SubtitlesContext from './subtitles'; 
 import * as THREE from "three";
 import { useChat } from "../hooks/useChat";
 import {ELEVEN_LABS_API_KEY} from '../../../config.js';

@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { Leva } from "leva";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
-import SubtitlesContext from './components/subtitiles';
+import SubtitlesContext from './components/subtitles';
 import React, {useState} from 'react';
 import { ChatEventListener } from './hooks/useChat';
 
