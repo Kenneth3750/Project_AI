@@ -22,7 +22,7 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
-#client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
+# client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
@@ -125,12 +125,13 @@ def index(role_id):
                     print("el nombre es:", name)
                     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                     conversation, resume = db.init_conversation(user_id, client, role_id)
-                    system_prompt = return_role(role_id, name, vision_prompt)
+                    system_prompt = return_role(user_id, role_id, name, vision_prompt)
                     if conversation:
                         chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
                     else:
                         chat = Chat(client=client, system_prompt=system_prompt, name=name)
                     session['chat'] = chat.get_messages()
+                    return jsonify({"name": name})
                 else:
                     return jsonify({'stop': 'stop'})
         except Exception as e:

@@ -70,6 +70,10 @@ def get_gmail_service(creds):
     service = build('gmail', 'v1', credentials=creds)
     return service
 
+def get_chat_service(creds):
+    service = build('chat', 'v1', credentials=creds)
+    return service
+
 
 def create_google_calendar_reminder(params, user_id, role_id):
     """Crea un recordatorio en Google Calendar"""
@@ -145,6 +149,27 @@ def send_email(params, user_id, role_id):
         return {'error': str(e)}
     
 
+
+def send_visitor_info(params, user_id, role_id):
+    try:
+        creds = authenticate(user_id)
+        service = get_gmail_service(creds)
+        sender_email = get_user_email(creds)
+
+        body = params['user_message']
+
+        html_message = MIMEText(body, "html")
+        html_message["Subject"] = f"Visitor info from {params['user_name']}"
+        html_message["From"] = sender_email
+        html_message["To"] = sender_email
+        raw_message = base64.urlsafe_b64encode(html_message.as_bytes()).decode("utf-8")
+        message = {"raw": raw_message}
+        sent_message = service.users().messages().send(userId="me", body=message).execute()
+        return {'message': f'Visitor info sent successfully'}
+    except Exception as e:
+        print(e)
+        return {'error': str(e)}
+
 def assistant_tools():
     tools = [
         {
@@ -210,11 +235,33 @@ def assistant_tools():
                     "required": ["summary", "description", "start_time", "end_time", "reminders_minutes"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "send_visitor_info",
+                "description": "Leave a message for the main user.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_name": {
+                            "type": "string",
+                            "description": "The name of the visitor."
+                        },
+                        "user_message": {
+                            "type": "string",
+                            "description": "The message of the visitor formatted in html."
+                        }
+                    },
+                    "required": ["user_name", "user_message"]
+                }
+            }
         }
     ]
     available_functions = {
         "send_email": send_email,
-        "create_google_calendar_reminder": create_google_calendar_reminder
+        "create_google_calendar_reminder": create_google_calendar_reminder,
+        "send_visitor_info": send_visitor_info
     }
 
     return tools, available_functions

@@ -184,7 +184,9 @@ function initConversation() {
                         contentType: false,
                         success: function(data) {
                             modal.style.display = "none";
-                            console.log('Image sent successfully:', data);
+                            console.log('Image sent successfully');
+                            name = data.name;
+                            document.getElementById("user_name").innerHTML = "Current user: " + name;
                             if(data.stop == "stop"){
                                 stopRecording();
                             }else{

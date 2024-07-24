@@ -55,7 +55,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
     try:
         tools = json.loads(tools)
         completion = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=messages,
             tools=tools,
             tool_choice="auto"
