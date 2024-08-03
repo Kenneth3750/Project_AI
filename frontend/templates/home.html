@@ -16,7 +16,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
+<body onload="getInfo()">
     <h1>Home</h1>
     <p>Take or upload a photo</p>
     <button id="upload-btn">Upload photo</button>
@@ -59,19 +59,35 @@
         <h4>Receptionist</h4>
         <p>Please insert down here the number of the apartment and the phone number related to the apartment. 
             You will need to provide the country code before the phone number but without the + sign. For example, Colombia code is +57, so you will need to write the number like <b>57xxxxxxxxx</b> </p>
-        <form>
 
-
+            <label for="apartment-number">Number of the apartment:</label>
             <input type="text" id="apartment-number">
+            <label for="apartment-phone">Phone number:</label>
             <input type="number" id="apartment-phone">
             <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()" >Send</button>
+        <h6>Apartments registerd</h6>
+        <div id="listApartments"></div>
 
-        </form>
+    </div>
+
+
+    <div class="personal-div">
+        <h4>Personal Assistant</h4>
+        <p>Please insert down the name and the email of the person you want to save</p>
+
+        <label for="person-name">Name:</label>
+        <input type="text" id="person-name">
+        <label for="person-email">Email:</label>
+        <input type="email" id="person-email">
+        <button class="btn btn-primary" id="send-person" onclick="sendEmailInfo()" >Send</button>
+        <h6>People registered</h6>
+        <div id="listPeopleEmail"></div>
 
     </div>
 
 
     <script src="/static/check_login.js"></script>
     <script src="/static/camera.js"></script>
+    <script src="/static/home.js"></script>
 </body>
 </html>

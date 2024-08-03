@@ -71,40 +71,17 @@ def recepcionist_tools():
 
     return tools, available_functions
 
-def encode_image(image_path):
-  with open(image_path, "rb") as image_file:
-    return base64.b64encode(image_file.read()).decode('utf-8')
-  
 
-def image_to_text(api_key, image_path):
-    base64_image = encode_image(image_path)
-    headers = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {api_key}"
-    }
-    payload = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {
-            "role": "user",
-            "content": [
-                {
-                "type": "text",
-                "text": f"{prompt}"
-                },
-                {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}"
-                }
-                }
-            ]
-            }
-        ],
-        "max_tokens": 300
-    }
-  
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    
-    return response.json().get('choices')[0].get('message').get('content')
+def add_apartment(apartment, phone, user_id):
+    json_path = os.path.join("apartment", f"user_{user_id}", "apartment.json")
+    with open(json_path, "r") as f:
+        data = json.load(f)
+        data[apartment] = phone
+    with open(json_path, "w") as f:
+        json.dump(data, f)
 
+def get_apartments(user_id):
+    json_path = os.path.join("apartment", f"user_{user_id}", "apartment.json")
+    with open(json_path, "r") as f:
+        data = json.load(f)
+    return data

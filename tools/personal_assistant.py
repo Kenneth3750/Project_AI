@@ -265,3 +265,20 @@ def assistant_tools():
     }
 
     return tools, available_functions
+
+
+def add_email(name, email, user_id):
+    json_path = os.path.join("emails", f"user_{user_id}", "users.json")
+    with open(json_path, "r") as file:
+        data = json.load(file)
+        data[name] = email
+    with open(json_path, "w") as file:
+        json.dump(data, file)
+
+def get_emails(user_id):
+    json_path = os.path.join("emails", f"user_{user_id}", "users.json")
+    with open(json_path, "r") as file:
+        data = json.load(file)
+    return data
+
+    

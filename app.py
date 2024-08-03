@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
-from services.files_manager import save_pdf
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -251,19 +251,48 @@ def pdfreader():
             return jsonify({'error': str(e)}), 500
         
 
-@app.route('/AnalysisImage', methods=['POST'])
-def analysis_threat():
-    if request.method == 'POST':
+@app.route('/apartment', methods=['GET', 'POST'])
+def apartment():
+    if request.method == "POST": 
         try:
-            file = request.files['image']
-            if file:
-                with open("current/user_1/image.jpg", "wb") as f:
-                    f.write(file.read())
-            return "yes"
+            data = request.get_json()
+            user_id = session['user_id']
+            apartment = data.get('apartmentNumber')
+            phone = data.get('apartmentPhone')
+            result = new_apartment(apartment, phone, user_id)
+            return result
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-        
-if __name__ == "__main__":
+    if request.method == "GET":
+        try:
+            user_id = session['user_id']
+            apartments_json = return_apartments(user_id)
+            return jsonify(apartments_json)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/email', methods=['POST', 'GET'])
+def email():
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            email = data.get('email')
+            user_id = session['user_id']
+            result = new_email(name, email, user_id)
+            return result
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500     
+    if request.method == "GET":
+        try:
+            user_id = session['user_id']
+            emails_json = return_emails(user_id)
+            return jsonify(emails_json)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000,
            ssl_context=('cert.pem', 'key.pem') )
    
