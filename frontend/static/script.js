@@ -215,3 +215,31 @@ function initConversation() {
             console.error('Error accessing camera:', error);
         });
 }
+
+function sendApartment(){
+
+    apartmentNumber = document.getElementById("apartmentNumber").value;
+    apartmentPhone = document.getElementById("apartmentPhone").value;
+
+    if (!apartmentNumber || !apartmentPhone){
+        alert("Please fill all the fields");
+        return  
+    }
+
+    data = {"apartmentNumber": apartmentNumber, "apartmentPhone": apartmentPhone}
+    $.ajax({
+        url: '/apartment',
+        type: 'POST',
+        data: jsonStringify(data),
+        success: function(data) {
+            console.log('Apartment sent successfully');
+            document.getElementById("apartmentNumber").value = "";
+            document.getElementById("apartmentPhone").value = "";
+            alert("Apartment sent successfully");
+        },
+        error: function(xhr, status, error) {
+            console.error('Error sending apartment:', error);
+            alert("Error sending apartment");
+        }
+    });
+}

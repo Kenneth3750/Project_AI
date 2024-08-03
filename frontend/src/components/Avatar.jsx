@@ -104,9 +104,24 @@ const corresponding = {
 let setupMode = false;
 
 export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF(
-    "/models/64f1a714fe61576b46f27ca2.glb"
-  );
+
+  const path = window.location.pathname;
+  const lastNumber = path.split('/').pop();
+
+  let gltfModel;
+  if (lastNumber === '5') {
+    gltfModel = "/models/66a40acb7b8266b463256d3a.glb";
+  } else if (lastNumber === '4') {
+    gltfModel = "/models/personal.glb";
+  } else if (lastNumber === '3') {
+    gltfModel = "/models/uni.glb"
+  } else if (lastNumber === '2') {
+    gltfModel = "/models/recepcionist.glb";
+  } else {
+    gltfModel = "/models/investigator.glb";
+  }
+
+  const { nodes, materials, scene } = useGLTF(gltfModel);
 
   const { message, messages, onMessagePlayed, chat } = useChat();
 
@@ -114,7 +129,9 @@ export function Avatar(props) {
   const { setSubtitles } = useContext(SubtitlesContext);
 
   useEffect(() => {
+  
   console.log(message);
+
   if (!message) {
     setAnimation("Idle");
     return;
@@ -429,5 +446,9 @@ export function Avatar(props) {
   );
 }
 
-useGLTF.preload("/models/64f1a714fe61576b46f27ca2.glb");
+useGLTF.preload("/models/uni.glb");
+useGLTF.preload("/models/66a40acb7b8266b463256d3a.glb");
+useGLTF.preload("/models/recepcionist.glb");
+useGLTF.preload("/models/investigator.glb");
+useGLTF.preload("/models/personal.glb");
 useGLTF.preload("/models/animations.glb");

@@ -250,6 +250,19 @@ def pdfreader():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
+
+@app.route('/AnalysisImage', methods=['POST'])
+def analysis_threat():
+    if request.method == 'POST':
+        try:
+            file = request.files['image']
+            if file:
+                with open("current/user_1/image.jpg", "wb") as f:
+                    f.write(file.read())
+            return "yes"
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000,
            ssl_context=('cert.pem', 'key.pem') )

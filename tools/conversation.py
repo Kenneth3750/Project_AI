@@ -11,7 +11,7 @@ import tiktoken
 import re
 
 max_tokens = 5000
-
+function_model = "gpt-4o-mini"
 def speak_text(text):
     engine = pyttsx3.init()
     engine.say(text)
@@ -55,7 +55,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
     try:
         tools = json.loads(tools)
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=function_model,
             messages=messages,
             tools=tools,
             tool_choice="auto"
@@ -92,7 +92,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 ) 
             try:
                 second_completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=function_model,
                     messages=messages        
                 )
                 messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})

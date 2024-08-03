@@ -22,6 +22,7 @@
         <form action="/logout"  method="post">
           <button class="btn btn-primary">LogOut</button>
         </form>
+        <button id="recordButton" class="btn btn-primary" onclick="toggleRecording()">Start </button>
       </div>
       <div id="modal" style="display: none;">
         <div id="modal-content">
@@ -33,12 +34,12 @@
                 <div id="text"></div>
             </div>
         </div>
-        <button id="recordButton" class="btn btn-primary" onclick="toggleRecording()">Start </button>
+        
     </div>
     <script src="/static/script.js"></script>
     <script src="/static/check_login.js"></script>
     
-    <script type="module" src="/compiled/main.js"></script>
+    <script type="module" src="/src/main.jsx"></script>
 
 
   </body>
