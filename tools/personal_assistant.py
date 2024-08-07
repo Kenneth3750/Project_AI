@@ -23,6 +23,16 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.events',
 
 
 
+def extract_array_from_string(input_string):
+        start = input_string.find('[')
+        end = input_string.rfind(']') + 1
+        if start != -1 and end != -1:
+            return input_string[start:end]
+        else:
+            return input_string
+
+
+
 def authenticate(user_id):
     """Autentica y retorna el servicio de la API de Google Calendar"""
     try:
@@ -176,7 +186,7 @@ def assistant_tools():
             "type": "function",
             "function": {
                 "name": "send_email",
-                "description": "Send an email to the specified email addresses.",
+                "description": "Send an email to the specified user names.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -240,7 +250,7 @@ def assistant_tools():
             "type": "function",
             "function": {
                 "name": "send_visitor_info",
-                "description": "Leave a message for the main user.",
+                "description": "Leave a message for the main user when a visitor arrives.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -269,6 +279,10 @@ def assistant_tools():
 
 def add_email(name, email, user_id):
     json_path = os.path.join("emails", f"user_{user_id}", "users.json")
+    if not os.path.exists(json_path):
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+        with open(json_path, "w") as f:
+            f.write("{}")
     with open(json_path, "r") as file:
         data = json.load(file)
         data[name] = email
@@ -280,5 +294,9 @@ def get_emails(user_id):
     with open(json_path, "r") as file:
         data = json.load(file)
     return data
+
+def erase_email_token(user_id):
+    token_path = f'tokens/token_{user_id}.json'
+    os.remove(token_path)
 
     

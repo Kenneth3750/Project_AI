@@ -106,6 +106,23 @@ function getEmailInfo(){
 }
 
 
+function deleteEmail (){
+        $.ajax({
+            url: '/email',
+            type: 'DELETE',
+            success: function(data) {
+                console.log('Email deleted successfully');
+                alert("Email deleted successfully");
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting email:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+                alert("Error deleting email: " + errorMessage);
+            }
+        })
+}
+
+
 
 
 

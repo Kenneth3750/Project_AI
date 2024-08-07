@@ -35,6 +35,19 @@ def new_visitor_alert(params, user_id, role_id):
     except Exception as e:
         return {"error": str(e)}
     
+
+def send_announcent_to_all(params, user_id, role_id):
+    try:
+        messenger = WhatsApp(os.environ.get("whatsapp_token"), phone_number_id=os.environ.get("phone_id"))
+        message = params.get("message")
+        with open(f"apartment/user_{user_id}/apartment.json", "r") as f:
+            data = json.load(f)
+            for owner_number in data.values():
+                messenger.send_message(f"{message}", owner_number)
+            return {"message": "The owners have been successfully notified."}
+
+    except Exception as e:
+        return {"error": str(e)}    
     
 
 
@@ -62,6 +75,24 @@ def recepcionist_tools():
                 }
             }
 
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "send_announcent_to_all",
+                "description": "Send a message to all the owners of the apartments",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "description": "The message the visitor wants to send to all the owners of the apartments"
+                        }
+                    },
+                    "required": ["message"]
+                }
+            }
+
         }
     ]
 
@@ -74,6 +105,10 @@ def recepcionist_tools():
 
 def add_apartment(apartment, phone, user_id):
     json_path = os.path.join("apartment", f"user_{user_id}", "apartment.json")
+    if not os.path.exists(os.path.dirname(json_path)):
+        os.makedirs(os.path.dirname(json_path))
+        with open(json_path, "w") as f:
+            json.dump({}, f)
     with open(json_path, "r") as f:
         data = json.load(f)
         data[apartment] = phone
