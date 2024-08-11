@@ -36,6 +36,19 @@ create table if not exists user_conversation_history (
 );
 
 
+create table if not exists recepcionist_reservations (
+    id int primary key auto_increment,
+    user_id int not null,
+    place enum('gym', 'pool', 'court', 'event room') not null,
+    reservation_date date not null,
+    reservation_start_time time not null,
+    reservation_end_time time not null,
+    user_name varchar(50) not null,
+    created_at date not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
+
 
 
 insert into roles (role_name) values ('Investigator');
