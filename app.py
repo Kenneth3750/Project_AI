@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -295,6 +295,17 @@ def email():
             user_id = session['user_id']
             delete_email(user_id)
             return "Email deleted successfully"
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+@app.route('/reservations', methods=['GET'])
+def reservations():
+    if request.method == "GET":
+        try:
+            user_id = session['user_id']
+            reservations = get_reservations(user_id)
+            print("reservations:", reservations)
+            return jsonify({"reservation": reservations})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 

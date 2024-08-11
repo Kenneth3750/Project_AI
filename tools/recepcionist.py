@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
+from datetime import datetime, timedelta
 import json
 
 
@@ -451,3 +452,33 @@ def get_apartments(user_id):
     with open(json_path, "r") as f:
         data = json.load(f)
     return data
+
+def list_of_reservations(user_id):
+    current_date = datetime.now().date().strftime("%Y-%m-%d") 
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT * FROM recepcionist_reservations WHERE user_id = %s AND reservation_date >= %s")
+    cursor.execute(query, (user_id, current_date))
+    reservations = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    formatted_reservations = []
+    for reservation in reservations:
+        formatted_reservation = {
+            "place": reservation[2],
+            "reservation_date": reservation[3].strftime("%Y-%m-%d"),
+            "start_time": str(reservation[4]),  
+            "end_time": str(reservation[5]),
+            "user_name": reservation[6],
+            "created_at": reservation[7].strftime("%Y-%m-%d")
+        }
+        formatted_reservations.append(formatted_reservation)
+
+    return formatted_reservations

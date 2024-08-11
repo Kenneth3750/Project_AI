@@ -48,7 +48,7 @@
                 <option value="2">Receptionist</option>
                 <option value="3">Personal Skills Trainer</option>
                 <option value="4">Personal Assistant </option>
-                <option value="5">Tutor</option>
+                <option value="5">University</option>
             </select>
 
             <button class="btn btn-primary" onclick="goToChat()">Go to chat</button>
@@ -65,8 +65,11 @@
             <label for="apartment-phone">Phone number:</label>
             <input type="number" id="apartment-phone">
             <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()" >Send</button>
-        <h6>Apartments registerd</h6>
+        <h6> <b> Apartments registerd  </b> </h6>
         <div id="listApartments"></div>
+
+        <h6> <b> Current reservations </b> </h6>
+        <div id="listReservations"></div>
 
     </div>
 

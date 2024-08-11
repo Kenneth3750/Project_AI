@@ -122,6 +122,28 @@ function deleteEmail (){
         })
 }
 
+function getReservations(){
+    $.ajax({
+        url: '/reservations',
+        type: 'GET',
+        success: function(data) {
+            console.log(data);
+            let reservations = data.reservation;
+            listReservations = document.getElementById("listReservations");
+            listReservations.innerHTML = "";
+            reservations.forEach(reservation => {
+                const { user_name, place, reservation_date, start_time, end_time } = reservation;
+                listReservations.innerHTML += `<li>User: ${user_name} - Place: ${place} - Date: ${reservation_date} - Start Time: ${start_time} - End Time: ${end_time}</li>`;
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error getting the reservations:', error);
+            const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+            alert("Error getting the reservations: " + errorMessage);
+        }
+    })
+
+}
 
 
 
@@ -132,4 +154,5 @@ function deleteEmail (){
 function getInfo(){
     getApartmentInfo();
     getEmailInfo();
+    getReservations();
 }

@@ -1,4 +1,4 @@
-from tools.recepcionist import add_apartment, get_apartments
+from tools.recepcionist import add_apartment, get_apartments, list_of_reservations
 import os
 import glob
 from tools.pdf_tools import save_pdf_tool, read_pdf_tool
@@ -51,3 +51,11 @@ def delete_email(user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error deleting the email. Please try again.")
+    
+def get_reservations(user_id):
+    try:
+        reservations = list_of_reservations(user_id)
+        return reservations
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error retrieving the reservations. Please try again.")

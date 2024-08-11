@@ -110,11 +110,11 @@ export function Avatar(props) {
 
   let gltfModel;
   if (lastNumber === '5') {
-    gltfModel = "/models/66a40acb7b8266b463256d3a.glb";
+    gltfModel = "/models/uni.glb";
   } else if (lastNumber === '4') {
     gltfModel = "/models/personal.glb";
   } else if (lastNumber === '3') {
-    gltfModel = "/models/uni.glb"
+    gltfModel = "/models/trainer.glb"
   } else if (lastNumber === '2') {
     gltfModel = "/models/recepcionist.glb";
   } else {
