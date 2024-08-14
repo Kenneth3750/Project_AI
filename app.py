@@ -308,7 +308,15 @@ def reservations():
             return jsonify({"reservation": reservations})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-
+        
+@app.route('/trainer', methods=['GET'])
+def get_summary_trainer():
+    user_id = session['user_id']
+    if os.path.exists(f"frontend/templates/trainer/user_{user_id}/summary.html"):
+        return send_from_directory(f"frontend/templates/trainer/user_{user_id}", "summary.html")
+    else:
+        return "<h1>SYou don't have a summary yet</h1>"
+        
 
 if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000,

@@ -5,6 +5,8 @@ wake_detect.wav
 audio.mp3
 audio_converted.wav
 
+__pycache__
+
 key.pem
 cert.pem
 
@@ -56,3 +58,4 @@ tokens/
 apartment/
 
 *.exe
+trainer/
