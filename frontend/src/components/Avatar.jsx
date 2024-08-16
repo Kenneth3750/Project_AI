@@ -87,6 +87,7 @@ const facialExpressions = {
     mouthSmileRight: 0.38473918302092225,
     tongueOut: 0.9618479575523053,
   },
+  
 };
 
 const corresponding = {

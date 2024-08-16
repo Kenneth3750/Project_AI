@@ -5,8 +5,10 @@ use prueba_ai;
 
 create table if not exists users (
     id int primary key auto_increment,
+    user_email varchar(100) not null unique,
+    user_full_name varchar(200) not null,
     user_name varchar(50) not null,
-    user_password varchar(50) not null
+    photo_url varchar(400) not null
 );
 
 
@@ -56,6 +58,3 @@ insert into roles (role_name) values ('Hotel');
 insert into roles (role_name) values ('Trainer');
 insert into roles (role_name) values ('PersonalAssistant');
 insert into roles (role_name) values ('Tutor');
-insert into users (user_name, user_password) values ('Kenneth', '123456');
-insert into users (user_name, user_password) values ('Jhon', '123456');
-insert into recepcionist_reservations (user_id, place, reservation_date, reservation_start_time, reservation_end_time, user_name, created_at) values (1, 'gym', '2024-08-20', '10:00:00', '11:00:00', 'Kenneth', '2021-08-11');

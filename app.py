@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory, flash
 from flask_session import Session
-import threading
 import os
 from functools import wraps
 from dotenv import load_dotenv
@@ -16,10 +15,14 @@ import json
 from redis import Redis
 from elevenlabs.client import ElevenLabs
 import mimetypes
+from authlib.integrations.flask_client import OAuth
+import authlib.integrations.base_client.errors
 from flask_cors import CORS
+from config import authorized_emails
 mimetypes.add_type('application/javascript', '.js')
 
 load_dotenv()
+
 
 os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 # client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
@@ -35,21 +38,38 @@ SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
 Session(app)
 CORS(app)
+google_client_id = os.getenv('GOOGLE_CLIENT_ID')
+google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+
+oauth = OAuth(app)
+CONF_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+google = oauth.register(
+  name='google',
+  server_metadata_url=CONF_URL,
+  # Collect client_id and client secret from google auth api
+  client_id= google_client_id,
+  client_secret = google_client_secret,
+  client_kwargs={
+    'scope': 'openid email profile'
+  }
+)
+
+
 
 
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login', next=request.url))
+        if 'google_token' not in session:
+            return redirect(url_for('before_login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
 def logout_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' in session:
+        if 'google_token' in session:
             return redirect(url_for('home'))
         return f(*args, **kwargs)
     return decorated_function
@@ -57,12 +77,53 @@ def logout_required(f):
 
 @app.route('/', methods=['GET', 'POST'])
 def root():
-    if "user_id" in session:
-        return redirect(url_for("home"))
+    if "google_token" in session:
+        try:
+            token = session['google_token']
+            user = token.get('userinfo')
+            print("User info:", user)
+            return redirect(url_for("home"))
+        except authlib.integrations.base_client.errors.MissingTokenError:
+            session.clear()
+            return redirect(url_for("before_login"))
     else:
-        return redirect(url_for("login"))
+        return redirect(url_for("before_login"))
     
+@app.route('/before', methods=['GET', 'POST'])
+def before_login():
+    if request.method == 'POST':
+        return redirect(url_for('login'))
+    return send_from_directory(app.static_folder, 'templates/login.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+@logout_required
+def login():
+    redirect_uri = url_for('authorize', _external=True)
+    google = oauth.create_client('google')
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/authorize')
+def authorize():
+    try:
+        db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+        token = oauth.google.authorize_access_token()
+        user = token.get('userinfo')
+        if user:
+            user_email = user.get('email')
+            if user_email not in authorized_emails:
+                return redirect(url_for('unauthorized'))
+            session['google_token'] = token
+            user_id = db.check_and_create_user(user)
+            if user_id:
+                session['user_id'] = user_id
+            print("User info:", user)
+            return redirect(url_for('home'))
+        else:
+            print("Failed to get user info")
+            return redirect(url_for('before_login'))
+    except Exception as e:
+        print(f"Error in authorize: {str(e)}")
+        return redirect(url_for('before_login'))
 
 @app.route('/home', methods=['GET', 'POST'])
 @login_required
@@ -82,28 +143,6 @@ def home():
             else:
                 return jsonify({'error': 'Error saving image'})
     return send_from_directory(app.static_folder, 'templates/home.html')
-    
-
-@app.route('/login', methods=['GET', 'POST'])
-@logout_required
-def login():
-    db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
-    if request.method == 'POST':
-        user_name = request.form['username']
-        password = request.form['password']
-        try:
-            user_id = db.check_user(user_name, password)
-            if user_id:
-                session['user_id'] = user_id
-                return redirect(url_for('login'))
-            else:
-                return send_from_directory(app.static_folder,'templates/login.html')
-        except Exception as e:
-            return jsonify({'error': str(e)})
-    return send_from_directory(app.static_folder,'templates/login.html')
-
-
-
 
 @app.route('/chat/<int:role_id>', methods=['GET', 'POST'])
 @login_required
@@ -184,19 +223,23 @@ def save():
         except Exception as e:
             return jsonify({'error': str(e)})
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['POST', 'GET'])
 def logout():
-    if request.method == 'POST':
+    if request.method == 'POST' or request.method == 'GET':
         session.clear()
-        return redirect(url_for('login'))
+        return redirect(url_for('before_login'))
+    
 
 @app.route('/check_session')
 def check_session():
-    return jsonify({'logged_in': 'user_id' in session})
+    return jsonify({'logged_in': 'google_token' in session})
 
 @app.route("/role_error")
 def role_error():
     return "<h1>Role not valid </h1>"
+@app.route("/unauthorized")
+def unauthorized():
+    return "<h1>You are not authorized to access this page</h1>"
 
 @app.route("/chat")
 @login_required

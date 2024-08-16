@@ -161,3 +161,34 @@ def is_valid_user(connection, username, password):
     except Exception as e:
         print(f"Error: {e}")
         return None
+    
+
+def check_user(connection, user_info):
+    try:
+        user_email = user_info.get("email")
+        cursor = connection.cursor()
+        sql = "select id from users where user_email = (%s)"
+        cursor.execute(sql, (user_email))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return False
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error checking the user. Please try again.")
+    
+def create_user(connection, user_info):
+    try:
+        cursor = connection.cursor()
+        sql = "INSERT INTO users (user_email, user_full_name, user_name, photo_url) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (user_info.get("email"), user_info.get("name"), user_info.get("given_name"), user_info.get("picture")))
+        connection.commit()
+        sql = "select id from users where user_email = (%s)"
+        cursor.execute(sql, (user_info.get("email")))
+        result = cursor.fetchone()
+        user_id = result[0]
+        return user_id
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error creating the user. Please try again.")

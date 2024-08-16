@@ -15,8 +15,8 @@ function App() {
       <Loader />
      
       <SubtitlesContext.Provider value={{ subtitles, setSubtitles }}>
-        <Leva hidden />
-        <UI />
+        <Leva  />
+        <UI hidden />
         <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
           <Experience />
         </Canvas>

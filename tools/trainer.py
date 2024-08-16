@@ -161,7 +161,7 @@ def trainer_tools():
                     "type": "function",
                     "function": {
                         "name": "generate_language_training_summary_and_tasks",
-                        "description": "This function will generate a summary of the language training and the tasks that the user has to do for his/her training.",
+                        "description": "This function will generate a summary of any (language, job interview, etc...) training and the tasks that the user has to do for his/her training.",
                         "parameters": {
                             "type": "object",
                             "properties": {
