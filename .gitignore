@@ -7,6 +7,7 @@ audio_converted.wav
 
 key.pem
 cert.pem
+/venv
 
 known_people/
 current/
