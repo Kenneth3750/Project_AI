@@ -89,16 +89,24 @@ def root():
     else:
         return redirect(url_for("before_login"))
     
-@app.route('/before', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def before_login():
     if request.method == 'POST':
         return redirect(url_for('login'))
     return send_from_directory(app.static_folder, 'templates/login.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/google_login', methods=['GET', 'POST'])
 @logout_required
 def login():
-    redirect_uri = url_for('authorize', _external=True)
+    current_url = request.url_root
+    redirect_uris = [
+        "https://127.0.0.1:5000/authorize",
+        "https://localhost:5000/authorize",
+    ]
+    redirect_uri = next((uri for uri in redirect_uris if uri.startswith(current_url)), None)
+    
+    if not redirect_uri:
+        redirect_uri = url_for('authorize', _external=True)
     google = oauth.create_client('google')
     return google.authorize_redirect(redirect_uri)
 
