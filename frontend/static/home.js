@@ -151,6 +151,8 @@ function getReservations(){
 
 
 
+
+
 function getInfo(){
     getApartmentInfo();
     getEmailInfo();

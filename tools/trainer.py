@@ -73,6 +73,50 @@ def show_me_some_image_advice_examples(params, user_id, role_id):
     except Exception as e:
         print(f"An error ocurred: {e}")
         return {"error": str(e)}
+    
+
+def generate_language_training_summary_and_tasks(params, user_id, role_id):
+    try:
+        html_content = params['html_content']
+        css_content = params['css_content']
+        
+        # Asegúrate de que el directorio de salida existe
+        output_dir = f"frontend/templates/trainer/user_{user_id}"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, "summary.html")
+
+        # Combinar HTML y CSS en un solo archivo
+        full_html_content = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Resumen de Entrenamiento de Idiomas</title>
+            <style>
+            {css_content}
+            </style>
+        </head>
+        <body>
+        {html_content}
+        </body>
+        </html>
+        """
+
+        # Escribir el contenido en el archivo HTML
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(full_html_content)
+
+        return {
+            "message": "Summary generated successfully, check it clicking on the button that is on the trainer section on home page"
+        }
+    except Exception as e:
+        print(f"An error ocurred: {e}")
+        return {"error": str(e)}
+    
+
+
+
      
 
 
@@ -112,12 +156,34 @@ def trainer_tools():
                             "required": ["user_petition"],
                         }
                     }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "generate_language_training_summary_and_tasks",
+                        "description": "This function will generate a summary of the language training and the tasks that the user has to do for his/her training.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "html_content": {
+                                    "type": "string",
+                                    "description": "The HTML content that will be used to generate the summary."
+                                },
+                                "css_content": {
+                                    "type": "string",
+                                    "description": "The CSS content that will be used to style the summary."
+                                }
+                            },
+                            "required": ["html_content", "css_content"],
+                        }
+                    }
                 }
             ]
 
     available_tools = {
         "look_advice": look_advice,
-        "show_me_some_image_advice_examples": show_me_some_image_advice_examples
+        "show_me_some_image_advice_examples": show_me_some_image_advice_examples,
+        "generate_language_training_summary_and_tasks": generate_language_training_summary_and_tasks
     }
 
     return tools, available_tools
