@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Formulario de inicio de sesión</title>
+    <title>Naia - Inicio de sesión</title>    
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .flash-messages {
-            margin-top: 20px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="../static/login.css">
 </head>
 <body>
+    <div class="background-shapes">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+        <div class="shape shape3"></div>
+    </div>
     <div class="container">
-        <h1>Login</h1>
-        
+        <h1>Naia</h1>
         <form method="post" action="/login">
-            <button type="submit" class="btn btn-primary">
-            <img src="gmail_logo.png" alt="Gmail Logo"> Iniciar sesión con Gmail
+            <button type="submit" class="login-btn">
+                <img src="../static/img/gmail.png" alt="Gmail Logo">
+                <span>Log in with Gmail</span>
             </button>
         </form>
     </div>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
