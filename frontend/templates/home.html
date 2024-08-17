@@ -15,91 +15,219 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel= "stylesheet" type= "text/css" href= "/static/camera.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body onload="getInfo()">
-    <h1>Home</h1>
-    <p>Take or upload a photo</p>
-    <button id="upload-btn">Upload photo</button>
-    <button id="take-btn">Use the camera</button>
-    <button id="erase" style="display: none;">X</button>
-    <div id="video-image-container">
-        <video id="video" autoplay></video>
-        <button id="capture-btn" style="display: none;">Take a photo</button>
-        <canvas id="canvas"></canvas>
+
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                Naia
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="user-profile">
+                            <img id="user-image" src="../static/img/no_user.png" alt="User profile">
+                            <span id="user-name">User</span>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        
+                        <form action="/logout" method="post">
+                            <li><button class="dropdown-item" href="#" >Logout</button></li>
+                        </form>
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <h1 id="welcome-message"></h1>
+    <div class="photo-section">
+        <h2>Take or upload a photo of your face</h2>
+        <div class="photo-controls">
+            <button id="upload-btn" class="btn-naia">Upload photo</button>
+            <button id="take-btn" class="btn-naia">Use camera</button>
+            <button id="erase" class="btn-naia" style="display: none;">Delete</button>
+        </div>
+        <div id="video-image-container">
+            <video id="video" autoplay style="display: none;"></video>
+            <img id="myImage" style="display: none;"/>
+            <button id="capture-btn" class="btn-naia" style="display: none;">Take photo</button>
+        </div>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <div class="image-preview">
+            <input type="text" id="person_name" placeholder="Enter your name">
+            <button id="send" class="btn-naia">Send image</button>
+        </div>
     </div>
 
-    <img id="myImage" style="display: none;"/>
-    <h4>Put your name here</h4>
-    <input type="text" id="person_name">
+  
 
-    <div class="container" style="display: flex;">
-        <button id="send" class="btn btn-primary">Send image</button>
-
-
-        <form action="/logout" method="post">
-            <button class="btn btn-primary">LogOut</button>
-        </form>
-    </div>
-
-    <div>
-     
-            <select id="select-role" name="select-role">
-                <option value="1" selected>Investigator</option>
+    <div class="role-selection-section">
+        <h2 class="text-center mb-4">Choose Your Avatar's Role</h2>
+        <p class="text-center mb-4">Select a role for the AI avatar to assist you. Each role offers unique capabilities to enhance your experience.</p>
+        
+        <div class="role-options">
+            <div class="role-option">
+                <i class="fas fa-search"></i>
+                <h3>Investigator</h3>
+                <p>Research and analyze information</p>
+            </div>
+            <div class="role-option">
+                <i class="fas fa-concierge-bell"></i>
+                <h3>Receptionist</h3>
+                <p>Manage appointments and visitor information</p>
+            </div>
+            <div class="role-option">
+                <i class="fas fa-dumbbell"></i>
+                <h3>Personal Skills Trainer</h3>
+                <p>Enhance your personal and professional skills</p>
+            </div>
+            <div class="role-option">
+                <i class="fas fa-tasks"></i>
+                <h3>Personal Assistant</h3>
+                <p>Help with daily tasks and organization</p>
+            </div>
+            <div class="role-option">
+                <i class="fas fa-university"></i>
+                <h3>University Guide</h3>
+                <p>Navigate academic life and resources</p>
+            </div>
+        </div>
+    
+        <div class="role-selection-controls">
+            <select id="select-role" name="select-role" class="form-select">
+                <option value="" disabled selected>Select a role</option>
+                <option value="1">Investigator</option>
                 <option value="2">Receptionist</option>
                 <option value="3">Personal Skills Trainer</option>
-                <option value="4">Personal Assistant </option>
-                <option value="5">University</option>
+                <option value="4">Personal Assistant</option>
+                <option value="5">University Guide</option>
             </select>
-
-            <button class="btn btn-primary" onclick="goToChat()">Go to chat</button>
-
+            <button class="btn btn-primary btn-lg" onclick="goToChat()">Start Conversation</button>
+        </div>
     </div>
 
-    <div class="recepcionist-div">
-        <h4>Receptionist</h4>
-        <p>Please insert down here the number of the apartment and the phone number related to the apartment. 
-            You will need to provide the country code before the phone number but without the + sign. For example, Colombia code is +57, so you will need to write the number like <b>57xxxxxxxxx</b> </p>
+    <div class="role-accordions">
+        <div class="role-accordion">
+            <div class="role-header" onclick="toggleAccordion(this)">
+                <i class="fas fa-chevron-right"></i>
+                <span>Receptionist</span>
+            </div>
+            <div class="role-content">
+                <h4>Receptionist Dashboard</h4>
+                <div class="receptionist-form">
+                    <p>Register new apartments and their contact numbers. Please include the country code without the '+' sign (e.g., for Colombia, use 57xxxxxxxxx).</p>
+                    <div class="form-group">
+                        <label for="apartment-number">Apartment Number:</label>
+                        <input type="text" id="apartment-number" class="form-control" placeholder="e.g., 101">
+                    </div>
+                    <div class="form-group">
+                        <label for="apartment-phone">Phone Number:</label>
+                        <input type="tel" id="apartment-phone" class="form-control" placeholder="e.g., 573001234567">
+                    </div>
+                    <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()">Register Apartment</button>
+                </div>
+                <div class="receptionist-info">
+                    <div class="info-section">
+                        <h5>Registered Apartments</h5>
+                        <ul id="listApartments" class="list-group"></ul>
+                    </div>
+                    <div class="info-section">
+                        <h5>Current Reservations</h5>
+                        <ul id="listReservations" class="list-group"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="role-accordion">
+            <div class="role-header" onclick="toggleAccordion(this)">
+                <i class="fas fa-chevron-right"></i>
+                <span>Personal Assistant</span>
+            </div>
+            <div class="role-content">
+                <h4>Personal Assistant Dashboard</h4>
+                <div class="assistant-form">
+                    <p>Register contacts for your personal assistant to manage. Enter the name and email of the person you want to add.</p>
+                    <div class="form-group">
+                        <label for="person-name">Name:</label>
+                        <input type="text" id="person-name" class="form-control" placeholder="e.g., John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="person-email">Email:</label>
+                        <input type="email" id="person-email" class="form-control" placeholder="e.g., john.doe@example.com">
+                    </div>
+                    <button class="btn btn-primary" id="send-person" onclick="sendEmailInfo()">Add Contact</button>
+                </div>
+                <div class="assistant-info">
+                    <h5>Registered Contacts</h5>
+                    <ul id="listPeopleEmail" class="list-group"></ul>
+                </div>
+                <div class="assistant-actions">
+                    <p>To update the email used by your personal assistant, click the button below. After changing, go to the chat and use any function to update the email.</p>
+                    <button class="btn btn-secondary" id="change-email" onclick="deleteEmail()">Update Assistant Email</button>
+                </div>
+            </div>
+        </div>
+    
+        <div class="role-accordion">
+            <div class="role-header" onclick="toggleAccordion(this)">
+                <i class="fas fa-chevron-right"></i>
+                <span>Personal Skills Trainer</span>
+            </div>
+            <div class="role-content">
+                <h4>Personal Skills Trainer</h4>
+                <div class="trainer-info">
+                    <p>Enhance your personal and professional skills with our AI-powered trainer. Focus on language learning and track your progress over time.</p>
+                    <div class="feature-list">
+                        <div class="feature">
+                            <i class="fas fa-language"></i>
+                            <span>Language Practice</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Progress Tracking</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>Personalized Learning</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-section">
+                    <p>View a comprehensive summary of your recent language training sessions, including performance metrics and areas for improvement.</p>
+                    <button class="btn btn-primary" id="get-summary" onclick="window.location.href='/trainer'">
+                        <i class="fas fa-file-alt"></i> Get Session Summary
+                    </button>
+                </div>
+            </div>
+        </div>
 
-            <label for="apartment-number">Number of the apartment:</label>
-            <input type="text" id="apartment-number">
-            <label for="apartment-phone">Phone number:</label>
-            <input type="number" id="apartment-phone">
-            <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()" >Send</button>
-        <h6> <b> Apartments registerd  </b> </h6>
-        <div id="listApartments"></div>
-
-        <h6> <b> Current reservations </b> </h6>
-        <div id="listReservations"></div>
-
-    </div>
-
-
-    <div class="personal-div">
-        <h4>Personal Assistant</h4>
-        <p>Please insert down the name and the email of the person you want to save</p>
-
-        <label for="person-name">Name:</label>
-        <input type="text" id="person-name">
-        <label for="person-email">Email:</label>
-        <input type="email" id="person-email">
-        <button class="btn btn-primary" id="send-person" onclick="sendEmailInfo()" >Send</button>
-        <h6>People registered</h6>
-        <div id="listPeopleEmail"></div>
-        <p>If you want to change the email used for the personal assistant click here, 
-            then go to the chat and call any of the functions to update the email</p>
-        <button class="btn btn-primary" id="change-email" onclick="deleteEmail()" >Change email</button>
-
-    </div>
-
-
-    <div class="trainer-div">
-        <h4>Personal Skills Trainer</h4>
-        <p>Click the button in order to see your last language session summary</p>
-        <button class="btn btn-primary" id="get-summary" onclick="window.location.href='/trainer'" >Get summary</button>
     </div>
 
 
     <script src="/static/camera.js"></script>
     <script src="/static/home.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script>
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl)
+        })
+        function toggleAccordion(header) {
+            header.classList.toggle('active');
+            var content = header.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+</script>
 </body>
 </html>

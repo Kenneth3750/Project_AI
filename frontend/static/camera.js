@@ -4,16 +4,43 @@ const takeBtn = document.getElementById('take-btn');
 const erase = document.getElementById('erase');
 const upload = document.getElementById('upload-btn');
 const myImage = document.getElementById('myImage');
+const videoImageContainer = document.getElementById('video-image-container');
 let reader;
 let image;
 
+// Function to stop the camera
+function stopCamera() {
+    if (video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach(function(track) {
+            track.stop();
+        });
+    }
+    video.srcObject = null;
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    closeCameraBtn.style.display = 'none';
+}
+
+// New button to close the camera
+const closeCameraBtn = document.createElement('button');
+closeCameraBtn.textContent = 'Close camera';
+closeCameraBtn.className = 'btn-naia';
+closeCameraBtn.style.display = 'none';
+videoImageContainer.appendChild(closeCameraBtn);
+
+closeCameraBtn.addEventListener('click', () => {
+    stopCamera();
+    erase.style.display = 'none';
+});
+
 takeBtn.addEventListener('click', () => {
-    // Show the video element
     video.style.display = 'block';
     erase.style.display = 'inline';
-    video.style.width = '100%';
     captureBtn.style.display = 'block';
-    // Request access to the camera
+    closeCameraBtn.style.display = 'inline';
+    myImage.style.display = 'none';
+    
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
@@ -23,41 +50,32 @@ takeBtn.addEventListener('click', () => {
         });
 });
 
-
-
-// Capturar la foto cuando se hace clic en el botón
 captureBtn.addEventListener('click', () => {
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
 
-    // Ajustar el tamaño del canvas al tamaño del video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
-    // Dibujar el video en el canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Eliminar la imagen anterior si existe
     const previousImage = document.getElementById('captured-image');
     if (previousImage) {
         previousImage.remove();
     }
 
-    // Mostrar la imagen capturada en pantalla
     const image = new Image();
-    myImage.style.display = 'block';
     image.src = canvas.toDataURL();
     image.id = 'captured-image';
     myImage.src = image.src;
+    
+    stopCamera();
+    myImage.style.display = 'block';
 });
 
 document.getElementById('send').addEventListener('click', () => {
-
     const personName = document.getElementById('person_name').value;
-    console.log(myImage.src)
-    console.log(personName)
-    if ( myImage.style.display !== "none"  && personName !== "") {
-        // Convertir la URL de datos en un Blob
+    
+    if (myImage.style.display !== "none" && personName !== "") {
         const dataURL = myImage.src;
         const byteString = atob(dataURL.split(',')[1]);
         const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -68,12 +86,10 @@ document.getElementById('send').addEventListener('click', () => {
         }
         const blob = new Blob([arrayBuffer], {type: mimeString});
 
-        // Crear objeto FormData con la imagen y el nombre de la persona
         const formData = new FormData();
         formData.append('image', blob);
         formData.append('personName', personName);
 
-        // Enviar los datos al servidor usando AJAX de jQuery
         $.ajax({
             url: '/home',
             type: 'POST',
@@ -81,19 +97,22 @@ document.getElementById('send').addEventListener('click', () => {
             processData: false,
             contentType: false,
             success: function(data) {
-                console.log('Imagen enviada correctamente:', data);
+                console.log('Image sent successfully:', data);
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    alert('Imagen enviada correctamente.');
+                    alert('Image sent successfully.');
+                    stopCamera();
+                    myImage.style.display = 'none';
+                    erase.style.display = 'none';
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Error al enviar la imagen:', error);
+                console.error('Error sending the image:', error);
             }
-        })
-    }else{
-        alert('Por favor, capture una imagen y escriba el nombre de la persona.');
+        });
+    } else {
+        alert('Please capture an image and enter your name.');
     }
 });
 
@@ -102,57 +121,35 @@ function goToChat() {
     window.location.href = '/chat/' + role;
 }
 
-
 erase.addEventListener('click', () => {
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
+    
     const previousImage = document.getElementById('captured-image');
     if (previousImage) {
         previousImage.remove();
     }
 
-
-
-    if (video.srcObject) {
-        const tracks = video.srcObject.getTracks();
-        tracks.forEach(function(track) {
-            track.stop();
-        });
-    }
-
-    video.srcObject = null;
+    stopCamera();
     myImage.src = "";
     myImage.style.display = 'none';
-    video.style.display = 'none';
-    captureBtn.style.display = 'none';
-
     erase.style.display = 'none';
 });
 
-
 upload.addEventListener('click', () => {
-
     const previousImage = document.getElementById('captured-image');
     if (previousImage) {
         previousImage.remove();
     }
 
-
-    if (video.srcObject) {
-        const tracks = video.srcObject.getTracks();
-        tracks.forEach(function(track) {
-            track.stop();
-        });
-    }
-
-    video.srcObject = null;
-
+    stopCamera();
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/png, image/jpeg';
     erase.style.display = 'inline';
+    
     fileInput.onchange = () => {
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -163,13 +160,13 @@ upload.addEventListener('click', () => {
             image.id = 'captured-image';
             myImage.style.display = 'block';
             myImage.src = image.src;
+            
             image.onload = () => {
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
 
                 canvas.width = image.width;
                 canvas.height = image.height;
-
                 context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
                 const dataURL = canvas.toDataURL(file.type);
@@ -185,7 +182,6 @@ upload.addEventListener('click', () => {
                 const formData = new FormData();
                 formData.append('image', blob);
                 formData.append('personName', personName);
-                const lastImage = document.getElementById('captured-image');
             };
 
             fileInput.remove();
@@ -196,8 +192,3 @@ upload.addEventListener('click', () => {
 
     fileInput.click();
 });
-
-
-
-
-

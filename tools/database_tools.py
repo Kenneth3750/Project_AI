@@ -192,3 +192,18 @@ def create_user(connection, user_info):
     except Exception as e:
         print(f"Error: {e}")
         raise Exception("There was an error creating the user. Please try again.")
+    
+def get_user(connection, user_id):
+    try:
+        cursor = connection.cursor()
+        sql = "select user_full_name, photo_url, user_name from users where id = (%s)"
+        cursor.execute(sql, (user_id))
+        result = cursor.fetchone()
+        print(f"Resultado de la db: {result}")
+        if result:
+            return result[0], result[1], result[2]
+        else:
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error getting the user information. Please try again.")

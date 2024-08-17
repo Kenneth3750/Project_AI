@@ -273,6 +273,15 @@ def serve_animations(filename):
 def serve_jsx(filename):
     return send_from_directory(os.path.join(app.static_folder, 'src'), filename, mimetype='application/javascript')
 
+@app.route('/user-info')
+def get_user_info():
+    try:
+        user_id = session['user_id']
+        db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
+        full_name, image_url, name = db.get_user_info(user_id)
+        return jsonify({"name": full_name, "image": image_url, "given_name": name})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/audio_prueba', methods=['POST'])
 def audio_prueba():

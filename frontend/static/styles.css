@@ -16,3 +16,248 @@
     padding: 20px;
     border-radius: 10px;
 }
+
+
+
+
+.navbar {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #4a4a4a;
+}
+.user-profile {
+    display: flex;
+    align-items: center;
+}
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 4px rgba(0,0,0,.1);
+}
+.user-profile span {
+    font-weight: 500;
+    color: #4a4a4a;
+}
+.dropdown-menu {
+    box-shadow: 0 2px 10px rgba(0,0,0,.1);
+}
+.dropdown-item:hover {
+    background-color: #f1f3f5;
+}
+
+#welcome-message {
+    font-weight: 500;
+    color: #4a4a4a;
+    margin-top: 10px;
+}
+
+
+.role-selection-section {
+    background-color: #f8f9fa;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+.role-options {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+.role-option {
+    text-align: center;
+    padding: 1rem;
+    margin: 1rem;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    width: 200px;
+}
+.role-option:hover {
+    transform: translateY(-5px);
+}
+.role-option i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+.role-option h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+.role-option p {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+.role-selection-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+#select-role {
+    max-width: 300px;
+}
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.role-accordions {
+    margin-top: 2rem;
+}
+.role-accordion {
+    border: 1px solid #ddd;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+.role-header {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.role-header i {
+    margin-right: 1rem;
+    transition: transform 0.3s ease;
+}
+.role-header.active i {
+    transform: rotate(90deg);
+}
+.role-content {
+    display: none;
+    padding: 1rem;
+}
+.role-content.active {
+    display: block;
+}
+
+
+
+
+
+
+.role-content {
+    background-color: #f8f9fa;
+    border-radius: 0 0 4px 4px;
+}
+.receptionist-form {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 0.5rem 1rem;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+.receptionist-info {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.info-section {
+    flex: 1;
+    min-width: 250px;
+    margin: 0 1rem 1rem 0;
+}
+.list-group {
+    list-style-type: none;
+    padding: 0;
+}
+.list-group li {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+
+.role-content {
+    background-color: #f8f9fa;
+    border-radius: 0 0 4px 4px;
+    padding: 1.5rem;
+}
+.trainer-info, .summary-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+.feature-list {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1rem;
+}
+.feature {
+    text-align: center;
+    padding: 1rem;
+}
+.feature i {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+.feature span {
+    display: block;
+    font-weight: bold;
+}
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+.btn i {
+    margin-right: 0.5rem;
+}

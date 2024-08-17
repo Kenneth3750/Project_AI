@@ -1,4 +1,4 @@
-from tools.database_tools import database_connection,  save_conversation, get_last_conversation_resume, save_conversation_history, is_valid_user, check_user, create_user
+from tools.database_tools import database_connection,  save_conversation, get_last_conversation_resume, save_conversation_history, is_valid_user, check_user, create_user, get_user
 from tools.conversation import generate_response,  make_resume_prompt
 import json
 class Database:
@@ -60,4 +60,10 @@ class Database:
             user_id = create_user(connection, user_info)
         connection.close()
         return user_id
+    
+    def get_user_info(self, user_id):
+        connection = self.connect()
+        full_name, image_url, name = get_user(connection, user_id)
+        connection.close()
+        return full_name, image_url, name
 
