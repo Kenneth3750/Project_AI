@@ -2,6 +2,7 @@
 from tools.conversation import  generate_response, check_conversation_length, make_resume_prompt, get_role_prompt, generate_response_with_tools
 from tools.conversation import lipSync, audio_file_to_base64, read_json_transcript
 import json
+import random
 
 
 
@@ -89,11 +90,13 @@ def create_voice(client, user_id, text ):
         for i, message in enumerate(messages):
             # generate audio file
             text_input = message['text']
+            animations = ["Talking_0", "Talking_2", "Crying", "Laughing", "Rumba", "Idle", "Terrified", "Angry", "standing_greeting", "raising_two_arms_talking", "put_hand_on_chin", "one_arm_up_talking", "happy_expressions"]
             #create_voice_file(client, user_id, text_input, i)
             # generate lipsync
             #lipSync(user_id, i)
-            if message['animation'] == "smile":
-                message["animation"] = "Talking_1"
+            if message['animation'] not in animations:
+                animations_random = ["Talking_0", "Talking_2"]
+                message['animation'] = random.choice(animations_random)
     
             message['audio'] = None
             message['lipsync'] = read_json_transcript(f"audio/default.json")

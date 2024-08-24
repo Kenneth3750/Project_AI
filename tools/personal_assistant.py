@@ -12,6 +12,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from tools.database_tools import database_connection
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -129,11 +130,11 @@ def send_email(params, user_id, role_id):
         names = params['names']
         subject = params['subject']
         message = params['message']
-        email_file_path = f"emails/user_{user_id}/email.txt"
+               
+        users = get_emails(user_id)
+        users = json.dumps(users)
 
-        with open(f'emails/user_{user_id}/users.json', 'r') as file:
-            users = json.load(file)
-            users = json.dumps(users)
+
         messages = [{"role": "system", "content": f"Return only an array of strings in which you relate each name on a list of names with emails on a json. I want you to return the emails of the users that are most likely to be the same. Example, i can hve on the json the name christian, but the text model maybe wrote crsitian, so i want you to know that, except for the little mistakes, the names are the same."},
                     {"role": "user", "content": f"The names of the users are {names} and the user emails are {users} " }]
         completion = generate_response(client, messages)
@@ -278,22 +279,56 @@ def assistant_tools():
 
 
 def add_email(name, email, user_id):
-    json_path = os.path.join("emails", f"user_{user_id}", "users.json")
-    if not os.path.exists(json_path):
-        os.makedirs(os.path.dirname(json_path), exist_ok=True)
-        with open(json_path, "w") as f:
-            f.write("{}")
-    with open(json_path, "r") as file:
-        data = json.load(file)
-        data[name] = email
-    with open(json_path, "w") as file:
-        json.dump(data, file)
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "Select email_json from assistant_emails_registerd where user_id = %s"
+    cursor.execute(sql, (user_id,))
+    result = cursor.fetchone()
+    if result:
+        emails = json.loads(result[0])
+        emails[name] = email
+        emails = json.dumps(emails)
+        sql = "UPDATE assistant_emails_registerd SET email_json = %s WHERE user_id = %s"
+        cursor.execute(sql, (emails, user_id))
+        connection.commit()
+    else:
+        emails = {name: email}
+        emails = json.dumps(emails)
+        sql = "INSERT INTO assistant_emails_registerd (user_id, email_json) VALUES (%s, %s)"
+        cursor.execute(sql, (user_id, emails))
+        connection.commit()
+    cursor.close()
+    connection.close()
 
 def get_emails(user_id):
-    json_path = os.path.join("emails", f"user_{user_id}", "users.json")
-    with open(json_path, "r") as file:
-        data = json.load(file)
-    return data
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "Select email_json from assistant_emails_registerd where user_id = %s"
+    cursor.execute(sql, (user_id,))
+    result = cursor.fetchone()
+    if result:
+        emails = json.loads(result[0])
+        cursor.close()
+        connection.close()
+        return emails
+    else:
+        cursor.close()
+        connection.close()
+        return {}
 
 def erase_email_token(user_id):
     token_path = f'tokens/token_{user_id}.json'

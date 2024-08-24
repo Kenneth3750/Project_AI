@@ -17,13 +17,13 @@ function sendApartment() {
             console.log('Apartment registered successfully');
             document.getElementById("apartment-number").value = "";
             document.getElementById("apartment-phone").value = "";
-            alert("Apartment registered successfully");
+            showNotification("Apartment registered successfully", "success");
             getApartmentInfo();
         },
         error: function(xhr, status, error) {
             console.error('Error registering apartment:', error);
             const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
-            alert("Error registering apartment: " + errorMessage);
+            showNotification("Error registering apartment: " + errorMessage, "error");
         }
     });
 }
@@ -44,7 +44,7 @@ function getApartmentInfo() {
         },
         error: function(xhr, status, error) {
             console.error('Error getting apartment info:', error);
-            alert("Error retrieving apartment information");
+            showNotification("Error retrieving apartment information", "error");
         }
     });
 }
@@ -71,7 +71,7 @@ function getReservations() {
         },
         error: function(xhr, status, error) {
             console.error('Error getting reservations:', error);
-            alert("Error retrieving reservation information");
+            showNotification("Error retrieving reservations", "error");
         }
     });
 }

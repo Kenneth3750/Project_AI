@@ -26,18 +26,19 @@ def new_visitor_alert(params, user_id, role_id):
         message = params.get("message")
         apartment = params.get("apartment")
 
-        with open(f"apartment/user_{user_id}/apartment.json", "r") as f:
-            data = json.load(f)
-            owner_number = data.get(apartment)
-            if owner_number:
-                messenger.send_message(f"{message}", owner_number)
-                messenger.send_image(
-                    image=media_id,
-                    recipient_id=owner_number,
-                    link=False
-                )
-                return {"message": "The owner has been successfully notified. Inform the visitor about that"}       
-            return {"error": "The apartment number is not valid. Please check the number and try again"}
+        data = get_apartments(user_id)
+        data = json.loads(data)
+  
+        owner_number = data.get(apartment)
+        if owner_number:
+            messenger.send_message(f"{message}", owner_number)
+            messenger.send_image(
+                image=media_id,
+                recipient_id=owner_number,
+                link=False
+            )
+            return {"message": "The owner has been successfully notified. Inform the visitor about that"}       
+        return {"error": "The apartment number is not valid. Please check the number and try again"}
         
     except Exception as e:
         return {"error": str(e)}
@@ -47,11 +48,11 @@ def send_announcent_to_all(params, user_id, role_id):
     try:
         messenger = WhatsApp(os.environ.get("whatsapp_token"), phone_number_id=os.environ.get("phone_id"))
         message = params.get("message")
-        with open(f"apartment/user_{user_id}/apartment.json", "r") as f:
-            data = json.load(f)
-            for owner_number in data.values():
-                messenger.send_message(f"{message}", owner_number)
-            return {"message": "The owners have been successfully notified."}
+        data = get_apartments(user_id)
+        data = json.loads(data)
+        for owner_number in data.values():
+            messenger.send_message(f"{message}", owner_number)
+        return {"message": "The owners have been successfully notified."}
 
     except Exception as e:
         return {"error": str(e)}  
@@ -111,7 +112,7 @@ def insert_reservation(params, user_id, role_id):
         print("Current reservations:", current_reservartions)
         messages = [
             {"role": "system", "content": f"""You are a db manager. 
-            Your labour is to translate a user petition into a SQL insert only query. The table is called recepcionist_reservations and has the following columns:\n
+            Your only labour is to see if the reservation that the user wants to do overlaps with another reservation. The table is called recepcionist_reservations and has the following columns:\n
             create table if not exists recepcionist_reservations (
                 id int primary key auto_increment,
                 user_id int not null,
@@ -123,11 +124,12 @@ def insert_reservation(params, user_id, role_id):
                 created_at date not null,
                 foreign key (user_id) references users(id) on delete cascade
             );
-            You have to make sure that the reservation does not overlap with any other reservation for the same place and date. Here are the current reservations for the date {date}:\n
-            You must return a json with the key 'query' and the value the SQL query. 
-            If the user reservation overlaps with another reservation, you must return a json with the key 'error' and the value 'The reservation overlaps with another reservation. Please select another date or time, the times that are already reserved are ...'.\n
-            An user cannot have more than 1 reservation for the same place and date. You can only update the reservation if the user wants to change the date or time of the reservation.\n
-            {current_reservartions} 
+            the current reservations are:\n
+            {current_reservartions}\n
+
+            If the date given by the user overlaps with another reservation, you must return a json with the key 'error' and the value 'The reservation overlaps with another reservation. Please select another date or time, the times that are already reserved are ...'.\n
+            If the date given by the user does not overlap with another reservation, you must return a json with the key 'query' and the value the SQL query to insert the reservation.\n
+            
             
              """
             },
@@ -436,22 +438,49 @@ def recepcionist_tools():
 
 
 def add_apartment(apartment, phone, user_id):
-    json_path = os.path.join("apartment", f"user_{user_id}", "apartment.json")
-    if not os.path.exists(os.path.dirname(json_path)):
-        os.makedirs(os.path.dirname(json_path))
-        with open(json_path, "w") as f:
-            json.dump({}, f)
-    with open(json_path, "r") as f:
-        data = json.load(f)
-        data[apartment] = phone
-    with open(json_path, "w") as f:
-        json.dump(data, f)
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT apartment_json from recepcionist_apartments WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    if data:
+        apartments = json.loads(data[0])
+        apartments[apartment] = phone
+        query = ("UPDATE recepcionist_apartments SET apartment_json = %s WHERE user_id = %s")
+        cursor.execute(query, (json.dumps(apartments), user_id))
+    else:
+        apartments = {apartment: phone}
+        query = ("INSERT INTO recepcionist_apartments (user_id, apartment_json) VALUES (%s, %s)")
+        cursor.execute(query, (user_id, json.dumps(apartments)))
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 def get_apartments(user_id):
-    json_path = os.path.join("apartment", f"user_{user_id}", "apartment.json")
-    with open(json_path, "r") as f:
-        data = json.load(f)
-    return data
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT apartment_json from recepcionist_apartments WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    if data:
+        return json.loads(data[0])
+    return {}
 
 def list_of_reservations(user_id):
     current_date = datetime.now().date().strftime("%Y-%m-%d") 

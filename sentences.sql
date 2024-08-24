@@ -50,6 +50,20 @@ create table if not exists recepcionist_reservations (
     foreign key (user_id) references users(id) on delete cascade
 );
 
+create table if not exists assistant_emails_registerd (
+    id int primary key auto_increment,
+    user_id int not null,
+    email_json json not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
+create table if not exists recepcionist_apartments (
+    id int primary key auto_increment,
+    user_id int not null,
+    apartment_json json not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
 
 
 

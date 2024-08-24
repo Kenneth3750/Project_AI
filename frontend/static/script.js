@@ -13,8 +13,15 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
-document.getElementById("role").innerHTML = "Role: " + getRoleId();
-
+document.addEventListener('DOMContentLoaded', () => {
+    modal = document.getElementById("modal");
+    if (modal){
+        console.log('Modal:', modal);
+    }
+    else{
+        console.log('No hay modal');
+    }
+});
 const synth = window.speechSynthesis;
 
 navigator.getUserMedia = (navigator.getUserMedia ||
@@ -70,7 +77,6 @@ recognition.onresult = (e) => {
         recognition.stop();
         document.getElementById("status").innerHTML = `Status: AI is thinking...`;
 
-        let formData = JSON.stringify({ "message": transcript})
         if (conversation){
             const event = new CustomEvent('chat', { detail: transcript });
             window.dispatchEvent(event);
@@ -93,30 +99,25 @@ window.stopRecognition = function() {
 
 recognition.onerror = (e) => {
     console.error('Error en el reconocimiento de voz:', e.error);
-    toggleRecording();
+    
 }
 
 
 
 
-function toggleRecording() {
+window.toggleRecording = function() {
     let boton = document.getElementById("recordButton");
 
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
-        boton.dataset.recording = "true";
-        boton.dataset.conversation = "true";
-        boton.textContent = "Stop conversation";
-        boton.className = "btn btn-danger";
         conversation = true;
         initConversation();
     } else {
-        boton.dataset.recording = "false";
-        boton.textContent = "Start conversation";
-        boton.className = "btn btn-primary";
-        boton.dataset.conversation = "false";
         conversation = false;
         stopRecording();
     }
+    window.dispatchEvent(new CustomEvent('recordingStatusChanged', { 
+        detail: { isRecording: conversation } 
+    }));
 }
 
 
@@ -130,6 +131,10 @@ function stopRecording() {
 
     const event = new CustomEvent('chat', { detail: "goodbye" });
     window.dispatchEvent(event);
+
+    window.dispatchEvent(new CustomEvent('recordingStatusChanged', { 
+        detail: { isRecording: false } 
+    }));
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
@@ -155,7 +160,7 @@ function getRoleId() {
 }
 
 function initConversation() {
-    modal.style.display = "block";
+    window.dispatchEvent(new CustomEvent('modalVisibilityChanged', { detail: { visible: true } }));
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
 
@@ -183,7 +188,7 @@ function initConversation() {
                         processData: false,
                         contentType: false,
                         success: function(data) {
-                            modal.style.display = "none";
+                            window.dispatchEvent(new CustomEvent('modalVisibilityChanged', { detail: { visible: false } }));
                             console.log('Image sent successfully');
                             name = data.name;
                             document.getElementById("user_name").innerHTML = "Current user: " + name;
@@ -199,7 +204,7 @@ function initConversation() {
                             }
                         },
                         error: function(xhr, status, error) {
-                            modal.style.display = "none";
+                            window.dispatchEvent(new CustomEvent('modalVisibilityChanged', { detail: { visible: false } }));
                             console.error('Error sending image:', error);
                             stopRecording();
                         }
@@ -215,3 +220,7 @@ function initConversation() {
             console.error('Error accessing camera:', error);
         });
 }
+
+window.getRoleId = getRoleId;
+window.initConversation = initConversation;
+window.stopRecording = stopRecording;
