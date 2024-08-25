@@ -11,6 +11,15 @@ export const UI = ({ hidden, ...props }) => {
   const [uploadedPdf, setUploadedPdf] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [hasNewContent, setHasNewContent] = useState(false);
+  const [storedPdfName, setStoredPdfName] = useState("");
+
+  useEffect(() => {
+    const storedName = window.localStorage.getItem("pdfFilename");
+    if (storedName) {
+      setStoredPdfName(storedName);
+    }
+  }, []);
 
   useEffect(() => {
     const handleRecordingChange = (event) => {
@@ -40,7 +49,12 @@ export const UI = ({ hidden, ...props }) => {
     if (displayResponses && displayResponses.length > 0) {
       const htmlContent = displayResponses.map(response => response.display || response.fragment).join('<br>');
       setInfoContent(htmlContent);
-      setIsOpen(true);
+      
+      if (window.innerWidth < 640) { // 640px is the 'sm' breakpoint in Tailwind
+        setHasNewContent(true);
+      } else {
+        setIsOpen(true);
+      }
     }
   }, [displayResponses]);
 
@@ -72,6 +86,8 @@ export const UI = ({ hidden, ...props }) => {
         setPdfError(errorData.error || "An error occurred while uploading the PDF.");
       } else {
         setUploadedPdf(file);
+        setStoredPdfName(file.name);
+        window.localStorage.setItem("pdfFilename", file.name);
         setPdfError("");
       }
     } catch (error) {
@@ -81,6 +97,7 @@ export const UI = ({ hidden, ...props }) => {
 
   const toggleContent = () => {
     setIsOpen(!isOpen);
+    setHasNewContent(false);
   };
 
   if (hidden) {
@@ -90,18 +107,21 @@ export const UI = ({ hidden, ...props }) => {
   
   return (
     <>
-      {/* Contenido principal */}
-      <div className="fixed inset-0 z-10 flex flex-col justify-between p-4 pointer-events-none">
-        <div className="self-start backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto max-w-[200px]">
-          <h1 className="font-bold text-lg text-gray-800">NAIA</h1>
-          <h6 id="status" className="text-xs font-semibold mt-1 text-gray-700">Status: Sleeping...</h6>
-          <h6 id="user_name" className="text-xs text-gray-700">Current user: Unknown</h6>
-          <button
-            onClick={toggleContent}
-            className="mt-2 text-blue-500 hover:text-blue-600 rounded-md p-1 text-sm pointer-events-auto"
-          >
-            {isOpen ? "Hide Content" : "Show Content"}
-          </button>
+        {/* Contenido principal */}
+        <div className="fixed inset-0 z-10 flex flex-col justify-between p-4 pointer-events-none">
+          <div className="self-start backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto max-w-[200px] relative">
+            <h1 className="font-bold text-lg text-gray-800">NAIA</h1>
+            <h6 id="status" className="text-xs font-semibold mt-1 text-gray-700">Status: Sleeping...</h6>
+            <h6 id="user_name" className="text-xs text-gray-700">Current user: Unknown</h6>
+            <button
+              onClick={toggleContent}
+              className="mt-2 text-blue-500 hover:text-blue-600 rounded-md p-1 text-sm pointer-events-auto"
+            >
+              {isOpen ? "Hide Content" : "Show Content"}
+            </button>
+            {hasNewContent && (
+              <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></div>
+            )}
 
           {isOpen && (
             <>
@@ -125,7 +145,7 @@ export const UI = ({ hidden, ...props }) => {
                   className="mb-1 text-xs w-full"
                 />
                 {pdfError && <p className="text-red-500 text-xs">{pdfError}</p>}
-                {uploadedPdf && (
+                {(uploadedPdf || storedPdfName) && (
                   <div className="flex items-center text-xs">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -136,7 +156,7 @@ export const UI = ({ hidden, ...props }) => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.74 9L14 4.54 8 9h3v9h2V9h3z" />
                     </svg>
-                    <span className="truncate">{uploadedPdf.name}</span>
+                    <span className="truncate">{uploadedPdf ? uploadedPdf.name : storedPdfName}</span>
                   </div>
                 )}
               </div>

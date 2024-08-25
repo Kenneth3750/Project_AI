@@ -45,24 +45,7 @@
         </div>
     </nav>
     <h1 id="welcome-message"></h1>
-    <div class="photo-section">
-        <h2>Take or upload a photo of your face</h2>
-        <div class="photo-controls">
-            <button id="upload-btn" class="btn-naia">Upload photo</button>
-            <button id="take-btn" class="btn-naia">Use camera</button>
-            <button id="erase" class="btn-naia" style="display: none;">Delete</button>
-        </div>
-        <div id="video-image-container">
-            <video id="video" autoplay style="display: none;"></video>
-            <img id="myImage" style="display: none;"/>
-            <button id="capture-btn" class="btn-naia" style="display: none;">Take photo</button>
-        </div>
-        <canvas id="canvas" style="display: none;"></canvas>
-        <div class="image-preview">
-            <input type="text" id="person_name" placeholder="Enter your name">
-            <button id="send" class="btn-naia">Send image</button>
-        </div>
-    </div>
+
 
   
 
@@ -108,6 +91,25 @@
                 <option value="5">University Guide</option>
             </select>
             <button class="btn btn-primary btn-lg" onclick="goToChat()">Start Conversation</button>
+        </div>
+    </div>
+
+    <div class="photo-section">
+        <h2>Take or upload a photo of your face</h2>
+        <div class="photo-controls">
+            <button id="upload-btn" class="btn-naia">Upload photo</button>
+            <button id="take-btn" class="btn-naia">Use camera</button>
+            <button id="erase" class="btn-naia" style="display: none;">Delete</button>
+        </div>
+        <div id="video-image-container">
+            <video id="video" autoplay style="display: none;"></video>
+            <img id="myImage" style="display: none;"/>
+            <button id="capture-btn" class="btn-naia" style="display: none;">Take photo</button>
+        </div>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <div class="image-preview">
+            <input type="text" id="person_name" placeholder="Enter your name">
+            <button id="send" class="btn-naia">Send image</button>
         </div>
     </div>
 

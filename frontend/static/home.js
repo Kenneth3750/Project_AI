@@ -217,6 +217,27 @@ function logout() {
 }
 
 
+function getPdfFilename(){
+    $.ajax({
+        url: '/pdfreader',
+        type: 'GET',
+        success: function(data) {
+            console.log('Pdf filename retrieved successfully');
+            if (data.pdf_filename != null){
+                window.localStorage.setItem("pdfFilename", data.pdf_filename);
+            }else{
+                window.localStorage.setItem("pdfFilename", null);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error getting pdf filename:', error);
+            window.localStorage.setItem("pdfFilename", null);
+        }
+    });
+    console.log(window.localStorage.getItem("pdfFilename"));
+}
+
+
 
 
 
@@ -227,4 +248,5 @@ function getInfo(){
     getEmailInfo();
     getReservations();
     getUserInfo();
+    getPdfFilename();
 }

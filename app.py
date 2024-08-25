@@ -298,17 +298,31 @@ def audio_prueba():
 
     return jsonify(messages = message_response)
 
-@app.route('/pdfreader', methods=['POST'])
+@app.route('/pdfreader', methods=['POST', 'GET'])
 def pdfreader():
+    user_id = session['user_id']
     if request.method == 'POST':
         try:
             file = request.files['pdf']
-            user_id = session['user_id']
             role_id = session['role_id']
             save_pdf(user_id, file, role_id)
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    else:
+        try:
+            pdf_path = os.path.join("pdf", f"user_{user_id}", "role_1" )
+            pdf_files = [file for file in os.listdir(f"{pdf_path}") if file.endswith(".pdf")]
+            if len(pdf_files) == 1:
+                pdf_filename = pdf_files[0]
+            else:
+                pdf_filename = None
+            print("pdf_filename:", pdf_filename)
+            return jsonify({"pdf_filename": pdf_filename})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
         
 
 @app.route('/apartment', methods=['GET', 'POST'])
