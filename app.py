@@ -138,6 +138,8 @@ def authorize():
 @login_required
 def home():
     user_id = session['user_id']
+    if not user_id:
+        return redirect(url_for('before_login'))
     if request.method == 'POST':    
         file = request.files['image']
         name = request.form['personName']
@@ -151,8 +153,7 @@ def home():
                     return jsonify({'error': 'No face detected in the image'})
             else:
                 return jsonify({'error': 'Error saving image'})
-    if not user_id:
-        return redirect(url_for('logout'))
+
     return send_from_directory(app.static_folder, 'templates/home.html')
 
 @app.route('/chat/<int:role_id>', methods=['GET', 'POST'])
