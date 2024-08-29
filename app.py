@@ -150,6 +150,8 @@ def home():
                     return jsonify({'error': 'No face detected in the image'})
             else:
                 return jsonify({'error': 'Error saving image'})
+    if not user_id:
+        return redirect(url_for('logout'))
     return send_from_directory(app.static_folder, 'templates/home.html')
 
 @app.route('/chat/<int:role_id>', methods=['GET', 'POST'])
