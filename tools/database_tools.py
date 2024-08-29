@@ -11,9 +11,10 @@ def database_connection(db_data):
             db=db_data['db'],
 
         )
+
         return connection
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error en conectar a la db: {e}")
         return None
     
 
