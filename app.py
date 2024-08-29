@@ -138,6 +138,7 @@ def authorize():
 @login_required
 def home():
     if not session.get('user_id') and request.method == 'GET':
+        session.clear()
         return redirect(url_for('before_login'))
     user_id = session['user_id']
     if request.method == 'POST':    
