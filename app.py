@@ -122,6 +122,7 @@ def authorize():
                 return redirect(url_for('unauthorized'))
             session['google_token'] = token
             user_id = db.check_and_create_user(user)
+            print("User id:", user_id)
             if user_id:
                 session['user_id'] = user_id
             print("User info:", user)
