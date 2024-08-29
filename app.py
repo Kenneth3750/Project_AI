@@ -137,9 +137,9 @@ def authorize():
 @app.route('/home', methods=['GET', 'POST'])
 @login_required
 def home():
-    user_id = session['user_id']
-    if not user_id:
+    if not session.get('user_id') and request.method == 'GET':
         return redirect(url_for('before_login'))
+    user_id = session['user_id']
     if request.method == 'POST':    
         file = request.files['image']
         name = request.form['personName']
