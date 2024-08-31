@@ -50,11 +50,7 @@ def getPapers(parameters, user_id, role_id):
         new_json = []
         i=0
         for result in organic_results:
-            if "inline_links" not in result or "cited_by" not in result["inline_links"]:
-                new_json.append(f'<div><h5><strong>Paper {i+1}:</strong> {result["title"]}</h5><ul><li>{result["snippet"]}</li><li><strong>Additional info:</strong> {result["publication_info"]}</li><li><strong>Link:</strong> {result["link"]} </li></ul></div><br>')
-            else:
-                new_json.append(f'<div><h5><strong>Paper {i+1}:</strong> {result["title"]}</h5><ul><li>{result["snippet"]}</li><li><strong>Additional info:</strong> {result["publication_info"]}</li><li><strong>Link:</strong> {result["link"]} </li><li>Cited by: {result["inline_links"]["cited_by"]["total"]}</li></ul></div><br>')
-
+            new_json.append(f"<div>Paper {i}: <a href='{result['link']}' target='_blank'><span style='color: blue; text-decoration: underline;'>{result['title']}</span></a></div><br>")
             i+=1
             if i==5:
                 break
