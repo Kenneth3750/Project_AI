@@ -129,8 +129,7 @@ export function Avatar(props) {
   const [lipsync, setLipsync] = useState();
   const { setSubtitles } = useContext(SubtitlesContext);
 
-  useEffect(() => {
-  
+useEffect(() => {
   console.log(message);
 
   if (!message) {
@@ -138,25 +137,35 @@ export function Avatar(props) {
     return;
   }
 
-  if (message.audio !== null) {
-    setAnimation(message.animation);
-    setFacialExpression(message.facialExpression);
-    setLipsync(message.lipsync);
-    const audio = new Audio("data:audio/mp3;base64," + message.audio);
-    audio.play();
-    audio.onplay = () => {
+  if (audio && !audio.paused) {
+    console.log("Audio already playing, queuing message");
+    return;
+  }
+
+  const playAudio = (audioSource) => {
+    const newAudio = new Audio(audioSource);
+    newAudio.onplay = () => {
       window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
+      window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Speaking" } }));
     };
-    setAudio(audio);
-    setSubtitles(message.text); 
-    audio.onended = () => {
+    newAudio.onended = () => {
       onMessagePlayed();
       if (messages.length === 1) {
         window.initRecognition();
-        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       }
+      window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       setSubtitles('');
     };
+    setAudio(newAudio);
+    setAnimation(message.animation);
+    setFacialExpression(message.facialExpression);
+    setLipsync(message.lipsync);
+    setSubtitles(message.text);
+    newAudio.play();
+  };
+
+  if (message.audio !== null) {
+    playAudio("data:audio/mp3;base64," + message.audio);
   } else {
     const options = {
       method: 'POST',
@@ -179,28 +188,12 @@ export function Avatar(props) {
     fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', options)
       .then(response => response.blob())
       .then(blob => {
-        const audio = new Audio(URL.createObjectURL(blob));
-        audio.oncanplaythrough = () => {
-          setAnimation(message.animation);
-          setFacialExpression(message.facialExpression);
-          setLipsync(message.lipsync);
-          setSubtitles(message.text);
-          audio.play();
-          window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
-        };
-        setAudio(audio);
-        audio.onended = () => {
-          onMessagePlayed();
-          if (messages.length === 1) {
-            window.initRecognition();
-            window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
-          }
-          setSubtitles('');
-        };
+        playAudio(URL.createObjectURL(blob));
       })
       .catch(err => {
         console.error('Error:', err);
-        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));  
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
+        window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Sleeping" } }));
       });
   }
 

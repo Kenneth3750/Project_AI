@@ -394,7 +394,7 @@ def get_summary_trainer():
     if os.path.exists(f"frontend/templates/trainer/user_{user_id}/summary.html"):
         return send_from_directory(f"frontend/templates/trainer/user_{user_id}", "summary.html")
     else:
-        return "<h1>SYou don't have a summary yet</h1>"
+        return "<h1>You don't have a summary yet</h1>"
         
 
 if __name__ == "__main__":  

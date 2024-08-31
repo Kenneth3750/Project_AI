@@ -13,15 +13,10 @@ recognition.continuous = true;
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
-document.addEventListener('DOMContentLoaded', () => {
-    modal = document.getElementById("modal");
-    if (modal){
-        console.log('Modal:', modal);
-    }
-    else{
-        console.log('No hay modal');
-    }
-});
+function updateAvatarState(newState) {
+    window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: newState } }));
+  }
+
 const synth = window.speechSynthesis;
 
 navigator.getUserMedia = (navigator.getUserMedia ||
@@ -76,7 +71,7 @@ recognition.onresult = (e) => {
     if (transcript){
         recognition.stop();
         window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
-        document.getElementById("status").innerHTML = `Status: AI is thinking...`;
+        updateAvatarState("Thinking");
 
         if (conversation){
             const event = new CustomEvent('chat', { detail: transcript });
@@ -86,7 +81,7 @@ recognition.onresult = (e) => {
         else {
             recognition.stop();
             window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
-            document.getElementById("status").innerHTML = `Status: Sleeping...`;
+            updateAvatarState("Sleeping");
         }
     }
 };
@@ -94,7 +89,10 @@ recognition.onresult = (e) => {
 window.initRecognition = function() {
     if (conversation){
         recognition.start();
-        document.getElementById("status").innerHTML = `Status: Listening...`;
+        updateAvatarState("Listening");
+    }
+    else{
+        updateAvatarState("Sleeping");
     }
   };
   
@@ -132,7 +130,7 @@ window.toggleRecording = function() {
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
     recognition.stop();
-    document.getElementById("status").innerHTML = `Status: Sleeping...`;
+    
 
     const event = new CustomEvent('chat', { detail: "goodbye" });
     window.dispatchEvent(event);
@@ -242,13 +240,43 @@ window.addEventListener('beforeunload', function () {
     }
 });
 
+function updateNaiaRole() {
+    const roleId = window.getRoleId();
+    console.log('Role ID:', roleId);
+    
+    let roleName;
+    switch(roleId) {
+      case "1": roleName = "Investigator"; break;
+      case "2": roleName = "Recepcionist"; break;
+      case "3": roleName = "Personal Skills Trainer"; break;
+      case "4": roleName = "Personal Assistant"; break;
+      case "5": roleName = "University Guide"; break;
+      default: roleName = "Unknown Role";
+    }
+  
+    window.dispatchEvent(new CustomEvent('naiaRoleUpdated', { detail: { role: roleName } }));
+    console.log('NAIA role updated to:', roleName);
+  }
+
+  function initializeNaiaRole() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateNaiaRole);
+    } else {
+      updateNaiaRole();
+    }
+  }
+
 document.addEventListener('DOMContentLoaded', function () {
     if (isChatURL()) {
         if (localStorage.getItem(CHAT_OPEN_KEY)) {
             alert("Ya tienes abierta una sección del chat en otra pestaña. Cierra la otra pestaña primero.");
-            window.location.href = '/';  // Redirige a la página de inicio
+            window.location.href = '/';  
         } else {
             localStorage.setItem(CHAT_OPEN_KEY, 'true');
         }
     }
+    window.addEventListener('reactComponentReady', initializeNaiaRole);
+    initializeNaiaRole();
+
 });
+

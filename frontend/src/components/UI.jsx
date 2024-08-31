@@ -14,12 +14,39 @@ export const UI = ({ hidden, ...props }) => {
   const [hasNewContent, setHasNewContent] = useState(false);
   const [storedPdfName, setStoredPdfName] = useState("");
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [avatarStatus, setAvatarStatus] = useState("Sleeping");
+  const [naiaRole, setNaiaRole] = useState("Default Role");
 
   useEffect(() => {
     const storedName = window.localStorage.getItem("pdfFilename");
     if (storedName) {
       setStoredPdfName(storedName);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleRoleUpdate = (event) => {
+      setNaiaRole(event.detail.role);
+    };
+
+    window.addEventListener('naiaRoleUpdated', handleRoleUpdate);
+    window.dispatchEvent(new Event('reactComponentReady'));
+    return () => {
+      window.removeEventListener('naiaRoleUpdated', handleRoleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleAvatarStatusChange = (event) => {
+      console.log("Avatar status changed to:", event.detail.status);
+      setAvatarStatus(event.detail.status);
+    };
+
+    window.addEventListener('avatarStatusChanged', handleAvatarStatusChange);
+
+    return () => {
+      window.removeEventListener('avatarStatusChanged', handleAvatarStatusChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -71,6 +98,31 @@ export const UI = ({ hidden, ...props }) => {
     }
   }, [displayResponses]);
 
+  useEffect(() => {
+    console.log("Current avatar status:", avatarStatus);
+    console.log("Status text:", getStatusText(avatarStatus));
+  }, [avatarStatus]);
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Listening": return "bg-green-500";
+      case "Speaking": return "bg-blue-500";
+      case "Thinking": return "bg-yellow-500";
+      case "Sleeping": return "bg-gray-500";
+      default: return "bg-gray-500";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch(status) {
+      case "Listening": return "Listening...";
+      case "Speaking": return "Speaking...";
+      case "Thinking": return "Thinking...";
+      case "Sleeping": return "Sleeping...";
+      default: return "Sleeping...";
+    }
+  };
+
   const copyToClipboard = () => {
     const tempElement = document.createElement("div");
     tempElement.innerHTML = infoContent;
@@ -120,12 +172,17 @@ export const UI = ({ hidden, ...props }) => {
   
   return (
     <>
-        {/* Contenido principal */}
+        
         <div className="fixed inset-0 z-10 flex flex-col justify-between p-4 pointer-events-none">
+          {/* Contenido principal */}
+          <div className="flex justify-between items-start w-full">
+          {/* Panel izquierdo (existente) */}
           <div className="self-start backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto max-w-[200px] relative">
             <h1 className="font-bold text-lg text-gray-800">NAIA</h1>
-            <h6 id="status" className="text-xs font-semibold mt-1 text-gray-700">Status: Sleeping...</h6>
             <h6 id="user_name" className="text-xs text-gray-700">Current user: Unknown</h6>
+            <h6 id="naia-role" className="text-xs text-gray-700">
+                Role: {naiaRole}
+            </h6>
             <button
               onClick={toggleContent}
               className="mt-2 text-blue-500 hover:text-blue-600 rounded-md p-1 text-sm pointer-events-auto"
@@ -175,8 +232,19 @@ export const UI = ({ hidden, ...props }) => {
               </div>
             </>
           )}
+          </div>
+          {/* Nuevo panel derecho para el estado del avatar */}
+          <div className={`backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto transition-all duration-300 ${getStatusColor(avatarStatus)}`}>
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full animate-pulse ${getStatusColor(avatarStatus)}`}></div>
+              <h6 id="status" className="text-sm font-semibold text-black whitespace-nowrap overflow-visible">                
+                Status: {getStatusText(avatarStatus)}
+              </h6>
+            </div>
+          </div>
         </div>
 
+  
         <div className="flex items-center justify-center flex-grow">
           <p className="text-center text-white bg-black bg-opacity-50 p-2 rounded-md text-xl font-semibold">{subtitles}</p>
         </div>
