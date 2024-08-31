@@ -144,12 +144,16 @@ export function Avatar(props) {
     setLipsync(message.lipsync);
     const audio = new Audio("data:audio/mp3;base64," + message.audio);
     audio.play();
+    audio.onplay = () => {
+      window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
+    };
     setAudio(audio);
     setSubtitles(message.text); 
     audio.onended = () => {
       onMessagePlayed();
       if (messages.length === 1) {
         window.initRecognition();
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       }
       setSubtitles('');
     };
@@ -182,17 +186,22 @@ export function Avatar(props) {
           setLipsync(message.lipsync);
           setSubtitles(message.text);
           audio.play();
+          window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
         };
         setAudio(audio);
         audio.onended = () => {
           onMessagePlayed();
           if (messages.length === 1) {
             window.initRecognition();
+            window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
           }
           setSubtitles('');
         };
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error('Error:', err);
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));  
+      });
   }
 
 }, [message, messages]);

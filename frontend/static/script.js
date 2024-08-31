@@ -75,13 +75,18 @@ recognition.onresult = (e) => {
     console.log('Transcripción:', transcript);
     if (transcript){
         recognition.stop();
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
         document.getElementById("status").innerHTML = `Status: AI is thinking...`;
 
         if (conversation){
             const event = new CustomEvent('chat', { detail: transcript });
             window.dispatchEvent(event);
             // sendTranscript(formData)
-
+        }
+        else {
+            recognition.stop();
+            window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
+            document.getElementById("status").innerHTML = `Status: Sleeping...`;
         }
     }
 };

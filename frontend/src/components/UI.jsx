@@ -13,6 +13,7 @@ export const UI = ({ hidden, ...props }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [hasNewContent, setHasNewContent] = useState(false);
   const [storedPdfName, setStoredPdfName] = useState("");
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
     const storedName = window.localStorage.getItem("pdfFilename");
@@ -30,6 +31,18 @@ export const UI = ({ hidden, ...props }) => {
 
     return () => {
       window.removeEventListener('recordingStatusChanged', handleRecordingChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleAudioStatusChange = (event) => {
+      setIsAudioPlaying(event.detail.isPlaying);
+    };
+
+    window.addEventListener('audioStatusChanged', handleAudioStatusChange);
+
+    return () => {
+      window.removeEventListener('audioStatusChanged', handleAudioStatusChange);
     };
   }, []);
 
@@ -176,12 +189,15 @@ export const UI = ({ hidden, ...props }) => {
               <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-full text-xs sm:text-sm">LogOut</button>
             </form>
             <button 
-              id="recordButton" 
-              className={`text-white px-3 py-2 rounded-full text-xs sm:text-sm ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`} 
-              onClick={() => window.toggleRecording()}
-              data-recording={isRecording.toString()}
-            >
-              {isRecording ? 'Stop' : 'Start'}
+                id="recordButton" 
+                className={`text-white px-3 py-2 rounded-full text-xs sm:text-sm ${
+                  isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+                } ${isAudioPlaying ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                onClick={() => !isAudioPlaying && window.toggleRecording()}
+                disabled={isAudioPlaying}
+                data-recording={isRecording.toString()}
+              >
+                {isRecording ? 'Stop' : 'Start'}
             </button>
           </div>
           <button
