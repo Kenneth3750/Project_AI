@@ -22,12 +22,12 @@ def return_role(user_id, role_id, name, vision_prompt):
     else:
         return None
     
-def return_tools(role_id):
+def return_tools(role_id, user_id):
     if role_id == 1:
         tools, available_functions = investigator_tools()
         return json.dumps(tools), available_functions
     elif role_id == 2:
-        tools, available_functions = recepcionist_tools()
+        tools, available_functions = recepcionist_tools(user_id)
         return json.dumps(tools), available_functions
     elif role_id == 3:
         tools, available_functions = trainer_tools()

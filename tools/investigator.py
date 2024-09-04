@@ -50,7 +50,7 @@ def getPapers(parameters, user_id, role_id):
         new_json = []
         i=0
         for result in organic_results:
-            new_json.append(f"<div>Paper {i}: <a href='{result['link']}' target='_blank'><span style='color: blue; text-decoration: underline;'>{result['title']}</span></a></div><br>")
+            new_json.append(f"<div>Paper {i+1}: <a href='{result['link']}' target='_blank'><span style='color: blue; text-decoration: underline;'>{result['title']}</span></a></div><br>")
             i+=1
             if i==5:
                 break

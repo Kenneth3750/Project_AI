@@ -3,7 +3,7 @@ function sendApartment() {
     const apartmentPhone = document.getElementById("apartment-phone").value.trim();
 
     if (!apartmentNumber || !apartmentPhone) {
-        alert("Please fill in all fields.");
+        showNotification("Please fill in all fields.", "error");
         return;
     }
 
@@ -37,8 +37,11 @@ function getApartmentInfo() {
             listApartment.innerHTML = "";
             Object.entries(data).forEach(([apartmentNumber, apartmentPhone]) => {
                 const li = document.createElement('li');
-                li.className = 'list-group-item';
-                li.innerHTML = `<strong>Apt ${apartmentNumber}:</strong> ${formatPhoneNumber(apartmentPhone)}`;
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <span>Apt ${apartmentNumber}: ${formatPhoneNumber(apartmentPhone)}</span>
+                    <button class="btn btn-sm btn-danger" onclick="deleteApartment('${apartmentNumber}')">Delete</button>
+                `;
                 listApartment.appendChild(li);
             });
         },
@@ -47,6 +50,26 @@ function getApartmentInfo() {
             showNotification("Error retrieving apartment information", "error");
         }
     });
+}
+
+function deleteApartment(apartmentNumber) {
+    if (confirm(`Are you sure you want to delete apartment ${apartmentNumber}?`)) {
+        $.ajax({
+            url: `/apartment`,
+            type: 'DELETE',
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({"apartmentNumber": apartmentNumber}),
+            success: function(response) {
+                showNotification(`Apartment ${apartmentNumber} deleted successfully`, "success");
+                getApartmentInfo();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting apartment:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+                showNotification("Error deleting apartment: " + errorMessage, "error");
+            }
+        });
+    }
 }
 
 function formatPhoneNumber(phoneNumber) {
@@ -237,9 +260,97 @@ function getPdfFilename(){
     console.log(window.localStorage.getItem("pdfFilename"));
 }
 
+function addCommonArea() {
+    const commonAreaName = document.getElementById('common-area-name').value.trim();
+    if (commonAreaName) {
+        const listCommonAreas = document.getElementById('listCommonAreas');
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.textContent = commonAreaName;
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-danger';
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.onclick = function() {
+            listCommonAreas.removeChild(li);
+            deleteArea(commonAreaName);
+        };
+        
+        li.appendChild(deleteBtn);
+        listCommonAreas.appendChild(li);
+        
+        document.getElementById('common-area-name').value = '';
+        
+        $.ajax({
+            url: '/areas',
+            type: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: JSON.stringify({ "area": commonAreaName }),
+            success: function(response) {
+                console.log('Common area added successfully');
+                showNotification('Common area added successfully', 'success');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error adding common area:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error';
+                showNotification('Error adding common area: ' + errorMessage, 'error');
+            }
+        });  
+    } else {
+        alert('Please enter a name for the common area.');
+    }
+}
 
+function getCommonAreas(){
+    $.ajax({
+        url: '/areas',
+        type: 'GET',
+        success: function(data) {
+            const listCommonAreas = document.getElementById('listCommonAreas');
+            listCommonAreas.innerHTML = '';
+            console.log(data.areas);
+            data.areas.forEach(area => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.textContent = area;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm btn-danger';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.onclick = function() {
+                    listCommonAreas.removeChild(li);
+                    deleteArea(area);
+                };
+                
+                li.appendChild(deleteBtn);
+                listCommonAreas.appendChild(li);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error getting common areas:', error);
+            showNotification('Error retrieving common areas', 'error');
+        }
+    });
+}
 
-
+function deleteArea(area){
+    $.ajax({
+        url: '/areas',
+        type: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        data: JSON.stringify({ "area": area }),
+        success: function(response) {
+            console.log('Common area deleted successfully');
+            showNotification('Common area deleted successfully', 'success');
+            getCommonAreas();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error deleting common area:', error);
+            const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error';
+            showNotification('Error deleting common area: ' + errorMessage, 'error');
+        }
+    });
+}
 
 
 
@@ -249,4 +360,5 @@ function getInfo(){
     getReservations();
     getUserInfo();
     getPdfFilename();
+    getCommonAreas();
 }

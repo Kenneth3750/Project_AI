@@ -1,4 +1,4 @@
-from tools.recepcionist import add_apartment, get_apartments, list_of_reservations
+from tools.recepcionist import add_apartment, get_apartments, list_of_reservations, erase_apartment, add_recepcionist_area, get_recepcionist_areas, delete_recepcionist_area
 import os
 import glob
 from tools.pdf_tools import save_pdf_tool, read_pdf_tool
@@ -26,6 +26,38 @@ def return_apartments(user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error retrieving the apartments. Please try again.")
+    
+def delete_apartment(user_id, apartment):
+    try:
+        erase_apartment(user_id, apartment)
+        return {"message": "Apartment deleted successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error deleting the apartment. Please try again.")
+    
+def get_areas(user_id):
+    try:
+        areas = get_recepcionist_areas(user_id)
+        return areas
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error retrieving the areas. Please try again.")
+    
+def add_area(user_id, area):
+    try:
+        add_recepcionist_area(user_id, area)
+        return {"message": "Area added successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error adding the area. Please try again.")
+    
+def delete_area(user_id, area):
+    try:
+        delete_recepcionist_area(user_id, area)
+        return {"message": "Area deleted successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error deleting the area. Please try again.")
     
 
 def new_email(name, email, user_id):

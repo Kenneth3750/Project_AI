@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -195,10 +195,10 @@ def index(role_id):
 @app.route('/audio', methods=['GET', 'POST'])
 def recibir_audio():
     role_id = session['role_id']
-    tools, available_functions = return_tools(role_id)
+    user_id = session['user_id']
+    tools, available_functions = return_tools(role_id, user_id)
     if request.method == 'POST':
         try:
-            user_id = session['user_id']
             user_input = request.get_json().get('message')
             print("el mensaje es:", user_input)
             if user_input == "welcome":
@@ -330,7 +330,7 @@ def pdfreader():
 
         
 
-@app.route('/apartment', methods=['GET', 'POST'])
+@app.route('/apartment', methods=['GET', 'POST', 'DELETE'])
 def apartment():
     if request.method == "POST": 
         try:
@@ -342,11 +342,20 @@ def apartment():
             return result
         except Exception as e:
             return jsonify({'error': str(e)}), 500
-    if request.method == "GET":
+    elif request.method == "GET":
         try:
             user_id = session['user_id']
             apartments_json = return_apartments(user_id)
             return jsonify(apartments_json)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    elif request.method == "DELETE":
+        try:
+            data = request.get_json()
+            apartment = data.get('apartmentNumber')
+            user_id = session['user_id']
+            delete_apartment(user_id, apartment)
+            return "Apartment deleted successfully"
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
@@ -377,7 +386,7 @@ def email():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
         
-@app.route('/reservations', methods=['GET'])
+@app.route('/reservations', methods=['GET', 'POST'])
 def reservations():
     if request.method == "GET":
         try:
@@ -387,7 +396,38 @@ def reservations():
             return jsonify({"reservation": reservations})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+
         
+@app.route('/areas', methods=['POST', 'GET', 'DELETE'])
+def areas():
+    if request.method == "GET":
+        try:
+            user_id = session['user_id']
+            areas = get_areas(user_id)
+            return jsonify({"areas": areas})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    elif request.method == "POST":
+        try:
+            data = request.get_json()
+            user_id = session['user_id']
+            new_area = data.get('area')
+            add_area(user_id, new_area)
+            return jsonify({"message": "Area added successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    elif request.method == "DELETE":
+        try:
+            data = request.get_json()
+            user_id = session['user_id']
+            area = data.get('area')
+            delete_area(user_id, area)
+            return jsonify({"message": "Area deleted successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
 @app.route('/trainer', methods=['GET'])
 def get_summary_trainer():
     user_id = session['user_id']

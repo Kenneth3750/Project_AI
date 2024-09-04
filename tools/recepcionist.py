@@ -264,8 +264,9 @@ def delete_last_reservation(params, user_id, role_id):
     
 
 
-def recepcionist_tools():
+def recepcionist_tools(user_id):
 
+    areas = get_recepcionist_areas(user_id)
     tools = [
                 {
                     "type": "function",
@@ -331,7 +332,7 @@ def recepcionist_tools():
                         },
                         "place": {
                             "type": "string",
-                            "enum": ["gym", "pool", "court", "event room"],
+                            "enum": areas,
                             "description": "The place where the reservation will be made"
                         },
                         "user_query": {
@@ -362,7 +363,7 @@ def recepcionist_tools():
                         },
                         "place": {
                             "type": "string",
-                            "enum": ["gym", "pool", "court", "event room"],
+                            "enum": areas,
                             "description": "The place where the reservation will be made"
                         },
                     },
@@ -385,7 +386,7 @@ def recepcionist_tools():
                         },
                         "place": {
                             "type": "string",
-                            "enum": ["gym", "pool", "court", "event room"],
+                            "enum": areas,
                             "description": "The place where the reservation will be made"
                         },
                         "user_query": {
@@ -411,7 +412,7 @@ def recepcionist_tools():
                     "properties": {
                         "place": {
                             "type": "string",
-                            "enum": ["gym", "pool", "court", "event room"],
+                            "enum": areas,
                             "description": "The place where the reservation will be made"
                         },
                         "name": {
@@ -481,6 +482,107 @@ def get_apartments(user_id):
     if data:
         return json.loads(data[0])
     return {}
+
+def erase_apartment(user_id, apartment):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT apartment_json from recepcionist_apartments WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    if data:
+        apartments = json.loads(data[0])
+        if apartment in apartments:
+            del apartments[apartment]
+            query = ("UPDATE recepcionist_apartments SET apartment_json = %s WHERE user_id = %s")
+            cursor.execute(query, (json.dumps(apartments), user_id))
+            connection.commit()
+            cursor.close()
+            connection.close()
+        else:
+            raise Exception("The apartment does not exist.")
+    else:
+        raise Exception("The user does not have any apartments.")
+    
+def add_recepcionist_area(user_id, area):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT areas_array from recepcionist_areas WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    if data:
+        areas = json.loads(data[0])
+        areas.append(area)
+        query = ("UPDATE recepcionist_areas SET areas_array = %s WHERE user_id = %s")
+        cursor.execute(query, (json.dumps(areas), user_id))
+    else:
+        areas = [area]
+        query = ("INSERT INTO recepcionist_areas (user_id, areas_array) VALUES (%s, %s)")
+        cursor.execute(query, (user_id, json.dumps(areas)))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+def get_recepcionist_areas(user_id):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT areas_array from recepcionist_areas WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    if data:
+        return json.loads(data[0])
+    return []
+
+def delete_recepcionist_area(user_id, area):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    query = ("SELECT areas_array from recepcionist_areas WHERE user_id = %s")
+    cursor.execute(query, (user_id,))
+    data = cursor.fetchone()
+    if data:
+        areas = json.loads(data[0])
+        if area in areas:
+            areas.remove(area)
+            query = ("UPDATE recepcionist_areas SET areas_array = %s WHERE user_id = %s")
+            cursor.execute(query, (json.dumps(areas), user_id))
+            connection.commit()
+            cursor.close()
+            connection.close()
+        else:
+            raise Exception("The area does not exist.")
+    else:
+        raise Exception("The user does not have any areas.")
+
+
 
 def list_of_reservations(user_id):
     current_date = datetime.now().date().strftime("%Y-%m-%d") 

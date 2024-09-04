@@ -55,33 +55,43 @@
         
         <div class="role-options">
             <div class="role-option">
-                <i class="fas fa-search"></i>
+                <div class="avatar-image">
+                    <img src="../static/img/investigator.png" alt="Investigator Avatar">
+                </div>
                 <h3>Investigator</h3>
                 <p>Research and analyze information</p>
             </div>
             <div class="role-option">
-                <i class="fas fa-concierge-bell"></i>
+                <div class="avatar-image recepcionist-image">
+                    <img src="../static/img/recepcionist.png" alt="Receptionist Avatar">
+                </div>
                 <h3>Receptionist</h3>
                 <p>Manage appointments and visitor information</p>
             </div>
             <div class="role-option">
-                <i class="fas fa-dumbbell"></i>
+                <div class="avatar-image">
+                    <img src="../static/img/trainer.png" alt="Personal Skills Trainer Avatar">
+                </div>
                 <h3>Personal Skills Trainer</h3>
                 <p>Enhance your personal and professional skills</p>
             </div>
             <div class="role-option">
-                <i class="fas fa-tasks"></i>
+                <div class="avatar-image">
+                    <img src="../static/img/personal.png" alt="Personal Assistant Avatar">
+                </div>
                 <h3>Personal Assistant</h3>
                 <p>Help with daily tasks and organization</p>
             </div>
             <div class="role-option">
-                <i class="fas fa-university"></i>
+                <div class="avatar-image">
+                    <img src="../static/img/university.png" alt="University Guide Avatar">
+                </div>
                 <h3>University Guide</h3>
                 <p>Navigate academic life and resources</p>
             </div>
         </div>
-    
-        <div class="role-selection-controls">
+
+        <div class="role-selection-controls" style="margin-top: 3%;">
             <select id="select-role" name="select-role" class="form-select">
                 <option value="" disabled selected>Select a role</option>
                 <option value="1">Investigator</option>
@@ -93,6 +103,9 @@
             <button class="btn btn-primary btn-lg" onclick="goToChat()">Start Conversation</button>
         </div>
     </div>
+    
+
+
 
     <div class="photo-section">
         <h2>Take or upload a photo of your face</h2>
@@ -121,7 +134,9 @@
             </div>
             <div class="role-content">
                 <h4>Receptionist Dashboard</h4>
+                
                 <div class="receptionist-form">
+                    <h5>Apartment Registration</h5>
                     <p>Register new apartments and their contact numbers. Please include the country code without the '+' sign (e.g., for Colombia, use 57xxxxxxxxx).</p>
                     <div class="form-group">
                         <label for="apartment-number">Apartment Number:</label>
@@ -133,18 +148,37 @@
                     </div>
                     <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()">Register Apartment</button>
                 </div>
-                <div class="receptionist-info">
+    
+                <div class="common-areas-form mt-4">
+                    <h5>Common Areas Management</h5>
+                    <p class="text-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Add the common areas you want NAIA to manage reservations for. These areas will be available for residents to book through NAIA.
+                    </p>
+                    <div class="form-group">
+                        <label for="common-area-name">Common Area Name:</label>
+                        <input type="text" id="common-area-name" class="form-control" placeholder="e.g., Swimming Pool">
+                    </div>
+                    <button class="btn btn-success" id="add-common-area" onclick="addCommonArea()">Add Common Area</button>
+                </div>
+    
+                <div class="receptionist-info mt-4">
                     <div class="info-section">
                         <h5>Registered Apartments</h5>
                         <ul id="listApartments" class="list-group"></ul>
                     </div>
-                    <div class="info-section">
+                    <div class="info-section mt-3">
+                        <h5>Common Areas for Reservations</h5>
+                        <ul id="listCommonAreas" class="list-group"></ul>
+                    </div>
+                    <div class="info-section mt-3">
                         <h5>Current Reservations</h5>
                         <ul id="listReservations" class="list-group"></ul>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     
         <div class="role-accordion">
             <div class="role-header" onclick="toggleAccordion(this)">
