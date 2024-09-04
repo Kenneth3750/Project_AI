@@ -69,7 +69,8 @@ def show_me_some_image_advice_examples(params, user_id, role_id):
                     )
 
         image_url = response.data[0].url
-        return {"display": image_url}
+        image_link = f"<a href='{image_url}' target='_blank'><span style='color: blue; text-decoration: underline;'>Click here to see the image</span></a>"
+        return {"display": image_link}
     except Exception as e:
         print(f"An error ocurred: {e}")
         return {"error": str(e)}
