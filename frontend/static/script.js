@@ -228,17 +228,7 @@ window.getRoleId = getRoleId;
 window.initConversation = initConversation;
 window.stopRecording = stopRecording;
 
-const CHAT_OPEN_KEY = 'isAnyChatOpen';
 
-function isChatURL() {
-    return window.location.pathname.startsWith('/chat/');
-}
-
-window.addEventListener('beforeunload', function () {
-    if (isChatURL()) {
-        localStorage.removeItem(CHAT_OPEN_KEY);
-    }
-});
 
 function updateNaiaRole() {
     const roleId = window.getRoleId();
@@ -267,14 +257,7 @@ function updateNaiaRole() {
   }
 
 document.addEventListener('DOMContentLoaded', function () {
-    if (isChatURL()) {
-        if (localStorage.getItem(CHAT_OPEN_KEY)) {
-            alert("Ya tienes abierta una sección del chat en otra pestaña. Cierra la otra pestaña primero.");
-            window.location.href = '/';  
-        } else {
-            localStorage.setItem(CHAT_OPEN_KEY, 'true');
-        }
-    }
+
     window.addEventListener('reactComponentReady', initializeNaiaRole);
     initializeNaiaRole();
 
