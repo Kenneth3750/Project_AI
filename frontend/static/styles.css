@@ -300,3 +300,37 @@
 .feature-card:hover {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+
+.tip-card {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.tip-icon {
+    color: #007bff;
+    margin-right: 0.5rem;
+}
+.btn-link {
+    padding: 0;
+    margin-top: 10px;
+    color: #007bff;
+    text-decoration: none;
+}
+.btn-link:hover {
+    text-decoration: underline;
+}
+.modal-content {
+    border-radius: 15px;
+}
+.modal-header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.modal-body {
+    padding-top: 0;
+}
+.list-group-item {
+    border: none;
+    padding: 0.5rem 0;
+}

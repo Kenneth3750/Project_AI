@@ -72,6 +72,9 @@
                     </div>
                     <h3>Investigator</h3>
                     <p>Research and analyze information</p>
+                    <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#investigatorModal">
+                        Learn More
+                    </button>
                 </div>
                 <div class="role-option">
                     <div class="avatar-image recepcionist-image">
@@ -79,13 +82,19 @@
                     </div>
                     <h3>Receptionist</h3>
                     <p>Manage appointments and visitor information</p>
+                    <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#receptionistModal">
+                        Learn More
+                    </button>
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
                         <img src="../static/img/trainer.png" alt="Personal Skills Trainer Avatar">
                     </div>
-                    <h3>Personal Skills Trainer</h3>
+                    <h3>Skills Trainer</h3>
                     <p>Enhance your personal and professional skills</p>
+                    <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#trainerModal">
+                        Learn More
+                    </button>
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
@@ -93,6 +102,9 @@
                     </div>
                     <h3>Personal Assistant</h3>
                     <p>Help with daily tasks and organization</p>
+                    <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#assistantModal">
+                        Learn More
+                    </button>
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
@@ -100,15 +112,18 @@
                     </div>
                     <h3>University Guide</h3>
                     <p>Navigate academic life and resources</p>
+                    <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#guideModal">
+                        Learn More
+                    </button>
                 </div>
             </div>
-
+    
             <div class="role-selection-controls" style="margin-top: 3%;">
                 <select id="select-role" name="select-role" class="form-select">
                     <option value="" disabled selected>Select a role</option>
                     <option value="1">Investigator</option>
                     <option value="2">Receptionist</option>
-                    <option value="3">Personal Skills Trainer</option>
+                    <option value="3">Skills Trainer</option>
                     <option value="4">Personal Assistant</option>
                     <option value="5">University Guide</option>
                 </select>
@@ -116,6 +131,98 @@
             </div>
         </div>
     </section>
+    
+    <!-- Modals for each role -->
+    <div class="modal fade" id="investigatorModal" tabindex="-1" aria-labelledby="investigatorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="investigatorModalLabel">Investigator Role Functions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Read and extract information from PDFs (up to 1GB)</li>
+                        <li class="list-group-item">Search for relevant scientific articles using Google Scholar</li>
+                        <li class="list-group-item">Provide easily copyable text fragments for your research</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="receptionistModal" tabindex="-1" aria-labelledby="receptionistModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receptionistModalLabel">Receptionist Role Functions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Notify residents via WhatsApp about visitors with images</li>
+                        <li class="list-group-item">Send announcements to all residents via WhatsApp</li>
+                        <li class="list-group-item">Manage reservations for common areas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="trainerModal" tabindex="-1" aria-labelledby="trainerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="trainerModalLabel">Personal Skills Trainer Role Functions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Conduct simulations for real-life scenarios (e.g., job interviews, sales negotiations)</li>
+                        <li class="list-group-item">Practice for language exams with listening and speaking components</li>
+                        <li class="list-group-item">Provide recommendations on social interactions, posture, and attire</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="assistantModal" tabindex="-1" aria-labelledby="assistantModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assistantModalLabel">Personal Assistant Role Functions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Send short emails to pre-registered contacts</li>
+                        <li class="list-group-item">Schedule reminders using Google Calendar or other tools</li>
+                        <li class="list-group-item">Inform about office visitors in your absence</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="guideModal" tabindex="-1" aria-labelledby="guideModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="guideModalLabel">University Guide Role Functions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Provide information on academic calendars, important dates, and administrative services</li>
+                        <li class="list-group-item">Offer guidance on key academic processes (e.g., enrollment, flexible progress)</li>
+                        <li class="list-group-item">Connect with student support services and academic counselors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
     <div class="section-divider"></div>
 
@@ -282,8 +389,28 @@
         <div class="section-divider"></div>
 
         <section id="usage-tips" class="mb-5">
-            <h2>Tips for Using NAIA</h2>
-            <!-- This section will be filled with usage recommendations later -->
+            <h2>Tips for Using NAIA</h2>            
+            <p>To ensure the best experience with NAIA, please follow these recommendations:</p>
+            
+            <div class="tip-card">
+                <h5><i class="fab fa-chrome tip-icon"></i>Use Chrome Browser</h5>
+                <p>For optimal performance, use Google Chrome as your primary browser to access NAIA. Some features, like Web Speech API, may not be available in other browsers, which could affect the app's functionality.</p>
+            </div>
+            
+            <div class="tip-card">
+                <h5><i class="fas fa-language tip-icon"></i>Set Browser Language</h5>
+                <p>Set your browser's default language to match the language you intend to use with NAIA. For example, if you want to interact with the avatar in English, set your browser's language to English for the best results. This applies to other supported languages as well.</p>
+            </div>
+            
+            <div class="tip-card">
+                <h5><i class="fas fa-lightbulb tip-icon"></i>Manage Lighting</h5>
+                <p>Avoid areas with strong backlighting when interacting with NAIA. Excessive light behind you can interfere with the facial recognition feature during your interaction with the avatar. Choose a well-lit environment where the light source is in front of you for best results.</p>
+            </div>
+            
+            <div class="tip-card">
+                <h5><i class="fas fa-volume-up tip-icon"></i>Minimize Background Noise</h5>
+                <p>Use NAIA in a quiet environment. Excessive background noise or multiple voices can interfere with the speech-to-text module, affecting the accuracy of voice interactions. Choose a quiet space for the best voice recognition performance.</p>
+            </div>
         </section>
 
     </div>
