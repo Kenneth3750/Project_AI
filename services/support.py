@@ -2,12 +2,20 @@ from tools.recepcionist import add_apartment, get_apartments, list_of_reservatio
 import os
 import glob
 from tools.pdf_tools import save_pdf_tool, read_pdf_tool
-from tools.personal_assistant import add_email, get_emails, erase_email_token
+from tools.personal_assistant import add_email, get_emails, erase_email_token, create_email_token
 
 def save_pdf(user_id, file, role_id):
     if not os.path.exists(f"pdf/user_{user_id}/role_{role_id}/{file.filename}"):
         save_pdf_tool(user_id, file, role_id)
         read_pdf_tool(user_id, file, role_id)
+
+def save_token(user_id, token):
+    try:
+        create_email_token(user_id, token)
+        return {"message": "Token added successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error adding the token. Please try again.")
 
 
 def new_apartment(user_id, apartment, phone):

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -44,15 +44,17 @@ google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
 oauth = OAuth(app)
 CONF_URL = 'https://accounts.google.com/.well-known/openid-configuration'
 google = oauth.register(
-  name='google',
-  server_metadata_url=CONF_URL,
-  # Collect client_id and client secret from google auth api
-  client_id= google_client_id,
-  client_secret = google_client_secret,
-  client_kwargs={
-    'scope': 'openid email profile'
-  }
-)
+        name='google',
+        client_id=os.getenv('GOOGLE_CLIENT_ID'),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={
+            'scope': 'openid email profile https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+            'access_type': 'offline',  
+            'prompt': 'consent',
+            'include_granted_scopes': 'true'
+        }
+    )
 
 
 
@@ -98,23 +100,17 @@ def before_login():
 @app.route('/google_login', methods=['GET', 'POST'])
 @logout_required
 def login():
-    current_url = request.url_root
-    redirect_uris = [
-        "https://127.0.0.1:5000/authorize",
-        "https://localhost:5000/authorize",
-    ]
-    redirect_uri = next((uri for uri in redirect_uris if uri.startswith(current_url)), None)
-    
-    if not redirect_uri:
-        redirect_uri = url_for('authorize', _external=True)
     google = oauth.create_client('google')
-    return google.authorize_redirect(redirect_uri)
+    redirect_uri = url_for('authorize', _external=True)
+    return google.authorize_redirect(redirect_uri, access_type='offline', prompt='consent')
 
 @app.route('/authorize')
 def authorize():
     try:
         db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
         token = oauth.google.authorize_access_token()
+        print("Token:", token)
+        print("*"*20)
         user = token.get('userinfo')
         if user:
             user_email = user.get('email')
@@ -126,6 +122,7 @@ def authorize():
             if user_id:
                 session['user_id'] = user_id
             print("User info:", user)
+            save_token(session["user_id"], token)
             return redirect(url_for('home'))
         else:
             print("Failed to get user info")

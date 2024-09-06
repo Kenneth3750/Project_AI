@@ -35,31 +35,41 @@ def extract_array_from_string(input_string):
 
 
 def authenticate(user_id):
-    """Autentica y retorna el servicio de la API de Google Calendar"""
-    try:
-        creds = None
-        token_path = f'tokens/token_{user_id}.json'
-
-        # El archivo de token específico del usuario almacena los tokens de acceso y actualización del usuario
-        if os.path.exists(token_path):
-            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-        
-        # Si no hay credenciales válidas disponibles, permite al usuario iniciar sesión
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-                creds = flow.run_local_server(port=0)
-            # Guarda las credenciales para la próxima ejecución
-            os.makedirs(os.path.dirname(token_path), exist_ok=True)
-            with open(token_path, 'w') as token:
-                token.write(creds.to_json())
-
-        return creds
-    except Exception as e:
-        print(e)
-        return Exception("Problema al autenticar el servicio de Google ")
+    token_path = f'tokens/token_{user_id}.json'
+    
+    if not os.path.exists(token_path):
+        print(f"No se encontró el archivo de token para el usuario {user_id}")
+        return None
+    
+    with open(token_path, 'r') as token_file:
+        token_data = json.load(token_file)
+    
+    if 'refresh_token' not in token_data:
+        print(f"No se encontró refresh_token para el usuario {user_id}")
+        return None
+    
+    creds = Credentials(
+        token=token_data.get('access_token'),
+        refresh_token=token_data.get('refresh_token'),
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.getenv('GOOGLE_CLIENT_ID'),
+        client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+        scopes=token_data.get('scope', '').split()
+    ) 
+    if creds.expired and creds.refresh_token:
+        print(f"Refrescando token para el usuario {user_id}")
+        try:
+            creds.refresh(Request())
+            create_email_token(user_id, {
+                'access_token': creds.token,
+                'refresh_token': creds.refresh_token,
+                'scope': ' '.join(creds.scopes)
+            })
+        except Exception as e:
+            print(f"Error al refrescar el token: {e}")
+            return None
+    
+    return creds
     
 def get_calendar_service(user_id):
     creds = authenticate(user_id)
@@ -89,6 +99,7 @@ def get_chat_service(creds):
 def create_google_calendar_reminder(params, user_id, role_id):
     """Crea un recordatorio en Google Calendar"""
     try:
+        some_google_operation(user_id)
         summary = params['summary']
         description = params['description']
         start_time = params['start_time']
@@ -204,7 +215,7 @@ def assistant_tools():
                         },
                         "message": {
                             "type": "string",
-                            "description": "The message the user wants to send converted to an html format."
+                            "description": "The message the user wants to send converted to an html format and written in a proper way for an email structure."
                         }
                     },
                     "required": ["names", "subject", "message"]
@@ -334,4 +345,31 @@ def erase_email_token(user_id):
     token_path = f'tokens/token_{user_id}.json'
     os.remove(token_path)
 
+def create_email_token(user_id, token):
+    token_data = {
+        "token": token,
+        "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+        "client_secret": os.getenv('GOOGLE_CLIENT_SECRET'), 
+    }
     
+    if 'refresh_token' in token:
+        token_data["refresh_token"] = token['refresh_token']
+    
+    token_path = f'tokens/token_{user_id}.json'
+    os.makedirs(os.path.dirname(token_path), exist_ok=True)
+    with open(token_path, 'w') as token_file:
+        json.dump(token_data, token_file)
+
+def refresh_token_if_expired(creds, user_id):
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        create_email_token(user_id, creds.to_json())
+    return creds
+
+
+def some_google_operation(user_id):
+    creds = authenticate(user_id)
+    if not creds:
+        raise Exception("No credentials found")
+    
+    creds = refresh_token_if_expired(creds, user_id)
