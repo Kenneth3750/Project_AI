@@ -3,10 +3,10 @@ from flask_session import Session
 import os
 from functools import wraps
 from dotenv import load_dotenv
-from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye
+from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
 from services.roles import return_role, roles_list, return_tools
-from services.vision import Vision, manage_image
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token
+from services.vision import Vision, manage_image, manage_current_image, current_image_description
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -170,17 +170,18 @@ def index(role_id):
                 image_file = request.files['image'] 
                 name = vision.start_image_recognition(image_file, user_id)
                 vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
-                print("vision prompt:", vision_prompt)
+                session['vision_prompt'] = vision_prompt
                 if name:
                     print("el nombre es:", name)
                     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
                     conversation, resume = db.init_conversation(user_id, client, role_id)
-                    system_prompt = return_role(user_id, role_id, name, vision_prompt)
+                    system_prompt = return_role(user_id, role_id, name)
                     if conversation:
-                        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name)
+                        chat = Chat(conversation=conversation, client=client, resume = resume, system_prompt=system_prompt, name=name, vision_prompt=vision_prompt)
                     else:
-                        chat = Chat(client=client, system_prompt=system_prompt, name=name)
+                        chat = Chat(client=client, system_prompt=system_prompt, name=name, vision_prompt=vision_prompt)
                     session['chat'] = chat.get_messages()
+                    session['name'] = name
                     return jsonify({"name": name})
                 else:
                     return jsonify({'stop': 'stop'})
@@ -205,6 +206,7 @@ def recibir_audio():
                 return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
+                print("messages on audio:", messages)
                 ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
@@ -233,6 +235,31 @@ def save():
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
+        
+@app.route('/saveCurrent', methods=['POST'])
+def save_current():
+    if request.method == "POST":
+        try:
+            user_id = session['user_id']
+            name = session['name']
+            print("name:", name)
+            if "image" in request.files:
+                image_file = request.files['image']
+                result = manage_current_image(image_file, user_id)
+                if result:
+                    messages = json.loads(session['chat'])
+                    vision_prompt = current_image_description(os.getenv('OPENAI_API_TOKEN'), user_id)
+                    print("vision_prompt:", vision_prompt)
+                    new_prompt = f"This is the new vision prompt: {vision_prompt}"
+                    messages.append({"role": "user", "content": new_prompt})
+                    print("new_messages:", messages)
+                    session['chat'] = json.dumps(messages)
+                    return jsonify({'result': 'ok'})
+                else:
+                    return jsonify({'error': 'Error saving image'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
 
 @app.route('/logout', methods=['POST', 'GET'])
 def logout():
@@ -378,8 +405,10 @@ def email():
             return jsonify({'error': str(e)}), 500
     if request.method == "DELETE":
         try:
+            name = request.get_json().get('name')
+            email = request.get_json().get('email')
             user_id = session['user_id']
-            delete_email(user_id)
+            delete_contact_email(user_id, name, email)
             return "Email deleted successfully"
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -429,10 +458,15 @@ def areas():
 @app.route('/trainer', methods=['GET'])
 def get_summary_trainer():
     user_id = session['user_id']
-    if os.path.exists(f"frontend/templates/trainer/user_{user_id}/summary.html"):
-        return send_from_directory(f"frontend/templates/trainer/user_{user_id}", "summary.html")
-    else:
-        return "<h1>You don't have a summary yet</h1>"
+    try:
+        html = get_summary(user_id)
+        print("html:", html)
+        if html:
+            return html
+        else:
+            return jsonify({'error': 'Error generating summary'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
         
 
 if __name__ == "__main__":  

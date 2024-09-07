@@ -105,7 +105,19 @@ function sendEmailInfo() {
     const personName = document.getElementById("person-name").value.trim();
 
     if (!email || !personName) {
-        alert("Please fill in both name and email fields.");
+        showNotification("Please fill in both name and email fields.", "error");
+        return;
+    }
+
+    const existingContacts = Array.from(document.querySelectorAll('#listPeopleEmail li strong'))
+        .map(nameElement => nameElement.textContent.trim());
+
+    const nameExists = existingContacts.some(existingName => 
+        existingName.toLowerCase() === personName.toLowerCase()
+    );
+
+    if (nameExists) {
+        showNotification("A contact with this name already exists. Please use a different name.", "error");
         return;
     }
 
@@ -116,7 +128,7 @@ function sendEmailInfo() {
             "Content-Type": "application/json",
         },
         data: JSON.stringify({"email": email, "name": personName}),
-        success: function(data) {
+        success: function(response) {
             console.log('Contact added successfully');
             document.getElementById("person-email").value = "";
             document.getElementById("person-name").value = "";
@@ -141,7 +153,12 @@ function getEmailInfo() {
             Object.entries(data).forEach(([name, email]) => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item';
-                li.innerHTML = `<strong>${name}</strong><br>${email}`;
+                li.innerHTML = `
+                    <span><strong>${name}</strong><br>${email}</span>
+                    <button class="delete-btn" onclick="deleteContact('${name}', '${email}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
                 listEmails.appendChild(li);
             });
         },
@@ -150,6 +167,29 @@ function getEmailInfo() {
             showNotification("Error retrieving contact information", "error");
         }
     });
+}
+
+function deleteContact(name, email) {
+    if (confirm(`Are you sure you want to delete the contact: ${name} (${email})?`)) {
+        $.ajax({
+            url: '/email',
+            type: 'DELETE',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({"name": name, "email": email}),
+            success: function(data) {
+                console.log('Contact deleted successfully');
+                showNotification("Contact deleted successfully", "success");
+                getEmailInfo();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting contact:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+                showNotification("Error deleting contact: " + errorMessage, "error");
+            }
+        });
+    }
 }
 
 function deleteEmail() {
@@ -170,6 +210,59 @@ function deleteEmail() {
         });
     }
 }
+
+function getSummaryPDF() {
+    fetch('/trainer')
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.text();
+        })
+        .then(content => {
+            console.log('Contenido recibido:', content);
+            if (content.trim() === '') {
+                throw new Error('No summary available');
+            }
+
+            const container = document.createElement('div');
+            container.innerHTML = content;
+            container.id = 'pdf-container';
+            console.log('Contenido del contenedor:', container.innerHTML);
+
+            container.style.color = 'black';
+            container.style.backgroundColor = 'white';
+            container.style.padding = '20px';
+
+            document.body.appendChild(container);
+
+            return html2pdf().set({
+                margin: 10,
+                filename: 'training_summary.pdf',
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2, useCORS: true, logging: false }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(container).save();
+        })
+        .then(() => {
+            console.log('PDF generado exitosamente');
+            document.body.removeChild(document.getElementById('pdf-container'));
+        })
+        .catch(error => {
+            console.error('Error detallado:', error);
+            if (error.error) {
+                showNotification(error.error, 'error');
+            } else if (error.message === 'No summary available') {
+                showNotification('No training summary available yet.', 'info');
+            } else {
+                showNotification('An error occurred while generating the PDF. Please try again.', 'error');
+            }
+            if (document.getElementById('pdf-container')) {
+                document.body.removeChild(document.getElementById('pdf-container'));
+            }
+        });
+}
+
 
 function showNotification(message, type) {
     const notificationDiv = document.createElement('div');
@@ -370,4 +463,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
             toggle: false
         })
     })
+
 });

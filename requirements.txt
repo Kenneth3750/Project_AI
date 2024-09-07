@@ -11,6 +11,7 @@ groq==0.11.0
 heyoo==0.1.2
 langchain==0.2.16
 langchain_community==0.2.16
+langchain_openai==0.1.23
 openai==1.44.0
 Pillow==10.4.0
 protobuf==5.28.0
@@ -20,5 +21,4 @@ pyttsx3==2.90
 redis==5.0.4
 Requests==2.32.3
 serpapi==0.1.5
-tiktoken==0.6.0
 tiktoken==0.7.0

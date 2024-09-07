@@ -142,7 +142,7 @@ useEffect(() => {
     return;
   }
 
-  const playAudio = (audioSource) => {
+  const playAudio = (audioSource, is_elevenlabs) => {
     const newAudio = new Audio(audioSource);
     newAudio.onplay = () => {
       window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
@@ -151,7 +151,11 @@ useEffect(() => {
     newAudio.onended = () => {
       onMessagePlayed();
       if (messages.length === 1) {
-        window.initRecognition();
+        if (!is_elevenlabs) {
+          window.initRecognition();
+        }else{
+          window.initRecognitionImage();
+        }
       }
       window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       setSubtitles('');
@@ -165,7 +169,7 @@ useEffect(() => {
   };
 
   if (message.audio !== null) {
-    playAudio("data:audio/mp3;base64," + message.audio);
+    playAudio("data:audio/mp3;base64," + message.audio, false);
   } else {
     const options = {
       method: 'POST',
@@ -188,7 +192,7 @@ useEffect(() => {
     fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', options)
       .then(response => response.blob())
       .then(blob => {
-        playAudio(URL.createObjectURL(blob));
+        playAudio(URL.createObjectURL(blob), true);
       })
       .catch(err => {
         console.error('Error:', err);

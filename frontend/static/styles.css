@@ -267,6 +267,10 @@
     cursor: pointer;
 }
 
+
+.delete-btn:hover {
+    color: #bd2130;
+}
 .avatar-image {
     width: 150px;
     height: 150px;
@@ -333,4 +337,9 @@
 .list-group-item {
     border: none;
     padding: 0.5rem 0;
+}
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }

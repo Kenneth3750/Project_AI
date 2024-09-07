@@ -95,7 +95,7 @@ def image_to_text(api_key, image_path):
     "Authorization": f"Bearer {api_key}"
     }
     payload = {
-        "model": "gpt-4o",
+        "model": "gpt-4o-mini",
         "messages": [
             {
             "role": "user",
@@ -104,14 +104,17 @@ def image_to_text(api_key, image_path):
                 "type": "text",
                 "text": """If there is nobody in the image, please type Nobody in the image.
                  If there is a person or people in the image, please follow the instructions below:
-                 - Describe the people in a way you give the relevant information to make nice comments about their look and posture.
+                 - Describe the people in a way you give the relevant information about their look, posture, and clothing, to make nice comments about them.
                  - Describe the background and the objects in the image in a way you give the relevant information to make nice comments about the environment.
-                 - Do not use more than 300 words because this description is going to be part of a larger prompt."""
+                 - Make descriptions as detailed as possible in order to help the AI generate more accurate and relevant comments.
+                 - Do not make the nice comments, just describe the people and the environment.
+                 - Do not use more than 100 words because this description is going to be part of a larger prompt."""
                 },
                 {
                 "type": "image_url",
                 "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}"
+                    "url": f"data:image/jpeg;base64,{base64_image}",
+                    "details": "high"
                 }
                 }
             ]

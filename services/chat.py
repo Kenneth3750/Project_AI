@@ -1,13 +1,14 @@
 #this script contains the chat class which is used to handle the conversation between the user and the bot
 from tools.conversation import  generate_response, check_conversation_length, make_resume_prompt, get_role_prompt, generate_response_with_tools
 from tools.conversation import lipSync, audio_file_to_base64, read_json_transcript
+from services.roles import return_role
 import json
 import random
 
 
 
 class Chat:
-    def __init__(self, conversation=None, client=None, resume=None, system_prompt=None, name=None):
+    def __init__(self, conversation=None, client=None, resume=None, system_prompt=None, name=None, vision_prompt=None):
         self.client = client
         self.name = name
         string_dialogue = system_prompt
@@ -17,18 +18,24 @@ class Chat:
             if resume:
                 name_content = f"Now you are talking to {name}"
                 resume_content= f"here is a resume of pasts conversations: {conversation}"
+                new_vision_prompt = f"Here is the vision prompt: {vision_prompt}"
                 self.conversation = [{"role": "system", "content": string_dialogue}]
                 self.conversation.append({"role": "user", "content": name_content})
                 self.conversation.append({"role": "user", "content": resume_content})
+                self.conversation.append({"role": "user", "content": new_vision_prompt})
                 self.messages = self.conversation
             else:
                 name_content = f"Now you are talking to {name}"
+                new_vision_prompt = f"Here is the vision prompt: {vision_prompt}"
                 self.messages = json.loads(conversation)
                 self.messages.insert(0, {"role": "system", "content": string_dialogue})
                 self.messages.append({"role": "user", "content": name_content})
+                self.messages.append({"role": "user", "content": new_vision_prompt})
 
         else:
+            new_vision_prompt = f"Here is the vision prompt: {vision_prompt}"
             self.messages = [{"role": "system", "content": string_dialogue}]
+            self.messages.append({"role": "user", "content": new_vision_prompt})
         print("--"*20)
         print("La conversación es:", self.messages)
         print("--"*20)
@@ -104,6 +111,18 @@ def create_voice(client, user_id, text ):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error elaborating the response. Please try again.")
+    
+def add_new_vision_prompt(messages, vision_prompt, role_id, name, user_id):
+    try:
+        if messages[0].get("role") == "system":
+            new_system_prompt = return_role(user_id, role_id, name, vision_prompt)
+            messages[0]["content"] = new_system_prompt
+            return messages
+        else:
+            return None
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error adding the new vision prompt. Please try again.")
 
 def send_intro():
     message = [{

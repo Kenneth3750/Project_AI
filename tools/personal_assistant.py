@@ -340,6 +340,31 @@ def get_emails(user_id):
         cursor.close()
         connection.close()
         return {}
+    
+def erase_email_contact(user_id, name, email):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "Select email_json from assistant_emails_registerd where user_id = %s"
+    cursor.execute(sql, (user_id,))
+    result = cursor.fetchone()
+    if result:
+        emails = json.loads(result[0])
+        if name in emails:
+            del emails[name]
+            emails = json.dumps(emails)
+            sql = "UPDATE assistant_emails_registerd SET email_json = %s WHERE user_id = %s"
+            cursor.execute(sql, (emails, user_id))
+            connection.commit()
+    cursor.close()
+    connection.close()
+    
 
 def erase_email_token(user_id):
     token_path = f'tokens/token_{user_id}.json'

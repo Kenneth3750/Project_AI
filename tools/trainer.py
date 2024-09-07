@@ -3,6 +3,7 @@ import requests
 import base64 
 from openai import OpenAI
 from dotenv import load_dotenv
+from tools.database_tools import database_connection
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_TOKEN")
@@ -103,13 +104,21 @@ def generate_language_training_summary_and_tasks(params, user_id, role_id):
         </body>
         </html>
         """
-
-        # Escribir el contenido en el archivo HTML
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(full_html_content)
+        connection = database_connection(
+            {
+             "user": os.getenv('user'), 
+             "password": os.getenv('password'), 
+             "host": os.getenv('host'), 
+             "db": os.getenv('db')
+            }
+        )
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO trainer_summaries (user_id, summary_html) VALUES (%s, %s)", (user_id, full_html_content))
+        connection.commit()
+        connection.close()
 
         return {
-            "message": "Summary generated successfully, check it clicking on the button that is on the trainer section on home page"
+            "message": "Summary generated successfully, generate the pdf by clicking on the button that is on the trainer section on home page"
         }
     except Exception as e:
         print(f"An error ocurred: {e}")
@@ -188,3 +197,18 @@ def trainer_tools():
     }
 
     return tools, available_tools
+
+def get_html_summary(user_id):
+    connection = database_connection(
+        {
+         "user": os.getenv('user'), 
+         "password": os.getenv('password'), 
+         "host": os.getenv('host'), 
+         "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    cursor.execute("SELECT summary_html FROM trainer_summaries WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user_id,))
+    summary_html = cursor.fetchone()
+    connection.close()
+    return summary_html[0] if summary_html else None

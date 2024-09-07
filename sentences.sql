@@ -71,6 +71,13 @@ create table if not exists recepcionist_areas (
     foreign key (user_id) references users(id) on delete cascade
 );
 
+create table if not exists trainer_summaries (
+    id int primary key auto_increment,
+    user_id int not null,
+    summary_html text not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
 
 
 

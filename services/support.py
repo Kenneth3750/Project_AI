@@ -2,7 +2,8 @@ from tools.recepcionist import add_apartment, get_apartments, list_of_reservatio
 import os
 import glob
 from tools.pdf_tools import save_pdf_tool, read_pdf_tool
-from tools.personal_assistant import add_email, get_emails, erase_email_token, create_email_token
+from tools.personal_assistant import add_email, get_emails, erase_email_token, create_email_token, erase_email_contact
+from tools.trainer import get_html_summary
 
 def save_pdf(user_id, file, role_id):
     if not os.path.exists(f"pdf/user_{user_id}/role_{role_id}/{file.filename}"):
@@ -92,6 +93,14 @@ def delete_email(user_id):
         print("An error occurred: ", e)
         raise Exception("There was an error deleting the email. Please try again.")
     
+def delete_contact_email(user_id, name, email):
+    try:
+        erase_email_contact(user_id, name, email)
+        return {"message": "Email deleted successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error deleting the email. Please try again.")
+    
 def get_reservations(user_id):
     try:
         reservations = list_of_reservations(user_id)
@@ -99,3 +108,11 @@ def get_reservations(user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error retrieving the reservations. Please try again.")
+    
+def get_summary(user_id):
+    try:
+        html = get_html_summary(user_id)
+        return html
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error retrieving the summary. Please try again.")

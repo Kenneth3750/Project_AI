@@ -96,6 +96,18 @@ window.initRecognition = function() {
     }
   };
   
+  window.initRecognitionImage = function() {
+    if (conversation){
+        recognition.start();
+        updateAvatarState("Listening");
+        captureAndSendImage();
+    }
+    else{
+        updateAvatarState("Sleeping");
+    }
+  };
+  
+
 window.stopRecognition = function() {
     stopRecording();
   };
@@ -193,8 +205,9 @@ function initConversation() {
                         success: function(data) {
                             window.dispatchEvent(new CustomEvent('modalVisibilityChanged', { detail: { visible: false } }));
                             console.log('Image sent successfully');
-                            name = data.name;
-                            document.getElementById("user_name").innerHTML = "Current user: " + name;
+                            user_name = data.name;
+                            document.getElementById("user_name").innerHTML = "Current user: " + user_name;
+                            window.localStorage.setItem("user_name", user_name);
                             if(data.stop == "stop"){
                                 stopRecording();
                             }else{
@@ -224,9 +237,56 @@ function initConversation() {
         });
 }
 
+
+function captureAndSendImage() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+
+            video.onloadedmetadata = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob((blob) => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'image.png');
+
+                    $.ajax({
+                        url: `/saveCurrent`, 
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(data) {
+                            console.log('Image sent successfully');
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error sending image:', error);
+                        }
+                    });
+                }, 'image/png');
+
+                stream.getTracks().forEach(function(track) {
+                    track.stop();
+                });
+            };
+        })
+        .catch(function(error) {
+            console.error('Error accessing camera:', error);
+        });
+    }
+  
+
 window.getRoleId = getRoleId;
 window.initConversation = initConversation;
 window.stopRecording = stopRecording;
+
 
 
 
