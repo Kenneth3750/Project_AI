@@ -7,13 +7,13 @@ flask_session==0.8.0
 google_api_python_client==2.137.0
 google_auth_oauthlib==1.2.1
 google_search_results==2.4.2
-groq==0.10.0
+groq==0.11.0
 heyoo==0.1.2
-langchain==0.2.15
-langchain_community==0.2.13
-openai==1.42.0
+langchain==0.2.16
+langchain_community==0.2.16
+openai==1.44.0
 Pillow==10.4.0
-protobuf==5.27.4
+protobuf==5.28.0
 PyMySQL==1.1.0
 python-dotenv==1.0.1
 pyttsx3==2.90
@@ -21,3 +21,4 @@ redis==5.0.4
 Requests==2.32.3
 serpapi==0.1.5
 tiktoken==0.6.0
+tiktoken==0.7.0

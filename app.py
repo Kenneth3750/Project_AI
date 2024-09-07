@@ -21,6 +21,7 @@ from flask_cors import CORS
 from config import authorized_emails
 mimetypes.add_type('application/javascript', '.js')
 
+
 load_dotenv()
 
 
@@ -437,4 +438,6 @@ def get_summary_trainer():
 if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000,
            ssl_context=('cert.pem', 'key.pem') )
+    
+
    

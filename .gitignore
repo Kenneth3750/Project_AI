@@ -61,3 +61,4 @@ apartment/
 *.exe
 trainer/
 tools/documents
+tools/chroma_db

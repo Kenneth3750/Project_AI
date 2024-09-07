@@ -1,154 +1,111 @@
-# university_tools.py
-from dotenv import load_dotenv
-from openai import OpenAI
+# university_assistant.py
 import os
-import json
-from tools.conversation import generate_response, extract_json
-from tools.database_tools import database_connection
-from langchain.document_loaders import DirectoryLoader
+from dotenv import load_dotenv
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader, UnstructuredPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI as LangChainOpenAI
+from langchain_openai import OpenAI as LangChainOpenAI
+from openai import OpenAI
 
+
+# Cargar variables de entorno
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
+PERSIST_DIRECTORY = 'tools/chroma_db'
+DOCUMENTS_DIRECTORY = 'tools/documents'
 
-# Inicializar el sistema RAG
-def initialize_rag():
-    # Cargar documentos
-    loader = DirectoryLoader('documents', glob="**/*.pdf")
-    documents = loader.load()
+# Verificar la clave API de OpenAI
+OPENAI_API_KEY = os.getenv('OPENAI_API_TOKEN')
+if not OPENAI_API_KEY:
+    raise ValueError("No se encontró la clave API de OpenAI. Asegúrate de tener un archivo .env con OPENAI_API_KEY=tu_clave_api")
 
-    # Dividir documentos en chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    texts = text_splitter.split_documents(documents)
+def load_documents():
+    """Carga los documentos usando diferentes métodos."""
+    loaders = [
+        (DirectoryLoader, {"glob": "**/*.pdf", "loader_cls": UnstructuredPDFLoader}),
+        (DirectoryLoader, {"glob": "**/*.pdf", "loader_cls": PyPDFLoader}),
+        (DirectoryLoader, {"glob": "**/*.pdf"})  # Intenta con el loader predeterminado
+    ]
+    
+    for loader_class, loader_args in loaders:
+        try:
+            print(f"Intentando cargar con {loader_class.__name__}...")
+            loader = loader_class(DOCUMENTS_DIRECTORY, **loader_args)
+            documents = loader.load()
+            print(f"Documentos cargados exitosamente con {loader_class.__name__}")
+            return documents
+        except Exception as e:
+            print(f"Error al cargar con {loader_class.__name__}: {str(e)}")
+    
+    raise Exception("No se pudo cargar los documentos con ningún método.")
 
-    # Crear embeddings y almacenar en Chroma
-    embeddings = OpenAIEmbeddings()
-    vectorstore = Chroma.from_documents(texts, embeddings)
+def create_vectorstore():
+    """Crea la base de datos vectorial si no existe."""
+    if not os.path.exists(PERSIST_DIRECTORY):
+        print("Creando nuevo vectorstore...")
+        try:
+            documents = load_documents()
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            texts = text_splitter.split_documents(documents)
+            embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+            vectorstore = Chroma.from_documents(texts, embeddings, persist_directory=PERSIST_DIRECTORY)
+            vectorstore.persist()
+            print("Vectorstore creado y guardado.")
+        except Exception as e:
+            print(f"Error al crear vectorstore: {str(e)}")
+            raise
+    else:
+        print("El vectorstore ya existe.")
 
-    # Crear cadena de recuperación
-    llm = LangChainOpenAI(temperature=0)
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vectorstore.as_retriever()
-    )
-
-    return qa_chain
-
-# Inicializar RAG
-qa_chain = initialize_rag()
-
-def query_rag(query):
-    return qa_chain.run(query)
-
-def get_professor_info(params, user_id, role_id):
+def query_university_info(params, user_id, role_id):
+    """Realiza una consulta en la base de datos vectorial."""
     try:
-        professor_name = params.get('professor_name')
-        course_name = params.get('course_name', '')
-        if not professor_name:
-            return {"error": "Se requiere el nombre del profesor."}
-        
-        query = f"Proporciona información sobre el profesor {professor_name}"
-        if course_name:
-            query += f" en relación con el curso {course_name}"
-        
-        result = query_rag(query)
-        return {"message": result}
-    except Exception as e:
-        return {"error": f"Error al obtener información del profesor: {str(e)}"}
+        query = params.get('query')
+        if not query:
+            return {"error": "Se requiere una consulta."}
 
-def get_course_info(params, user_id, role_id):
-    try:
-        course_code = params.get('course_code')
-        if not course_code:
-            return {"error": "Se requiere el código del curso."}
+        embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+        vectorstore = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=embeddings)
+        llm = LangChainOpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",
+            retriever=vectorstore.as_retriever()
+        )
         
-        query = f"Proporciona información sobre el curso con código {course_code}"
-        result = query_rag(query)
-        return {"message": result}
+        result = qa_chain.run(query)
+        return {"display": result}
     except Exception as e:
-        return {"error": f"Error al obtener información del curso: {str(e)}"}
+        return {"error": f"Error al buscar información: {str(e)}"}
 
-def get_exam_schedule(params, user_id, role_id):
-    try:
-        course_code = params.get('course_code')
-        if not course_code:
-            return {"error": "Se requiere el código del curso."}
-        
-        query = f"¿Cuál es el horario de examen para el curso con código {course_code}?"
-        result = query_rag(query)
-        return {"message": result}
-    except Exception as e:
-        return {"error": f"Error al obtener el horario de examen: {str(e)}"}
-
-def university_tools():
+def university_assistant_tools():
     tools = [
         {
             "type": "function",
             "function": {
-                "name": "get_professor_info",
-                "description": "Obtener información sobre un profesor específico",
+                "name": "query_university_info",
+                "description": "Answer any question related to college/university information.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "professor_name": {
+                        "query": {
                             "type": "string",
-                            "description": "El nombre del profesor"
-                        },
-                        "course_name": {
-                            "type": "string",
-                            "description": "El nombre del curso (opcional)"
+                            "description": "The question about college/university information."
                         }
                     },
-                    "required": ["professor_name"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "get_course_info",
-                "description": "Obtener información sobre un curso específico",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "course_code": {
-                            "type": "string",
-                            "description": "El código del curso"
-                        }
-                    },
-                    "required": ["course_code"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "get_exam_schedule",
-                "description": "Obtener el horario de examen para un curso específico",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "course_code": {
-                            "type": "string",
-                            "description": "El código del curso"
-                        }
-                    },
-                    "required": ["course_code"]
+                    "required": ["query"]
                 }
             }
         }
     ]
 
     available_functions = {
-        "get_professor_info": get_professor_info,
-        "get_course_info": get_course_info,
-        "get_exam_schedule": get_exam_schedule
+        "query_university_info": query_university_info
     }
 
     return tools, available_functions
+
+# Crear el vectorstore al iniciar (esto puede moverse a un script separado si es necesario)
+create_vectorstore()
