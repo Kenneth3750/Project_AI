@@ -6,21 +6,6 @@ import face_recognition
 import base64 
 
 
-
-
-# def save_image(file, name):
-#     url = "http://127.0.0.1:15000"
-#     files = {'image': file}
-#     data = {'name': name}
-#     response = requests.post(url, files=files, data=data)
-#     if response.status_code == 200:
-#         print("Image saved successfully.")
-#         return True
-#     else:
-#         print("Failed to save image.")
-#         return False
-
-
 def save_image(file, name, user_id):
     try:
         if not os.path.exists(f"known_people/user_{user_id}/{name}"):
@@ -117,7 +102,11 @@ def image_to_text(api_key, image_path):
             "content": [
                 {
                 "type": "text",
-                "text": "If there is a person in the image, please describe him/her. If there is no person, please type No person in the image. If there is a group of people, please describe the group. Describe the sorroundings as well."
+                "text": """If there is nobody in the image, please type Nobody in the image.
+                 If there is a person or people in the image, please follow the instructions below:
+                 - Describe the people in a way you give the relevant information to make nice comments about their look and posture.
+                 - Describe the background and the objects in the image in a way you give the relevant information to make nice comments about the environment.
+                 - Do not use more than 300 words because this description is going to be part of a larger prompt."""
                 },
                 {
                 "type": "image_url",

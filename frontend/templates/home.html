@@ -66,9 +66,12 @@
             <p class="text-center mb-4">Select a role for the AI avatar to assist you. Each role offers unique capabilities to enhance your experience.</p>
             
             <div class="role-options">
+                
                 <div class="role-option">
                     <div class="avatar-image">
-                        <img src="../static/img/investigator.png" alt="Investigator Avatar">
+                        <a href="/chat/1">
+                            <img src="../static/img/investigator.png" alt="Investigator Avatar">
+                        </a>
                     </div>
                     <h3>Investigator</h3>
                     <p>Research and analyze information</p>
@@ -78,7 +81,9 @@
                 </div>
                 <div class="role-option">
                     <div class="avatar-image recepcionist-image">
-                        <img src="../static/img/recepcionist.png" alt="Receptionist Avatar">
+                        <a href="/chat/2">
+                            <img src="../static/img/recepcionist.png" alt="Receptionist Avatar">
+                        </a>
                     </div>
                     <h3>Receptionist</h3>
                     <p>Manage appointments and visitor information</p>
@@ -88,7 +93,9 @@
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
-                        <img src="../static/img/trainer.png" alt="Personal Skills Trainer Avatar">
+                        <a href="/chat/3">
+                            <img src="../static/img/trainer.png" alt="Personal Skills Trainer Avatar">
+                        </a>
                     </div>
                     <h3>Skills Trainer</h3>
                     <p>Enhance your personal and professional skills</p>
@@ -98,7 +105,9 @@
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
-                        <img src="../static/img/personal.png" alt="Personal Assistant Avatar">
+                        <a href="/chat/4">
+                            <img src="../static/img/personal.png" alt="Personal Assistant Avatar">
+                        </a>
                     </div>
                     <h3>Personal Assistant</h3>
                     <p>Help with daily tasks and organization</p>
@@ -108,7 +117,9 @@
                 </div>
                 <div class="role-option">
                     <div class="avatar-image">
-                        <img src="../static/img/university.png" alt="University Guide Avatar">
+                        <a href="/chat/5">
+                            <img src="../static/img/university.png" alt="University Guide Avatar">
+                        </a>
                     </div>
                     <h3>University Guide</h3>
                     <p>Navigate academic life and resources</p>
@@ -116,18 +127,6 @@
                         Learn More
                     </button>
                 </div>
-            </div>
-    
-            <div class="role-selection-controls" style="margin-top: 3%;">
-                <select id="select-role" name="select-role" class="form-select">
-                    <option value="" disabled selected>Select a role</option>
-                    <option value="1">Investigator</option>
-                    <option value="2">Receptionist</option>
-                    <option value="3">Skills Trainer</option>
-                    <option value="4">Personal Assistant</option>
-                    <option value="5">University Guide</option>
-                </select>
-                <button class="btn btn-primary btn-lg" onclick="goToChat()">Start Conversation</button>
             </div>
         </div>
     </section>
