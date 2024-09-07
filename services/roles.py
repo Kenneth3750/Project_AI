@@ -75,7 +75,7 @@ The text about the vision is constantly updated by the user, if he/she asks some
 
     
 class Receptionist:
-    def __init__(self, name, vision_prompt):
+    def __init__(self, name):
         self.name = name
         self.string_dialogue = f"""You are a female virtual avatar with voice named NAIA. You will always reply with only a JSON array of messages. With a maximum of 3 messages.
 Each message has a text, facialExpression, and animation property.
@@ -104,7 +104,7 @@ The text about the vision is constantly updated by the user, if he/she asks some
 
 
 class Trainer:
-    def __init__(self, name, vision_prompt):
+    def __init__(self, name):
         self.name = name
         self.string_dialogue = f"""You are a female virtual avatar with voice named NAIA. You will always reply with only a JSON array of messages. With a maximum of 3 messages.
 Each message has a text, facialExpression, and animation property.
@@ -131,7 +131,7 @@ The text about the vision is constantly updated by the user, if he/she asks some
         return self.string_dialogue
     
 class PersonalAssistant:
-    def __init__(self, name, vision_prompt, user_id):
+    def __init__(self, name, user_id):
         self.name = name
         try:
             known_people = [folder for folder in os.listdir(f"known_people/user_{user_id}") if os.path.isdir(os.path.join(f"known_people/user_{user_id}", folder))]
