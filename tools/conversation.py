@@ -64,6 +64,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
         display_responses = []
         if response.content is not None:
             first_response = extract_json(response.content)
+            first_response = convert_to_array_json(first_response)
             return first_response, display_responses
 
         i = 1
@@ -100,6 +101,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 second_response = second_completion.choices[0].message
 
                 second_response = extract_json(second_response.content)
+                second_response = convert_to_array_json(second_response)
             
                 remove_i_elements_from_penultimate(messages, i)
 
@@ -114,6 +116,12 @@ def remove_i_elements_from_penultimate(messages, i):
     penultimate_index = len(messages) - 2
     start_index = max(penultimate_index - i + 1, 0)
     del messages[start_index:penultimate_index + 1]
+
+def convert_to_array_json(response):
+    response = json.loads(response)
+    if isinstance(response, dict):
+        response = [response]
+    return json.dumps(response)
 
 
 
