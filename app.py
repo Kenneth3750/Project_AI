@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image, manage_current_image, current_image_description
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -468,6 +468,19 @@ def get_summary_trainer():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
         
+@app.route('/investigator', methods=['GET'])
+def investigator():
+    user_id = session['user_id']
+    if request.method == "GET":
+        try:
+            html = get_pdf(user_id)
+            if html:
+                print("html:", html)
+                return html
+            else:
+                return jsonify({'error': 'Error generating pdf'}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000,

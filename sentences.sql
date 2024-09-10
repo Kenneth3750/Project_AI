@@ -78,6 +78,13 @@ create table if not exists trainer_summaries (
     foreign key (user_id) references users(id) on delete cascade
 );
 
+create table if not exists investigator_long_texts (
+    id int primary key auto_increment,
+    user_id int not null,
+    long_text text not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
 
 
 

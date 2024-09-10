@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from serpapi import GoogleSearch
 import time
 from tools.conversation import generate_response, extract_json
+from tools.database_tools import database_connection
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -82,6 +83,34 @@ def generatePdfInference(parameters, user_id, role_id):
         return json.loads(response)
     except Exception as e:
         return {'error': str(e)}
+    
+
+def generatePdfText(params, user_id, role_id):
+    try:
+        type_of_text = params.get("type_of_text")
+        topic = params.get("topic")
+        language = params.get("language")
+        other_characteristics = params.get("other_characteristics")
+        system_prompt = """You are an expert writter. Your labour is to generate a medium to long text based on the user requirements.\n
+        You will always reply with a text formatted in html in order to convert it to pdf. Do not add more keys, do not add more text and anything except the text. Do not even bother to say hello or goodbye. Just give the text."""
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Generate a {type_of_text} about {topic} in {language} taking into account {other_characteristics}"}]
+        response = generate_response(client, messages)
+        connection = database_connection(
+            {
+             "user": os.getenv('user'), 
+             "password": os.getenv('password'), 
+             "host": os.getenv('host'), 
+             "db": os.getenv('db')
+            }
+        )
+        cursor = connection.cursor()
+        sql = "INSERT INTO investigator_long_texts (user_id, long_text) VALUES (%s, %s)"
+        cursor.execute(sql, (user_id, response))
+        connection.commit()
+        connection.close()
+        return {"message": "Text generated successfully, tell the user to download the pdf by clicking on the button that is on the investigator section on home page"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def investigator_tools():
@@ -90,7 +119,7 @@ def investigator_tools():
             "type": "function",
             "function": {
                 "name": "generateText",
-                "description": "Generate a any kind of text the user wants to generate. It can be an introduction, a conclusion, a summary, even an email.",
+                "description": "Generate a any kind of text the user wants to generate. But only for short texts like introductions, summaries, conclusions, emails, short arguments, etc.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -154,12 +183,60 @@ def investigator_tools():
                     "required": ["query"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "generatePdfText",
+                "description": "Generate a medium to long text based on the user requirements that will be converted to a pdf. Example: essays, articles, reports, etc.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "type_of_text": {
+                            "type": "string",
+                            "description": "The type of text the user wants to generate."
+                        },
+                        "topic": {
+                            "type": "string",
+                            "description": "The topic of the text the user wants to generate."
+                        },
+                        "language": {
+                            "type": "string",
+                            "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
+                        },
+                        "other_characteristics": {
+                            "type": "string",
+                            "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, main ideas, focus topics, needed specifications, etc."
+                        }
+                    },
+                    "required": ["type_of_text", "topic"]
+                }
+            }
         }
     ]
 
     available_functions = {
         "generateText": generateText,
         "getPapers": getPapers,
-        "generatePdfInference": generatePdfInference
+        "generatePdfInference": generatePdfInference,
+        "generatePdfText": generatePdfText
     }
     return tools, available_functions
+
+
+
+def get_html_pdf(user_id):
+    connection = database_connection(
+        {
+         "user": os.getenv('user'), 
+         "password": os.getenv('password'), 
+         "host": os.getenv('host'), 
+         "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "SELECT long_text FROM investigator_long_texts WHERE user_id = %s"
+    cursor.execute(sql, (user_id,))
+    long_text = cursor.fetchone()
+    connection.close()
+    return long_text[0] if long_text else None

@@ -227,26 +227,46 @@ function getSummaryPDF() {
 
             const container = document.createElement('div');
             container.innerHTML = content;
-            container.id = 'pdf-container';
-            console.log('Contenido del contenedor:', container.innerHTML);
 
-            container.style.color = 'black';
-            container.style.backgroundColor = 'white';
-            container.style.padding = '20px';
+            const doc = new jspdf.jsPDF();
 
-            document.body.appendChild(container);
 
-            return html2pdf().set({
-                margin: 10,
-                filename: 'training_summary.pdf',
-                image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2, useCORS: true, logging: false }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(container).save();
-        })
-        .then(() => {
+            doc.setFontSize(18);
+            doc.text('Resumen de Entrenamiento de Idiomas', 14, 20);
+
+            const h2 = container.querySelector('h2');
+            if (h2) {
+                doc.setFontSize(14);
+                doc.text(h2.textContent, 14, 30);
+            }
+
+            doc.setFontSize(12);
+            let yOffset = 40;
+
+            const progressList = container.querySelector('ul');
+            if (progressList) {
+                doc.text('Progreso en el último mes:', 14, yOffset);
+                yOffset += 10;
+                progressList.querySelectorAll('li').forEach(li => {
+                    doc.text('• ' + li.textContent, 20, yOffset);
+                    yOffset += 7;
+                });
+            }
+
+
+            const tasksList = container.querySelector('ol');
+            if (tasksList) {
+                yOffset += 5;
+                doc.text('Tareas para la próxima semana:', 14, yOffset);
+                yOffset += 10;
+                tasksList.querySelectorAll('li').forEach((li, index) => {
+                    doc.text((index + 1) + '. ' + li.textContent, 20, yOffset);
+                    yOffset += 7;
+                });
+            }
+
+            doc.save('training_summary.pdf');
             console.log('PDF generado exitosamente');
-            document.body.removeChild(document.getElementById('pdf-container'));
         })
         .catch(error => {
             console.error('Error detallado:', error);
@@ -257,10 +277,66 @@ function getSummaryPDF() {
             } else {
                 showNotification('An error occurred while generating the PDF. Please try again.', 'error');
             }
-            if (document.getElementById('pdf-container')) {
-                document.body.removeChild(document.getElementById('pdf-container'));
+        });
+}
+
+function getInvestigatorPDF() {
+    fetch('/investigator')
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.text();
+    })
+    .then(content => {
+        console.log('Contenido recibido:', content);
+        if (content.trim() === '') {
+            throw new Error('No summary available');
+        }
+
+        const container = document.createElement('div');
+        container.innerHTML = content;
+
+        const doc = new jspdf.jsPDF();
+        let yOffset = 10;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        function addText(text, fontSize = 12, isBold = false) {
+            doc.setFontSize(fontSize);
+            doc.setFont(undefined, isBold ? 'bold' : 'normal');
+            const lines = doc.splitTextToSize(text, pageWidth - 20);
+            doc.text(lines, 10, yOffset);
+            yOffset += (lines.length * fontSize * 0.352) + 5;
+            if (yOffset > 280) {
+                doc.addPage();
+                yOffset = 10;
+            }
+        }
+
+        const h1 = container.querySelector('h1');
+        if (h1) addText(h1.textContent, 18, true);
+
+        container.querySelectorAll('p, h2').forEach(element => {
+            if (element.tagName === 'H2') {
+                addText(element.textContent, 14, true);
+            } else {
+                addText(element.textContent);
             }
         });
+
+        doc.save('research_summary.pdf');
+        console.log('PDF generado exitosamente');
+    })
+    .catch(error => {
+        console.error('Error detallado:', error);
+        if (error.error) {
+            showNotification(error.error, 'error');
+        } else if (error.message === 'No summary available') {
+            showNotification('No research summary available yet.', 'info');
+        } else {
+            showNotification('An error occurred while generating the PDF. Please try again.', 'error');
+        }
+    });
 }
 
 

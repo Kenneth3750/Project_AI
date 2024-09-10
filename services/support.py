@@ -4,6 +4,7 @@ import glob
 from tools.pdf_tools import save_pdf_tool, read_pdf_tool
 from tools.personal_assistant import add_email, get_emails, erase_email_token, create_email_token, erase_email_contact
 from tools.trainer import get_html_summary
+from tools.investigator import get_html_pdf
 
 def save_pdf(user_id, file, role_id):
     if not os.path.exists(f"pdf/user_{user_id}/role_{role_id}/{file.filename}"):
@@ -116,3 +117,12 @@ def get_summary(user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error retrieving the summary. Please try again.")
+    
+
+def get_pdf(user_id):
+    try:
+        html = get_html_pdf(user_id)
+        return html
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error retrieving the pdf. Please try again.")

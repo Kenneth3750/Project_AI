@@ -18,7 +18,7 @@
     <link rel= "stylesheet" type= "text/css" href= "/static/camera.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.20/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body onload="getInfo()">
 
@@ -139,6 +139,25 @@
                     <li><strong>Personal Skills Trainer:</strong> Set your learning goals and preferences</li>
                 </ul>
                 <div class="role-accordions">
+                    <div class="role-accordion">
+                        <div class="role-header" onclick="toggleAccordion(this)">
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Investigator</span>
+                        </div>
+                        <div class="role-content">
+                            <h4>Investigator Dashboard</h4>
+                
+                            <div class="generate-pdf mt-4">
+                                <h5>Generate Extended Text PDF</h5>
+                                <p>Generate a PDF with extended text based on your research and analysis.</p>
+                                <button class="btn btn-success" id="generate-pdf" onclick="getInvestigatorPDF()">
+                                    <i class="fas fa-file-pdf"></i> Generate and Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>                
+
+
                     <div class="role-accordion">
                         <div class="role-header" onclick="toggleAccordion(this)">
                             <i class="fas fa-chevron-right"></i>
