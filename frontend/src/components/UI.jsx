@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
 import SubtitlesContext from './subtitles'; 
+import HelpTooltip from "./HelpToolTip";
 
 export const UI = ({ hidden, ...props }) => {
   const { loading, cameraZoomed, setCameraZoomed, displayResponses } = useChat();
@@ -178,7 +179,10 @@ export const UI = ({ hidden, ...props }) => {
           <div className="flex justify-between items-start w-full">
           {/* Panel izquierdo (existente) */}
           <div className="self-start backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto max-w-[200px] relative">
-            <h1 className="font-bold text-lg text-gray-800">NAIA</h1>
+            <div className="flex justify-between items-center">
+              <h1 className="font-bold text-lg text-gray-800">NAIA</h1>
+              <HelpTooltip role={naiaRole} />
+            </div>
             <h6 id="user_name" className="text-xs text-gray-700">Current user: Unknown</h6>
             <h6 id="naia-role" className="text-xs text-gray-700">
                 Role: {naiaRole}
