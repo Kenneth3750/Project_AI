@@ -9,8 +9,9 @@ from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
 from datetime import datetime, timedelta
 import json
-
-
+import requests
+from typing import List, Dict
+from urllib.parse import urlencode
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -260,7 +261,52 @@ def delete_last_reservation(params, user_id, role_id):
     except Exception as e:
         print("Error:", e)
         return {"error": str(e)}
-  
+    
+def list_hotels(params: Dict, user_id: str, role_id: str) -> Dict:
+    try:
+        base_url = "https://api.liteapi.travel/v3.0/data/hotels"
+
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": os.getenv('LITE_API_KEY')
+        }
+
+        query_params = {
+            "countryCode": params.get("countryCode"),
+            "cityName": params.get("cityName"),
+            "hotelName": params.get("hotelName"),
+            "limit": 5,
+            "minRating": params.get("min_rating"),
+            "aiSearch": params.get("aiSearch")
+        }
+
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+
+
+        url = f"{base_url}?{urlencode(query_params)}"
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        try:
+            response_data = response.json()
+        except json.JSONDecodeError:
+            return {"error": f"Failed to decode JSON. Response content: {response.text}"}
+
+
+        if not response_data:
+            return {"error": "The API returned an empty response"}
+
+        print(f"Response Data: {json.dumps(response_data, indent=2)}")  
+
+
+        html = format_hotel_results_to_html(response_data)
+        return {"display": html}     
+
+    except requests.RequestException as e:
+        return {"error": f"Request failed: {str(e)}"}
+    except Exception as e:
+        return {"error": f"An unexpected error occurred: {str(e)}"}
+
     
 
 
@@ -423,8 +469,41 @@ def recepcionist_tools(user_id):
                     "required": ["place", "name"]
                 }
             }
+        },
+            {
+        "type": "function",
+        "function": {
+            "name": "list_hotels",
+            "description": "Retrieve a list of hotels based on the parameters provided",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "countryCode": {
+                        "type": "string",
+                        "description": "Country code"
+                    },
+                    "cityName": {
+                        "type": "string",
+                        "description": "City name"
+                    },
+                    "hotelName": {
+                        "type": "string",
+                        "description": "Hotel name"
+                    },
+                    "min_rating": {
+                        "type": "number",
+                        "description": "Minimum rating of the hotel"
+                    },
+                    "aiSearch": {
+                        "type": "string",
+                        "description": "A query in natural language to search for hotels, usefull to add specifications, e.g. 'hotels with pool', 'hotels near a beach' "
+                    }
+                },
+                "required": [ "countryCode", "cityName"]
+            }
         }
-    ]
+    }
+]
 
     available_functions = {
         "new_visitor_alert": new_visitor_alert,
@@ -432,10 +511,38 @@ def recepcionist_tools(user_id):
         "insert_reservation": insert_reservation,   
         "see_current_reservations": see_current_reservations,
         "change_reservation": change_reservation,
-        "delete_last_reservation": delete_last_reservation
+        "delete_last_reservation": delete_last_reservation,
+        "list_hotels": list_hotels
     }
 
     return tools, available_functions
+
+def format_hotel_results_to_html(data: Dict) -> str:
+    hotels = data.get('data', [])
+    html_output = "<div class='hotel-results'>"
+
+    for hotel in hotels[:5]:  # Limit to 5 hotels
+        html_output += f"<div class='hotel' id='{hotel['id']}'>"
+        
+        html_output += f"<h2>{hotel['name']}</h2>"
+        html_output += f"<img src='{hotel['main_photo']}' alt='{hotel['name']}' class='hotel-image'>"
+        
+        html_output += f"<p><strong>Location:</strong> {hotel['city']}, {hotel['country']}</p>"
+        html_output += f"<p><strong>Address:</strong> {hotel['address']}, {hotel['zip']}</p>"
+        html_output += f"<p><strong>Stars:</strong> {hotel['stars']}</p>"
+        
+        # Truncate description to first 200 characters
+        description = hotel['hotelDescription'][:200] + "..." if len(hotel['hotelDescription']) > 200 else hotel['hotelDescription']
+        html_output += f"<p><strong>Description:</strong> {description}</p>"
+        
+        html_output += f"<p><strong>Amenities:</strong> {hotel.get('business_amenities', 'Information not available')}</p>"
+        
+        html_output += f"<a href='https://example.com/book/{hotel['id']}' target='_blank' class='book-now'>Book Now</a>"
+        
+        html_output += "</div>"  # Close hotel div
+
+    html_output += "</div>"  # Close hotel-results div
+    return html_output
 
 
 def add_apartment(apartment, phone, user_id):

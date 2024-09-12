@@ -252,7 +252,6 @@ def save_current():
                     print("vision_prompt:", vision_prompt)
                     new_prompt = f"This is the new vision prompt: {vision_prompt}"
                     messages.append({"role": "user", "content": new_prompt})
-                    print("new_messages:", messages)
                     session['chat'] = json.dumps(messages)
                     return jsonify({'result': 'ok'})
                 else:
