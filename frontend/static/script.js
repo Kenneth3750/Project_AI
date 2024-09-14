@@ -4,6 +4,7 @@ let audioStream;
 let mediaRecorder;
 let chunks = [];
 let conversation;
+let globalTranscript = null;
 let modal = document.getElementById("modal");
 
 const NO_SPEECH_DETECTED = 'No se detectó voz';
@@ -25,48 +26,9 @@ navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.msGetUserMedia);
 
 
-function sendTranscript(formData) {
-    $.ajax({
-        url: '/audio',
-        type: 'POST',
-        headers: {
-            "Content-Type": "application/json",
-        },
-        data: formData,
-        success: function(data) {
-            console.log('Texto:', data.messages);
-            console.log('Display:', data.display_responses);
-            // if ('speechSynthesis' in window) {
-            //     const synthesisUtterance = new SpeechSynthesisUtterance();
-            //     synthesisUtterance.text = data.text;
-            //     const voices = window.speechSynthesis.getVoices();
-            //     synthesisUtterance.voice = voices[0];
-            //     synthesisUtterance.onend = function(event) {
-            //         console.log('Finalizó la síntesis de voz:', event);
-            //         if (conversation){
-            //             recognition.start();
-            //             document.getElementById("status").innerHTML = `Status: Listening...`;
-            //         }
-            //     };
-            //     document.getElementById("status").innerHTML = `Status: Speaking...`;
-            //     window.speechSynthesis.speak(synthesisUtterance);
-            // } else {
-            //     console.log('Lo siento, tu navegador no soporta la API de síntesis de voz.');
-            // }
-            recognition.start();
-        },
-        error: function(xhr, status, error) {
-            console.error('Error al enviar el audio:', error);
-
-        }
-    });
-
-}
-
-
-
 recognition.onresult = (e) => {
     const transcript = e.results[0][0].transcript;
+    globalTranscript = transcript;
     console.log('Transcripción:', transcript);
     if (transcript){
         recognition.stop();
@@ -76,10 +38,10 @@ recognition.onresult = (e) => {
         if (conversation){
             const event = new CustomEvent('chat', { detail: transcript });
             window.dispatchEvent(event);
-            // sendTranscript(formData)
         }
         else {
             recognition.stop();
+            globalTranscript = null;
             window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
             updateAvatarState("Sleeping");
         }
@@ -89,6 +51,7 @@ recognition.onresult = (e) => {
 window.initRecognition = function() {
     if (conversation){
         recognition.start();
+        globalTranscript = null;
         updateAvatarState("Listening");
     }
     else{
@@ -96,9 +59,10 @@ window.initRecognition = function() {
     }
   };
   
-  window.initRecognitionImage = function() {
+window.initRecognitionImage = function() {
     if (conversation){
         recognition.start();
+        globalTranscript = null;
         updateAvatarState("Listening");
         captureAndSendImage();
     }
@@ -113,8 +77,16 @@ window.stopRecognition = function() {
   };
 
 recognition.onerror = (e) => {
-    console.error('Error en el reconocimiento de voz:', e.error);
+    console.log('Error en el reconocimiento de voz:', e.error);
     
+}
+
+recognition.onend = (e) => {
+    console.log('Fin del reconocimiento de voz');
+    setTimeout(() => { console.log('Fin del reconocimiento de voz'); }, 1000);
+    if (conversation && globalTranscript === null){
+        recognition.start();
+    }
 }
 
 
@@ -142,7 +114,7 @@ window.toggleRecording = function() {
 // Detener la grabación y enviar el audio al presionar el botón "Detener Grabación y Enviar"
 function stopRecording() {
     recognition.stop();
-    
+    globalTranscript = null;
 
     const event = new CustomEvent('chat', { detail: "goodbye" });
     window.dispatchEvent(event);
