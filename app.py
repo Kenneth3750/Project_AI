@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory, flash
+from flask import Flask, request, jsonify, session, redirect, url_for, send_from_directory, abort
 from flask_session import Session
 import os
+from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
@@ -19,6 +20,10 @@ from authlib.integrations.flask_client import OAuth
 import authlib.integrations.base_client.errors
 from flask_cors import CORS
 from config import authorized_emails
+import re
+import threading
+import time
+import logging
 mimetypes.add_type('application/javascript', '.js')
 
 
@@ -33,6 +38,7 @@ voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 # tiny_model = whisper.load_model('tiny')
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
@@ -57,8 +63,39 @@ google = oauth.register(
         }
     )
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
+BLOCKED_PATTERNS = [
+    r'/web/css/button_style\.css',
+    r'/favicon\.ico',
+    r'/cgi-bin/',
+    r'/vendor/phpunit/',
+    r'/hello\.world',
+    r'\.\./',  
+    r'%2e%2e',  
+    r'eval-stdin\.php',
+    r'allow_url_include',
+    r'auto_prepend_file'
+]
+
+
+BLOCKED_PATTERNS_COMPILED = [re.compile(pattern) for pattern in BLOCKED_PATTERNS]
+
+@app.before_request
+def block_unwanted_requests():
+    path = request.path
+    full_url = request.url
+
+    for pattern in BLOCKED_PATTERNS_COMPILED:
+        if pattern.search(path) or pattern.search(full_url):
+            logger.warning(f"Intento de acceso bloqueado: {full_url}")
+            abort(403)
+
+@app.errorhandler(403)
+def forbidden(e):
+    return "Access denied", 403
 
 
 def login_required(f):
@@ -74,6 +111,26 @@ def logout_required(f):
     def decorated_function(*args, **kwargs):
         if 'google_token' in session:
             return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def security_middleware(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        path = request.path
+        full_url = request.url
+
+        # Verificar si la URL coincide con alguno de los patrones bloqueados
+        for pattern in BLOCKED_PATTERNS_COMPILED:
+            if pattern.search(path) or pattern.search(full_url):
+                app.logger.warning(f"Intento de acceso bloqueado: {full_url}")
+                abort(403)  # Forbidden
+
+        # Verificar versión de HTTP
+        if request.environ.get('SERVER_PROTOCOL') not in ['HTTP/1.1', 'HTTP/1.0']:
+            app.logger.warning(f"Versión HTTP no soportada: {request.environ.get('SERVER_PROTOCOL')}")
+            abort(505)  # HTTP Version Not Supported
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -482,8 +539,8 @@ def investigator():
             return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":  
-    app.run(debug=True, host='0.0.0.0', port=5000,
-           ssl_context=('cert.pem', 'key.pem') )
+    app.run(debug=True, host='0.0.0.0', port=5000, 
+           ssl_context=('cert.pem', 'key.pem'), threaded=True) 
     
 
    
