@@ -89,7 +89,7 @@ create table if not exists user_useful_info(
     id int primary key auto_increment,
     user_id int not null,
     city varchar(100) not null,
-    country_code varchar(10) not null,
+    country varchar(100) not null,
     foreign key (user_id) references users(id) on delete cascade
 );
 

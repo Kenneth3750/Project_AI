@@ -130,16 +130,8 @@ def get_pdf(user_id):
         raise Exception("There was an error retrieving the pdf. Please try again.")
     
 
-def get_user_useful_info(user_id, user_ip):
+def get_user_useful_info(user_id, location_data):
     try:
-        if user_ip == "127.0.0.1":
-            location_data = {
-                "city": "Barranquilla",
-                "country_code": "CO"
-            }
-        else:
-            response = requests.get(f'https://ipapi.co/{user_ip}/json/')
-            location_data = response.json()
         connection = database_connection(
             {
                 "user": os.getenv('user'), 

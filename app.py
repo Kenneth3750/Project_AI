@@ -244,13 +244,6 @@ def index(role_id):
         except Exception as e:
             return jsonify({'error': str(e)})
     elif request.method == 'GET':
-        try:
-            user_ip = request.remote_addr
-            print("user_ip:", user_ip)
-            get_user_useful_info(user_id, user_ip)
-        except Exception as e:
-            print("Error saving useful data:", e)
-            pass
         return send_from_directory(app.static_folder,'index.html')
 
 
@@ -544,6 +537,17 @@ def investigator():
                 return jsonify({'error': 'Error generating pdf'}), 500
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+@app.route('/saveLocation', methods=['POST'])
+def save_location():
+    user_id = session['user_id']
+    try:
+        location_json = request.get_json()
+        print("location_json:", location_json)
+        get_user_useful_info(user_id, location_json)
+        return jsonify({'result': 'ok'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000, 

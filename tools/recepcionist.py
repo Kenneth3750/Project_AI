@@ -29,7 +29,6 @@ def new_visitor_alert(params, user_id, role_id):
         apartment = params.get("apartment")
 
         data = get_apartments(user_id)
-        data = json.loads(data)
   
         owner_number = data.get(apartment)
         if owner_number:
@@ -886,13 +885,13 @@ def get_user_current_location(user_id):
         }
     )
     cursor = connection.cursor()
-    sql = "SELECT city, country_code FROM user_useful_info WHERE user_id = (%s)"
+    sql = "SELECT city, country FROM user_useful_info WHERE user_id = (%s)"
     cursor.execute(sql, (user_id,))
     data = cursor.fetchone()
     cursor.close()
     connection.close()
     city = data[0]
-    country_code = data[1]
+    country = data[1]
     if data:
-        return city, country_code
+        return city, country
     return None, None

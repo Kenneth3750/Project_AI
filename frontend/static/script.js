@@ -260,6 +260,65 @@ window.initConversation = initConversation;
 window.stopRecording = stopRecording;
 
 
+async function getUserLocation() {
+    try {
+      const storedLocation = window.localStorage.getItem("user_location");
+      const locationDate = window.localStorage.getItem("location_date");
+      const currentDate = new Date();
+  
+      if (storedLocation && locationDate) {
+        const lastUpdateDate = new Date(locationDate);
+        if (currentDate - lastUpdateDate < 86400000) { // 24 horas en milisegundos
+          console.log('Usando ubicación almacenada');
+          return JSON.parse(storedLocation);
+        }
+      }
+  
+      const position = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocalización no soportada por este navegador.'));
+        } else {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      });
+  
+      const { latitude, longitude } = position.coords;
+
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      const data = await response.json();
+  
+      const cleanCityName = (cityName) => {
+        const unwantedPrefixes = ['Perímetro Urbano', 'Área Metropolitana', 'Zona Urbana'];
+        let cleanName = cityName;
+        for (const prefix of unwantedPrefixes) {
+          if (cleanName.startsWith(prefix)) {
+            cleanName = cleanName.substring(prefix.length).trim();
+          }
+        }
+        return cleanName.split(' ')[0];
+      };
+  
+      const rawCityName = data.address.city || data.address.town || data.address.village || 'Desconocido';
+      const cleanedCityName = cleanCityName(rawCityName);
+  
+      const locationData = {
+        latitude,
+        longitude,
+        city: cleanedCityName,
+        country: data.address.country || 'Desconocido'
+      };
+  
+      window.localStorage.setItem("user_location", JSON.stringify(locationData));
+      window.localStorage.setItem("location_date", currentDate.toISOString());
+  
+      return locationData;
+    } catch (error) {
+      console.error('Error al obtener la ubicación:', error);
+      throw error;
+    }
+  }
+
+
 
 
 function updateNaiaRole() {
@@ -292,6 +351,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('reactComponentReady', initializeNaiaRole);
     initializeNaiaRole();
+    getUserLocation()
+    .then((location) => {
+      console.log('Ubicación del usuario:', location);
+      $.ajax({
+        url: '/saveLocation',
+        type: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(location),
+        success: function(data) {
+          console.log('Ubicación enviada correctamente:', data);
+        },
+        error: function(xhr, status, error) {
+          console.error('Error al enviar la ubicación:', error);
+        }
+      });
+    })
+    .catch((error) => {
+      console.error('Error al obtener la ubicación:', error.message);
+    });
 
 });
 

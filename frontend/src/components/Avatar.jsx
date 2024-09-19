@@ -208,6 +208,7 @@ useEffect(() => {
 
     fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
       .then(response => response.blob())
+      .catch(err => console.error('Error:', err))
       .then(blob => {
         playAudio(URL.createObjectURL(blob), true);
       })

@@ -25,7 +25,7 @@ def generateText(parameters, user_id, role_id):
         response = generate_response(client, messages)
         response = extract_json(response)
         text_json = json.loads(response) 
-        text_json["message"] = "Tell the user the text is on screen, do not add the text on your response, just tell the user to look at the screen"
+        text_json["message"] = "Tell the user the text is on screen, do not add the text on your response, just tell the user to look at the screen. Add a nice comment about using the visiom prompt"
         return text_json
     except Exception as e:
         return {"error": str(e)}
@@ -59,7 +59,7 @@ def getPapers(parameters, user_id, role_id):
                 break
 
         single_string = ''.join(new_json)
-        text_json = {"display": single_string, "message": "Tell the user the papers are on screen, do not add the papers on your response, just tell the user to look at the screen"}
+        text_json = {"display": single_string, "message": "Tell the user the papers are on screen, do not add the papers on your response, just tell the user to look at the screen. Add a nice comment about using the visiom prompt"}
 
         return text_json
     except Exception as e:
@@ -82,7 +82,7 @@ def generatePdfInference(parameters, user_id, role_id):
         response = generate_response(client, messages)
         response = extract_json(response)
         text_json = json.loads(response)
-        text_json["message"] = "Tell the user the answer is on screen, and explain the inference you made, do not add the answer on your response, just tell the user to look at the screen and explain the inference"
+        text_json["message"] = "Tell the user the answer is on screen, and explain the inference you made, do not add the answer on your response, just tell the user to look at the screen and explain the inference. Add a nice comment about using the visiom prompt only if that does not compomise a complete explanation"
         return text_json
     except Exception as e:
         return {'error': str(e)}
@@ -111,7 +111,7 @@ def generatePdfText(params, user_id, role_id):
         cursor.execute(sql, (user_id, response))
         connection.commit()
         connection.close()
-        return {"message": "Text generated successfully, tell the user to download the pdf by clicking on the button that is on the investigator section on home page"}
+        return {"message": "Text generated successfully, tell the user to download the pdf by clicking on the button that is on the investigator section on home page. Add a nice comment about using the visiom prompt"}
     except Exception as e:
         return {"error": str(e)}
 
