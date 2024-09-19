@@ -8,7 +8,7 @@ from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain_openai import OpenAI as LangChainOpenAI
 from openai import OpenAI
-
+import json
 
 # Cargar variables de entorno
 load_dotenv()
@@ -62,7 +62,7 @@ def create_vectorstore():
 def query_university_info(params, user_id, role_id):
     """Realiza una consulta en la base de datos vectorial."""
     try:
-        query = params.get('query')
+        query = params["query"]
         if not query:
             return {"error": "Se requiere una consulta."}
 
@@ -75,8 +75,19 @@ def query_university_info(params, user_id, role_id):
             retriever=vectorstore.as_retriever()
         )
         
-        result = qa_chain.run(query)
-        return {"display": result}
+        result = qa_chain.invoke(query)
+
+        question = result.get("query")
+        answer = result.get("result")
+        display = f"""
+        <h3><b>Question</b></h3><br>
+        <p>{question}</p><br>
+        <h3><b>Answer</b></h3><br>
+        <p>{answer}</p><br>
+        """
+
+        return {"display": display,
+                "message": "The result of the embeddings is on screen. Now you must explain the answer to the user in a proper way for a voice assistant."}
     except Exception as e:
         return {"error": f"Error al buscar información: {str(e)}"}
 
@@ -107,5 +118,3 @@ def university_assistant_tools():
 
     return tools, available_functions
 
-# Crear el vectorstore al iniciar (esto puede moverse a un script separado si es necesario)
-create_vectorstore()

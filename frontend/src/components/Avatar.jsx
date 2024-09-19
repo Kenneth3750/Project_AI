@@ -188,8 +188,25 @@ useEffect(() => {
         },
       })
     };
+    let voice_id;
+    let role_id = window.localStorage.getItem('role');
+    if (role_id === "1") {
+      voice_id = "21m00Tcm4TlvDq8ikWAM";
+    }
+    else if (role_id === "2") {
+      voice_id = "FGY2WhTYpPnrIDTdsKH5";
+    }
+    else if (role_id === "3") {
+      voice_id = "Xb7hH8MSUJpSbSDYk0k2";
+    }
+    else if (role_id === "4") {
+      voice_id = "cgSgspJ2msm6clMCkdW9";
+    }
+    else {
+      voice_id = "XrExE9yKIg1WjnnlVkGX";
+    }
 
-    fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', options)
+    fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
       .then(response => response.blob())
       .then(blob => {
         playAudio(URL.createObjectURL(blob), true);

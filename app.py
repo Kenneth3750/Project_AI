@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image, manage_current_image, current_image_description
-from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, delete_email, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
+from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, get_user_useful_info, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -21,9 +21,8 @@ import authlib.integrations.base_client.errors
 from flask_cors import CORS
 from config import authorized_emails
 import re
-import threading
-import time
 import logging
+import requests
 mimetypes.add_type('application/javascript', '.js')
 
 
@@ -244,7 +243,15 @@ def index(role_id):
                     return jsonify({'stop': 'stop'})
         except Exception as e:
             return jsonify({'error': str(e)})
-    return send_from_directory(app.static_folder,'index.html')
+    elif request.method == 'GET':
+        try:
+            user_ip = request.remote_addr
+            print("user_ip:", user_ip)
+            get_user_useful_info(user_id, user_ip)
+        except Exception as e:
+            print("Error saving useful data:", e)
+            pass
+        return send_from_directory(app.static_folder,'index.html')
 
 
 

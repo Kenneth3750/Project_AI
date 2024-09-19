@@ -7,6 +7,7 @@ from serpapi import GoogleSearch
 import time
 from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
+import pypdf
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -24,6 +25,7 @@ def generateText(parameters, user_id, role_id):
         response = generate_response(client, messages)
         response = extract_json(response)
         text_json = json.loads(response) 
+        text_json["message"] = "Tell the user the text is on screen, do not add the text on your response, just tell the user to look at the screen"
         return text_json
     except Exception as e:
         return {"error": str(e)}
@@ -57,7 +59,7 @@ def getPapers(parameters, user_id, role_id):
                 break
 
         single_string = ''.join(new_json)
-        text_json = {"display": single_string}
+        text_json = {"display": single_string, "message": "Tell the user the papers are on screen, do not add the papers on your response, just tell the user to look at the screen"}
 
         return text_json
     except Exception as e:
@@ -79,8 +81,9 @@ def generatePdfInference(parameters, user_id, role_id):
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Find the answer to the question: {query} on this text: {text}"}]
         response = generate_response(client, messages)
         response = extract_json(response)
-        print(response)
-        return json.loads(response)
+        text_json = json.loads(response)
+        text_json["message"] = "Tell the user the answer is on screen, and explain the inference you made, do not add the answer on your response, just tell the user to look at the screen and explain the inference"
+        return text_json
     except Exception as e:
         return {'error': str(e)}
     

@@ -79,9 +79,9 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 function_args = json.loads(tool_call.function.arguments)
                 function_response = function_to_call(function_args, user_id, role_id)
                 if function_response.get("display"):
-                    display_responses.append(function_response)
+                    display_responses.append({"display": function_response.get("display")})
                 if function_response.get("fragment"):
-                    display_responses.append(function_response)
+                    display_responses.append({"fragment": function_response.get("fragment")})
                 print("function_response:", function_response)
                 messages.append(
                     {

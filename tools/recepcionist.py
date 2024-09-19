@@ -9,8 +9,9 @@ from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
 from datetime import datetime, timedelta
 import json
-import requests
+from html import escape
 from typing import List, Dict
+from serpapi import GoogleSearch
 from urllib.parse import urlencode
 load_dotenv()
 
@@ -262,52 +263,180 @@ def delete_last_reservation(params, user_id, role_id):
         print("Error:", e)
         return {"error": str(e)}
     
-def list_hotels(params: Dict, user_id: str, role_id: str) -> Dict:
-    try:
-        base_url = "https://api.liteapi.travel/v3.0/data/hotels"
+def json_to_html_events(json_data, location):
+    events = json.loads(json_data)
+    html = "<html><head><style>body{font-family:Arial,sans-serif;line-height:1.6;margin:0;padding:20px;background-color:#f4f4f4}h1{color:#333}ul{list-style-type:none;padding:0}li{background-color:#fff;margin-bottom:10px;padding:15px;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}h2{margin-top:0;color:#2c3e50}a{color:#3498db;text-decoration:none}a:hover{text-decoration:underline}</style></head><body>"
+    html += f"<h1>Events in {location}</h1><ul>"
 
-        headers = {
-            "accept": "application/json",
-            "X-API-Key": os.getenv('LITE_API_KEY')
-        }
+    for event in events:
+        html += f"<li>"
+        html += f"<h2>{escape(event['title'])}</h2>"
+        if 'date' in event and 'when' in event['date']:
+            html += f"<p><strong>Fecha:</strong> {escape(event['date']['when'])}</p>"
+        if 'address' in event:
+            html += f"<p><strong>Lugar:</strong> {escape(', '.join(event['address']))}</p>"
+        if 'description' in event:
+            html += f"<p>{escape(event['description'][:150])}...</p>"
+        if 'link' in event:
+            html += f"<p><a href='{escape(event['link'])}' target='_blank'>Más información</a></p>"
+        html += "</li>"
 
-        query_params = {
-            "countryCode": params.get("countryCode"),
-            "cityName": params.get("cityName"),
-            "hotelName": params.get("hotelName"),
-            "limit": 5,
-            "minRating": params.get("min_rating"),
-            "aiSearch": params.get("aiSearch")
-        }
+    html += "</ul></body></html>"
+    return html
+def json_to_html_food(json_data, location):
+    restaurants = json.loads(json_data)
+    html = """
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4; }
+            h1 { color: #333; }
+            .restaurant { background-color: #fff; margin-bottom: 20px; padding: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .restaurant h2 { margin-top: 0; color: #2c3e50; }
+            .restaurant img { max-width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px; }
+            .restaurant p { margin: 5px 0; }
+            .restaurant a { color: #3498db; text-decoration: none; }
+            .restaurant a:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+    """
+    html += f"<h1>Restaurants in {location}</h1>"
+    for restaurant in restaurants:
+        html += '<div class="restaurant">'
+        html += f'<h2>{escape(restaurant["title"])}</h2>'
+        
+        if 'images' in restaurant and restaurant['images']:
+            html += f'<img src="{escape(restaurant["images"][0])}" alt="{escape(restaurant["title"])}">'
+        
+        if 'rating' in restaurant:
+            html += f'<p><strong>Calificación:</strong> {restaurant["rating"]} ({restaurant["reviews"]} reseñas)</p>'
+        
+        if 'price' in restaurant:
+            html += f'<p><strong>Precio:</strong> {restaurant["price"]}</p>'
+        
+        if 'address' in restaurant:
+            html += f'<p><strong>Dirección:</strong> {escape(restaurant["address"])}</p>'
+        
+        if 'hours' in restaurant:
+            html += f'<p><strong>Horario:</strong> {escape(restaurant["hours"])}</p>'
+        
+        if 'links' in restaurant:
+            if 'website' in restaurant['links']:
+                html += f'<p><a href="{escape(restaurant["links"]["website"])}" target="_blank">Sitio web</a></p>'
+            if 'order' in restaurant['links']:
+                html += f'<p><a href="{escape(restaurant["links"]["order"])}" target="_blank">Ordenar en línea</a></p>'
+            if 'directions' in restaurant['links']:
+                html += f'<p><a href="{escape(restaurant["links"]["directions"])}" target="_blank">Cómo llegar</a></p>'
+        
+        html += '</div>'
 
-        query_params = {k: v for k, v in query_params.items() if v is not None}
+    html += "</body></html>"
+    return html
 
+def json_to_html_places(json_data):
+    places = json.loads(json_data)
+    html = """
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4; }
+            h1 { color: #333; text-align: center; }
+            .place { background-color: #fff; margin-bottom: 20px; padding: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .place h2 { margin-top: 0; color: #2c3e50; }
+            .place img { max-width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px; }
+            .place p { margin: 5px 0; }
+            .place .rating { font-weight: bold; color: #f39c12; }
+        </style>
+    </head>
+    <body>
+        <h1>Lugares para visitar en Barranquilla y alrededores</h1>
+    """
 
-        url = f"{base_url}?{urlencode(query_params)}"
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+    for place in places:
+        html += '<div class="place">'
+        html += f'<h2>{escape(place["title"])}</h2>'
+        
+        if 'thumbnail' in place:
+            html += f'<img src="{escape(place["thumbnail"])}" alt="{escape(place["title"])}">'
+        
+        if 'rating' in place and 'reviews' in place:
+            html += f'<p class="rating">Calificación: {place["rating"]} ({place["reviews"]} reseñas)</p>'
+        
+        if 'type' in place:
+            html += f'<p><strong>Tipo:</strong> {escape(place["type"])}</p>'
+        
+        if 'address' in place:
+            html += f'<p><strong>Dirección:</strong> {escape(place["address"])}</p>'
+        
+        if 'description' in place:
+            html += f'<p><strong>Descripción:</strong> {escape(place["description"])}</p>'
+        
+        if 'hours' in place:
+            html += f'<p><strong>Horario:</strong> {escape(place["hours"])}</p>'
+        
+        html += '</div>'
 
-        try:
-            response_data = response.json()
-        except json.JSONDecodeError:
-            return {"error": f"Failed to decode JSON. Response content: {response.text}"}
-
-
-        if not response_data:
-            return {"error": "The API returned an empty response"}
-
-        print(f"Response Data: {json.dumps(response_data, indent=2)}")  
-
-
-        html = format_hotel_results_to_html(response_data)
-        return {"display": html}     
-
-    except requests.RequestException as e:
-        return {"error": f"Request failed: {str(e)}"}
-    except Exception as e:
-        return {"error": f"An unexpected error occurred: {str(e)}"}
-
+    html += "</body></html>"
+    return html
     
+
+def get_location_events(params, user_id, role_id):
+    try:
+        location = params["location"]
+
+        params_google = {
+            "engine": "google_events",
+            "q": f"Events in {location}" ,
+            "hl": "en",
+            "gl": "us",
+            "api_key": os.getenv('SEARCH_WEB_API_KEY')
+        }
+
+        search = GoogleSearch(params_google)
+        results = search.get_dict()
+        events_results = results["events_results"]
+        return {"display": json_to_html_events(json.dumps(events_results), location), 
+                "message": "The events have been successfully retrieved. Tell the user to check the screen, mention some of the events and suggest some activities but do not add links and nothing like that on the message."}
+    except Exception as e:
+        return {"error": str(e)}
+    
+
+def get_restaurants(params, user_id, role_id):
+    try: 
+        location = params["location"]
+        food_query = params["food_query"]
+        params = {
+        "engine": "google_food",
+        "q": food_query,
+        "location": location,
+        "api_key": os.getenv('SEARCH_WEB_API_KEY')
+        }
+
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        local_results = results["local_results"]
+        return {"display": json_to_html_food(json.dumps(local_results), location), "message": "The restaurants have been successfully retrieved. Tell the user to check the screen, mention some of the restaurants and suggest some activities but do not add links and nothing like that on the message."}
+    except Exception as e:
+        return {"error": str(e)}
+    
+def get_location_places(params, user_id, role_id):
+    try:
+        location = params["location"]
+        params = {
+        "engine": "google_local",
+        "q": "Places to visit",
+        "location": location,
+        "api_key": os.getenv('SEARCH_WEB_API_KEY')
+        }
+
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        local_results = results["local_results"]
+        return {"display": json_to_html_places(json.dumps(local_results)), 
+                "message": "The places have been successfully retrieved. Tell the user to check the screen, mention some of the places and suggest some activities but do not add links and nothing like that on the message."}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def recepcionist_tools(user_id):
@@ -470,39 +599,61 @@ def recepcionist_tools(user_id):
                 }
             }
         },
-            {
-        "type": "function",
-        "function": {
-            "name": "list_hotels",
-            "description": "Retrieve a list of hotels based on the parameters provided",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "countryCode": {
-                        "type": "string",
-                        "description": "Country code"
+        {
+            "type": "function",
+            "function": {
+                "name": "get_location_events",
+                "description": "Recommend the user what to do in the location provided or provided the events of the location if the user asks for it",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The location to search for events on the following format: city, country or city, state, country according to the location provided by the user"
+                        }
                     },
-                    "cityName": {
-                        "type": "string",
-                        "description": "City name"
+                    "required": ["location"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_restaurants",
+                "description": "Recommend, show or suggest the user the restaurants of the food type the user wants to eat in the location provided",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The location to search for restaurants on the following format: city, country or city, state, country according to the location provided by the user"
+                        },
+                        "food_query": {
+                            "type": "string",
+                            "description": "The type of food the user wants to eat"
+                        }
                     },
-                    "hotelName": {
-                        "type": "string",
-                        "description": "Hotel name"
+                    "required": ["location", "food_query"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_location_places",
+                "description": "Recommend, show or suggest the user the places to visit in the location provided",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The location to search for places to visit on the following format: city, country or city, state, country according to the location provided by the user"
+                        }
                     },
-                    "min_rating": {
-                        "type": "number",
-                        "description": "Minimum rating of the hotel"
-                    },
-                    "aiSearch": {
-                        "type": "string",
-                        "description": "A query in natural language to search for hotels, usefull to add specifications, e.g. 'hotels with pool', 'hotels near a beach' "
-                    }
-                },
-                "required": [ "countryCode", "cityName"]
+                    "required": ["location"]
+                }
             }
         }
-    }
 ]
 
     available_functions = {
@@ -512,7 +663,10 @@ def recepcionist_tools(user_id):
         "see_current_reservations": see_current_reservations,
         "change_reservation": change_reservation,
         "delete_last_reservation": delete_last_reservation,
-        "list_hotels": list_hotels
+        "get_location_events": get_location_events,
+        "get_restaurants": get_restaurants,
+        "get_location_places": get_location_places
+
     }
 
     return tools, available_functions
@@ -521,7 +675,7 @@ def format_hotel_results_to_html(data: Dict) -> str:
     hotels = data.get('data', [])
     html_output = "<div class='hotel-results'>"
 
-    for hotel in hotels[:5]:  # Limit to 5 hotels
+    for hotel in hotels[:5]:  
         html_output += f"<div class='hotel' id='{hotel['id']}'>"
         
         html_output += f"<h2>{hotel['name']}</h2>"
@@ -531,7 +685,7 @@ def format_hotel_results_to_html(data: Dict) -> str:
         html_output += f"<p><strong>Address:</strong> {hotel['address']}, {hotel['zip']}</p>"
         html_output += f"<p><strong>Stars:</strong> {hotel['stars']}</p>"
         
-        # Truncate description to first 200 characters
+
         description = hotel['hotelDescription'][:200] + "..." if len(hotel['hotelDescription']) > 200 else hotel['hotelDescription']
         html_output += f"<p><strong>Description:</strong> {description}</p>"
         
@@ -539,9 +693,9 @@ def format_hotel_results_to_html(data: Dict) -> str:
         
         html_output += f"<a href='https://example.com/book/{hotel['id']}' target='_blank' class='book-now'>Book Now</a>"
         
-        html_output += "</div>"  # Close hotel div
+        html_output += "</div>" 
 
-    html_output += "</div>"  # Close hotel-results div
+    html_output += "</div>"  
     return html_output
 
 
@@ -720,3 +874,25 @@ def list_of_reservations(user_id):
         formatted_reservations.append(formatted_reservation)
 
     return formatted_reservations
+
+
+def get_user_current_location(user_id):
+    connection = database_connection(
+        {
+            "user": os.getenv('user'), 
+            "password": os.getenv('password'), 
+            "host": os.getenv('host'), 
+            "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "SELECT city, country_code FROM user_useful_info WHERE user_id = (%s)"
+    cursor.execute(sql, (user_id,))
+    data = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    city = data[0]
+    country_code = data[1]
+    if data:
+        return city, country_code
+    return None, None

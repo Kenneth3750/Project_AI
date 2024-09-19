@@ -268,11 +268,11 @@ function updateNaiaRole() {
     
     let roleName;
     switch(roleId) {
-      case "1": roleName = "Investigator"; break;
-      case "2": roleName = "Recepcionist"; break;
-      case "3": roleName = "Personal Skills Trainer"; break;
-      case "4": roleName = "Personal Assistant"; break;
-      case "5": roleName = "University Guide"; break;
+      case "1": roleName = "Investigator"; window.localStorage.setItem("role", "1"); break;
+      case "2": roleName = "Recepcionist"; window.localStorage.setItem("role", "2"); break;
+      case "3": roleName = "Personal Skills Trainer"; window.localStorage.setItem("role", "3"); break;
+      case "4": roleName = "Personal Assistant"; window.localStorage.setItem("role", "4"); break;
+      case "5": roleName = "University Guide"; window.localStorage.setItem("role", "5"); break;
       default: roleName = "Unknown Role";
     }
   

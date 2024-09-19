@@ -208,3 +208,25 @@ def get_user(connection, user_id):
     except Exception as e:
         print(f"Error: {e}")
         raise Exception("There was an error getting the user information. Please try again.")
+    
+
+def save_useful_data(connection, user_id, location_json):
+    try:
+        print(f"Location data: {location_json}")
+        cursor = connection.cursor()
+        city = location_json.get("city")
+        country_code = location_json.get("country_code")
+        sql = "SELECT city FROM user_useful_info WHERE user_id = (%s)"
+        result = cursor.execute(sql, (user_id))
+        if result:
+            sql = "UPDATE user_useful_info SET city = %s, country_code = %s WHERE user_id = %s"
+            cursor.execute(sql, (city, country_code, user_id))
+            connection.commit()
+            return True
+        else:
+            sql = "INSERT INTO user_useful_info (user_id, city, country_code) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (user_id, city, country_code))
+            connection.commit()
+    except Exception as e:      
+        print(f"Error: {e}")
+        return False

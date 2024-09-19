@@ -5,6 +5,8 @@ from tools.pdf_tools import save_pdf_tool, read_pdf_tool
 from tools.personal_assistant import add_email, get_emails, erase_email_token, create_email_token, erase_email_contact
 from tools.trainer import get_html_summary
 from tools.investigator import get_html_pdf
+from tools.database_tools import save_useful_data, database_connection
+import requests
 
 def save_pdf(user_id, file, role_id):
     if not os.path.exists(f"pdf/user_{user_id}/role_{role_id}/{file.filename}"):
@@ -126,3 +128,28 @@ def get_pdf(user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error retrieving the pdf. Please try again.")
+    
+
+def get_user_useful_info(user_id, user_ip):
+    try:
+        if user_ip == "127.0.0.1":
+            location_data = {
+                "city": "Barranquilla",
+                "country_code": "CO"
+            }
+        else:
+            response = requests.get(f'https://ipapi.co/{user_ip}/json/')
+            location_data = response.json()
+        connection = database_connection(
+            {
+                "user": os.getenv('user'), 
+                "password": os.getenv('password'), 
+                "host": os.getenv('host'), 
+                "db": os.getenv('db')
+            }
+        )
+        save = save_useful_data(connection, user_id, location_data)
+        return save
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error saving useful info. Please try again.")
