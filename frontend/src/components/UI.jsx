@@ -6,6 +6,7 @@ import HelpTooltip from "./HelpToolTip";
 export const UI = ({ hidden, ...props }) => {
   const { loading, cameraZoomed, setCameraZoomed, displayResponses } = useChat();
   const { subtitles } = useContext(SubtitlesContext);
+  const [accumulatedResponses, setAccumulatedResponses] = useState([]);
   const [infoContent, setInfoContent] = useState("Initial content from server...");
   const [isOpen, setIsOpen] = useState(false);
   const [pdfError, setPdfError] = useState("");
@@ -88,8 +89,12 @@ export const UI = ({ hidden, ...props }) => {
 
   useEffect(() => {
     if (displayResponses && displayResponses.length > 0) {
-      const htmlContent = displayResponses.map(response => response.display || response.fragment).join('<br>');
-      setInfoContent(htmlContent);
+      const newResponses = displayResponses.map(response => ({
+        content: response.display || response.fragment,
+        timestamp: new Date().toLocaleTimeString()
+      }));
+      
+      setAccumulatedResponses(prevResponses => [...newResponses, ...prevResponses]);
       
       if (window.innerWidth < 640) { // 640px is the 'sm' breakpoint in Tailwind
         setHasNewContent(true);
@@ -125,9 +130,9 @@ export const UI = ({ hidden, ...props }) => {
   };
 
   const copyToClipboard = () => {
-    const tempElement = document.createElement("div");
-    tempElement.innerHTML = infoContent;
-    const textContent = tempElement.textContent.replace(/<br\s*\/?>/gi, '\n') || tempElement.innerText.replace(/<br\s*\/?>/gi, '\n') || "";
+    const textContent = accumulatedResponses
+      .map(response => `[${response.timestamp}] ${response.content}`)
+      .join('\n\n');
     navigator.clipboard.writeText(textContent);
   };
 
@@ -200,8 +205,14 @@ export const UI = ({ hidden, ...props }) => {
           {isOpen && (
             <>
               <div className="mt-2 p-2 bg-gray-100 rounded-md w-full h-40 overflow-y-auto pointer-events-auto">
-                <h2 className="font-semibold text-sm mb-1">Requested function</h2>
-                <div className="text-xs" dangerouslySetInnerHTML={{ __html: infoContent }}></div>
+                <h2 className="font-semibold text-sm mb-1">Requested functions</h2><br>
+                </br>
+                {accumulatedResponses.map((response, index) => (
+                  <div key={index} className="text-xs mb-2">
+                    <span className="font-semibold">[{response.timestamp}]</span>
+                    <div dangerouslySetInnerHTML={{ __html: response.content }}></div>
+                  </div>
+                ))}
                 <button
                   onClick={copyToClipboard}
                   className="mt-2 bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-md text-xs pointer-events-auto"
