@@ -18,7 +18,7 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
 
 
-def new_visitor_alert(params, user_id, role_id):
+def send_alert_to_apartment_owner(params, user_id, role_id):
     try:
         messenger = WhatsApp(os.environ.get("whatsapp_token"), phone_number_id=os.environ.get("phone_id"))
         media_path = os.path.join("current", f"user_{user_id}", "image.jpg")
@@ -445,8 +445,8 @@ def recepcionist_tools(user_id):
                 {
                     "type": "function",
                     "function": {
-                        "name": "new_visitor_alert",
-                        "description": "Send a message to the owner of the apartment to alert them of a new visitor",
+                        "name": "send_alert_to_apartment_owner",
+                        "description": "Alert the owner of an apartment when someone is serching for him, or if there is someone leaving a package or a message for him, every time someone ask for an apartment this function must be used",
                         "parameters": {
                             "type": "object",
                             "properties": {
@@ -485,7 +485,7 @@ def recepcionist_tools(user_id):
             "type": "function",
             "function": {
                 "name": "insert_reservation",
-                "description": "Make a reservation for the users of the building or update the reservation if the user wants to change the date or time of the reservation",
+                "description": "Make a reservation for the users of the building ",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -526,7 +526,7 @@ def recepcionist_tools(user_id):
             "type": "function",
             "function": {
                 "name": "see_current_reservations",
-                "description": "Select all the reservations made for a specific date and place",
+                "description": "See all the reservations made for a specific date and place",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -656,7 +656,7 @@ def recepcionist_tools(user_id):
 ]
 
     available_functions = {
-        "new_visitor_alert": new_visitor_alert,
+        "send_alert_to_apartment_owner": send_alert_to_apartment_owner,
         "send_announcent_to_all": send_announcent_to_all,
         "insert_reservation": insert_reservation,   
         "see_current_reservations": see_current_reservations,

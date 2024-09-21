@@ -129,7 +129,7 @@ def create_google_calendar_reminder(params, user_id, role_id):
 
         event = service.events().insert(calendarId='primary', body=event).execute()
         print(f'Recordatorio creado: {event.get("htmlLink")}')
-        return {'message': f'Recordatorio creado existosamente'}
+        return {'message': f'Reminder created successfully. Add a comment about the user look if that does not compromise retrieving the full information.'}
     except Exception as e:
         print(e)
         return {'error': str(e)}
@@ -150,7 +150,7 @@ def get_user_agenda(params, user_id, role_id):
         else:
             return {'message': f""" According to the current time, the next 10 events are:\n {events}\n
             Mention the user the time and names of the the events that are going to happen near the current time that means that you don't have to mention all the events.\n
-            Your response will pass a TTS model so do not add links or images, just text in a proper way for a voice assistant."""}
+            Your response will pass a TTS model so do not add links or images, just text in a proper way for a voice assistant. Add a comment about the user look if that does not compromise retrieving the full information."""}
     except Exception as e:
         print(e)
         return {'error': str(e)}
@@ -190,7 +190,7 @@ def send_email(params, user_id, role_id):
         raw_message = base64.urlsafe_b64encode(html_message.as_bytes()).decode("utf-8")
         message = {"raw": raw_message}
         sent_message = service.users().messages().send(userId="me", body=message).execute()
-        return {'message': f'Email sent successfully to {", ".join(recipients)} with id {sent_message["id"]}' }
+        return {'message': f'Email sent successfully to {", ".join(recipients)} with id {sent_message["id"]}. Add a comment about the user look if that does not compromise retrieving the full information.'}
     except Exception as e:
         print(e)
         return {'error': str(e)}

@@ -124,15 +124,20 @@ export function Avatar(props) {
 
   const { nodes, materials, scene } = useGLTF(gltfModel);
 
-  const { message, messages, onMessagePlayed, chat } = useChat();
-
+  const { message, messages, onMessagePlayed, chat, playedMessageIds, setPlayedMessageIds } = useChat();
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [lipsync, setLipsync] = useState();
   const { setSubtitles } = useContext(SubtitlesContext);
+  const generateMessageId = (message) => {
+    return btoa(message.text + message.animation + message.facialExpression);
+  };
 
 useEffect(() => {
   console.log(message);
 
-  if (!message) {
+  let converastionStatus;
+  if (!message || isAudioPlaying || playedMessageIds.has(generateMessageId(message))) {
+    console.log("Mensaje vacío, audio ya está sonando, o mensaje ya reproducido");
     setAnimation("Idle");
     return;
   }
@@ -143,21 +148,29 @@ useEffect(() => {
   }
 
   const playAudio = (audioSource, is_elevenlabs) => {
+    setIsAudioPlaying(true);
+    const messageId = generateMessageId(message);
+    if (playedMessageIds.has(messageId)) {
+      console.log("Este mensaje ya se ha reproducido, saltando...");
+      return;
+    }
     const newAudio = new Audio(audioSource);
     newAudio.onplay = () => {
       window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
       window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Speaking" } }));
     };
     newAudio.onended = () => {
+      setIsAudioPlaying(false);
+      setPlayedMessageIds(prevIds => new Set(prevIds).add(messageId));
       onMessagePlayed();
       if (messages.length === 1) {
-        if (!is_elevenlabs) {
+        if (!is_elevenlabs) {       
           window.initRecognition();
         }else{
           window.initRecognitionImage();
         }
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       }
-      window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       setSubtitles('');
     };
     setAudio(newAudio);
@@ -205,21 +218,27 @@ useEffect(() => {
     else {
       voice_id = "XrExE9yKIg1WjnnlVkGX";
     }
-
-    fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
-      .then(response => response.blob())
-      .catch(err => console.error('Error:', err))
-      .then(blob => {
-        playAudio(URL.createObjectURL(blob), true);
-      })
-      .catch(err => {
-        console.error('Error:', err);
-        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
-        window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Sleeping" } }));
-      });
+    converastionStatus = window.localStorage.getItem('conversation');
+    console.log(converastionStatus);
+    if (converastionStatus === "true") {
+        fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
+          .then(response => response.blob())
+          .catch(err => console.error('Error:', err))
+          .then(blob => {
+            let conversationStatus2 = window.localStorage.getItem('conversation');
+            console.log(conversationStatus2);
+            if (conversationStatus2 === "true") {
+              playAudio(URL.createObjectURL(blob), true);
+            }
+          })
+          .catch(err => {
+            console.error('Error:', err);
+            window.stopRecognition();
+          });
+    }
   }
 
-}, [message, messages]);
+}, [message, messages, playedMessageIds]);
 
   const { animations } = useGLTF("/models/animations.glb");
 

@@ -22,7 +22,7 @@ from flask_cors import CORS
 from config import authorized_emails
 import re
 import logging
-import requests
+import sys
 mimetypes.add_type('application/javascript', '.js')
 
 
@@ -38,7 +38,8 @@ voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.DEBUG)
 SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
@@ -306,7 +307,6 @@ def save_current():
                 if result:
                     messages = json.loads(session['chat'])
                     vision_prompt = current_image_description(os.getenv('OPENAI_API_TOKEN'), user_id)
-                    print("vision_prompt:", vision_prompt)
                     new_prompt = f"This is the new vision prompt: {vision_prompt}"
                     messages.append({"role": "user", "content": new_prompt})
                     session['chat'] = json.dumps(messages)

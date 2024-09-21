@@ -97,9 +97,11 @@ window.toggleRecording = function() {
 
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
         conversation = true;
+        window.localStorage.setItem("conversation", "true");
         initConversation();
     } else {
         conversation = false;
+        window.localStorage.setItem("conversation", "false");
         stopRecording();
     }
     window.dispatchEvent(new CustomEvent('recordingStatusChanged', { 
@@ -122,6 +124,8 @@ function stopRecording() {
     window.dispatchEvent(new CustomEvent('recordingStatusChanged', { 
         detail: { isRecording: false } 
     }));
+
+    window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
 
     let boton = document.getElementById("recordButton");
     boton.dataset.recording = "false";
