@@ -285,7 +285,10 @@
                         <div class="guide-info">
                             <h5>How the University Guide Can Help You</h5>
                             <p>The University Guide is designed to assist you throughout your academic journey. Here are some key areas where the guide can provide support:</p>
-                            
+                            <p class="text-info">
+                                <i class="fas fa-info-circle"></i> 
+                                Make sure to set up your university email inside the NAIA box on the chat page to recieve emails with the information you need.
+                            </p>
                             <div class="feature-list">
                                 <div class="feature">
                                     <i class="fas fa-calendar-alt"></i>
@@ -347,6 +350,7 @@
                         <li class="list-group-item">Notify residents via WhatsApp about visitors with images</li>
                         <li class="list-group-item">Send announcements to all residents via WhatsApp</li>
                         <li class="list-group-item">Manage reservations for common areas</li>
+                        <li class="list-group-item">Recommend places to visit, restaurants, and incoming events on any location</li>
                     </ul>
                 </div>
             </div>
@@ -383,6 +387,8 @@
                         <li class="list-group-item">Send short emails to pre-registered contacts</li>
                         <li class="list-group-item">Schedule reminders using Google Calendar or other tools</li>
                         <li class="list-group-item">Inform about office visitors in your absence</li>
+                        <li class="list-group-item">Keep you on track with your agenda</li>
+                        <li class="list-group-item">Give you information about the weather and recent news</li>
                     </ul>
                 </div>
             </div>
@@ -401,6 +407,7 @@
                         <li class="list-group-item">Provide information on academic calendars, important dates, and administrative services</li>
                         <li class="list-group-item">Offer guidance on key academic processes (e.g., enrollment, flexible progress)</li>
                         <li class="list-group-item">Connect with student support services and academic counselors</li>
+                        <li class="list-group-item">Send emails with information about resources, libraries, and study spaces to your academic email</li>
                     </ul>
                 </div>
             </div>
@@ -438,136 +445,6 @@
                 <button id="send" class="btn-naia">Send image</button>
             </div>
         </div>
-    </section>
-
-    <div class="section-divider"></div>
-
-
-    <section id="role-setup" class="mb-5">
-            <h2>Role-Specific Setup</h2>
-            <p>Before using certain NAIA roles, you'll need to set up some information. This ensures that NAIA can provide you with the best possible assistance:</p>
-            <ul>
-                <li><strong>Receptionist:</strong> Register apartments and common areas</li>
-                <li><strong>Personal Assistant:</strong> Add contacts and set up your email</li>
-                <li><strong>Personal Skills Trainer:</strong> Set your learning goals and preferences</li>
-            </ul>
-            <p>Scroll down to find and complete the necessary setup for your chosen roles.</p>
-            <div class="role-accordions">
-                <div class="role-accordion">
-                    <div class="role-header" onclick="toggleAccordion(this)">
-                        <i class="fas fa-chevron-right"></i>
-                        <span>Receptionist</span>
-                    </div>
-                    <div class="role-content">
-                        <h4>Receptionist Dashboard</h4>
-                        
-                        <div class="receptionist-form">
-                            <h5>Apartment Registration</h5>
-                            <p>Register new apartments and their contact numbers. Please include the country code without the '+' sign (e.g., for Colombia, use 57xxxxxxxxx).</p>
-                            <div class="form-group">
-                                <label for="apartment-number">Apartment Number:</label>
-                                <input type="text" id="apartment-number" class="form-control" placeholder="e.g., 101">
-                            </div>
-                            <div class="form-group">
-                                <label for="apartment-phone">Phone Number:</label>
-                                <input type="tel" id="apartment-phone" class="form-control" placeholder="e.g., 573001234567">
-                            </div>
-                            <button class="btn btn-primary" id="send-apartment" onclick="sendApartment()">Register Apartment</button>
-                        </div>
-            
-                        <div class="common-areas-form mt-4">
-                            <h5>Common Areas Management</h5>
-                            <p class="text-info">
-                                <i class="fas fa-info-circle"></i> 
-                                Add the common areas you want NAIA to manage reservations for. These areas will be available for residents to book through NAIA.
-                            </p>
-                            <div class="form-group">
-                                <label for="common-area-name">Common Area Name:</label>
-                                <input type="text" id="common-area-name" class="form-control" placeholder="e.g., Swimming Pool">
-                            </div>
-                            <button class="btn btn-success" id="add-common-area" onclick="addCommonArea()">Add Common Area</button>
-                        </div>
-            
-                        <div class="receptionist-info mt-4">
-                            <div class="info-section">
-                                <h5>Registered Apartments</h5>
-                                <ul id="listApartments" class="list-group"></ul>
-                            </div>
-                            <div class="info-section mt-3">
-                                <h5>Common Areas for Reservations</h5>
-                                <ul id="listCommonAreas" class="list-group"></ul>
-                            </div>
-                            <div class="info-section mt-3">
-                                <h5>Current Reservations</h5>
-                                <ul id="listReservations" class="list-group"></ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="role-accordion">
-                <div class="role-header" onclick="toggleAccordion(this)">
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Personal Assistant</span>
-                </div>
-                <div class="role-content">
-                    <h4>Personal Assistant Dashboard</h4>
-                    <div class="assistant-form">
-                        <p>Register contacts for your personal assistant to manage. Enter the name and email of the person you want to add.</p>
-                        <div class="form-group">
-                            <label for="person-name">Name:</label>
-                            <input type="text" id="person-name" class="form-control" placeholder="e.g., John Doe">
-                        </div>
-                        <div class="form-group">
-                            <label for="person-email">Email:</label>
-                            <input type="email" id="person-email" class="form-control" placeholder="e.g., john.doe@example.com">
-                        </div>
-                        <button class="btn btn-primary" id="send-person" onclick="sendEmailInfo()">Add Contact</button>
-                    </div>
-                    <div class="assistant-info">
-                        <h5>Registered Contacts</h5>
-                        <ul id="listPeopleEmail" class="list-group"></ul>
-                    </div>
-                    <div class="assistant-actions">
-                        <p>To update the email used by your personal assistant, click the button below. After changing, go to the chat and use any function to update the email.</p>
-                        <button class="btn btn-secondary" id="change-email" onclick="deleteEmail()">Update Assistant Email</button>
-                    </div>
-                </div>
-            </div>
-            
-                <div class="role-accordion">
-                    <div class="role-header" onclick="toggleAccordion(this)">
-                        <i class="fas fa-chevron-right"></i>
-                        <span>Personal Skills Trainer</span>
-                    </div>
-                    <div class="role-content">
-                        <h4>Personal Skills Trainer</h4>
-                        <div class="trainer-info">
-                            <p>Enhance your personal and professional skills with our AI-powered trainer. Focus on language learning and track your progress over time.</p>
-                            <div class="feature-list">
-                                <div class="feature">
-                                    <i class="fas fa-language"></i>
-                                    <span>Language Practice</span>
-                                </div>
-                                <div class="feature">
-                                    <i class="fas fa-chart-line"></i>
-                                    <span>Progress Tracking</span>
-                                </div>
-                                <div class="feature">
-                                    <i class="fas fa-user-graduate"></i>
-                                    <span>Personalized Learning</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="summary-section">
-                            <p>View a comprehensive summary of your recent language training sessions, including performance metrics and areas for improvement.</p>
-                            <button class="btn btn-primary" id="get-summary" onclick="window.location.href='/trainer'">
-                                <i class="fas fa-file-alt"></i> Get Session Summary
-                            </button>
-                        </div>
-                    </div>
-                </div>
     </section>
 
         <div class="section-divider"></div>

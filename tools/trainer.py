@@ -160,7 +160,9 @@ def trainer_tools():
                             "properties": {
                                 "user_petition": {
                                     "type": "string",
-                                    "description": "The user petition transformed into a prompt that will generate the images with advices based on the petition."
+                                    "description": """The user petition transformed into a prompt that will generate the images with advices based on the user petition.
+                                                      Use specific prompts to get the best results, put on the prompt the characteistics of the situation the user is involved in,
+                                                      characteristicas of the location and everything that can help to generate a better image. Put on the prompt that image should be realistic (DALL-E is the model used to generate the images)."""
                                 }, 
                             },
                             "required": ["user_petition"],

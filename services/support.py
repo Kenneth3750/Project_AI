@@ -6,7 +6,7 @@ from tools.personal_assistant import add_email, get_emails, erase_email_token, c
 from tools.trainer import get_html_summary
 from tools.investigator import get_html_pdf
 from tools.database_tools import save_useful_data, database_connection
-import requests
+from tools.university_tools import update_university_email, get_university_email
 
 def save_pdf(user_id, file, role_id):
     if not os.path.exists(f"pdf/user_{user_id}/role_{role_id}/{file.filename}"):
@@ -145,3 +145,19 @@ def get_user_useful_info(user_id, location_data):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error saving useful info. Please try again.")
+    
+def return_university_emails(user_id):
+    try:
+        email = get_university_email(user_id)
+        return email
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error retrieving the university email. Please try again.")
+    
+def set_university_email(user_id, email):
+    try:
+        update_university_email(user_id, email)
+        return {"message": "Email updated successfully"}
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error updating the email. Please try again.")

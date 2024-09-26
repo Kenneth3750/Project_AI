@@ -69,8 +69,9 @@ def getPapers(parameters, user_id, role_id):
 def generatePdfInference(parameters, user_id, role_id):
     try:
         query = parameters.get("query")
-        system_prompt = """You are an expert reader that recieves a full pdf converted to text. You will always reply a json with the key fragment and the value of the text fragment that contains 
-        the answer to the question. Do no add more keys, do not add more text and anything except the json, do not even bother to say hello or goodbye. Just give the text. If the answer is not in the text, just say that you could not find it."""
+        system_prompt = """You are an expert reader that recieves a full pdf converted to text.
+        the answer to the question. Do not any text not related to the answer, do not even bother to say hello or goodbye. Just give the text. If the answer is not in the text, just say that you could not find it.\n
+        But if the 'question' really is something like generating a resume a resume, a text, an explanation, etc. from the pdf,  you must do it too."""
         text = ""
         folder_path = f"pdf/user_{user_id}/role_{role_id}"
         file_name = [file for file in os.listdir(folder_path) if file.endswith(".txt")][0]  
@@ -80,8 +81,8 @@ def generatePdfInference(parameters, user_id, role_id):
             text = file.read().replace('\n', ' ')
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Find the answer to the question: {query} on this text: {text}"}]
         response = generate_response(client, messages)
-        response = extract_json(response)
-        text_json = json.loads(response)
+        response = {"fragment": response}
+        text_json = response
         text_json["message"] = "Tell the user the answer is on screen, and explain the inference you made, do not add the answer on your response, just tell the user to look at the screen and explain the inference. Add a nice comment about using the visiom prompt only if that does not compomise a complete explanation"
         return text_json
     except Exception as e:

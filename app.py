@@ -8,6 +8,7 @@ from services.chat import Chat, AI_response, check_current_conversation, create_
 from services.roles import return_role, roles_list, return_tools
 from services.vision import Vision, manage_image, manage_current_image, current_image_description
 from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, get_user_useful_info, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
+from services.support import return_university_emails, set_university_email
 from tools.conversation import generate_response
 from openai import OpenAI
 from groq import Groq
@@ -548,6 +549,25 @@ def save_location():
         return jsonify({'result': 'ok'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/university', methods = ['GET', 'POST'])
+def save_university_email():
+    user_id = session['user_id']
+    if request.method == "GET":
+        try:
+            emails = return_university_emails(user_id)
+            return jsonify(emails)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    elif request.method == "POST":
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            set_university_email(user_id, email)
+            return jsonify({"message": "Email saved successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":  
     app.run(debug=True, host='0.0.0.0', port=5000, 

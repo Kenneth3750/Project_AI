@@ -93,6 +93,13 @@ create table if not exists user_useful_info(
     foreign key (user_id) references users(id) on delete cascade
 );
 
+create table if not exists university_emails(
+    id int primary key auto_increment,
+    user_id int not null,
+    email varchar(100) not null,
+    foreign key (user_id) references users(id) on delete cascade
+);
+
 
 
 

@@ -18,7 +18,10 @@ export const UI = ({ hidden, ...props }) => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [avatarStatus, setAvatarStatus] = useState("Sleeping");
   const [naiaRole, setNaiaRole] = useState("Default Role");
-
+  const [universityEmail, setUniversityEmail] = useState("");
+  const [activeEmail, setActiveEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   useEffect(() => {
     const storedName = window.localStorage.getItem("pdfFilename");
     if (storedName) {
@@ -103,6 +106,65 @@ export const UI = ({ hidden, ...props }) => {
       }
     }
   }, [displayResponses]);
+
+  useEffect(() => {
+    fetchActiveEmail();
+  }, []);
+
+  const fetchActiveEmail = async () => {
+    try {
+      const response = await fetch('/university', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setActiveEmail(data.email || "");
+      } else {
+        console.error('Failed to fetch active email');
+      }
+    } catch (error) {
+      console.error('Error fetching active email:', error);
+    }
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailError("");
+    setSuccessMessage("");
+
+    if (!universityEmail.endsWith("@uninorte.edu.co")) {
+      setEmailError("Please enter a valid Uninorte email address.");
+      return;
+    }
+
+    try {
+      const response = await fetch('/university', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: universityEmail }),
+      });
+
+      if (response.ok) {
+        setActiveEmail(universityEmail);
+        setUniversityEmail("");
+        setSuccessMessage("Email updated successfully!");
+        setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
+      } else {
+        const errorData = await response.json();
+        setEmailError(errorData.error || "Failed to save email.");
+      }
+    } catch (error) {
+      console.error('Error saving email:', error);
+      setEmailError("An error occurred while saving the email.");
+    }
+  };
+
+
 
   useEffect(() => {
     console.log("Current avatar status:", avatarStatus);
@@ -245,6 +307,32 @@ export const UI = ({ hidden, ...props }) => {
                   </div>
                 )}
               </div>
+
+              <div className="mt-4">
+                  <h2 className="font-semibold text-sm mb-1">University Email</h2>
+                  <p className="text-xs mb-2">Active Email: {activeEmail || "None set"}</p>
+                  <form onSubmit={handleEmailSubmit} className="space-y-2">
+                    <input
+                      type="email"
+                      value={universityEmail}
+                      onChange={(e) => setUniversityEmail(e.target.value)}
+                      placeholder="Enter Uninorte email"
+                      className="w-full text-xs p-1 border rounded"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-md text-xs"
+                    >
+                      Set Email
+                    </button>
+                  </form>
+                  {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+                  {successMessage && (
+                    <div className="mt-2 p-2 bg-green-100 border border-green-400 text-green-700 text-xs rounded">
+                      {successMessage}
+                    </div>
+                  )}
+                </div>
             </>
           )}
           </div>
