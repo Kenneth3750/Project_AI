@@ -283,6 +283,7 @@ export const UI = ({ hidden, ...props }) => {
                 </button>
               </div>
 
+              { naiaRole === "Investigator" && (
               <div className="mt-2">
                 <h2 className="font-semibold text-sm mb-1">Upload PDF</h2>
                 <input
@@ -307,7 +308,9 @@ export const UI = ({ hidden, ...props }) => {
                   </div>
                 )}
               </div>
+            )}
 
+              {( naiaRole === "University Guide") && (
               <div className="mt-4">
                   <h2 className="font-semibold text-sm mb-1">University Email</h2>
                   <p className="text-xs mb-2">Active Email: {activeEmail || "None set"}</p>
@@ -333,6 +336,7 @@ export const UI = ({ hidden, ...props }) => {
                     </div>
                   )}
                 </div>
+                )}
             </>
           )}
           </div>

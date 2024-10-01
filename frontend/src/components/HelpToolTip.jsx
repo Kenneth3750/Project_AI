@@ -14,11 +14,12 @@ const HelpTooltip = ({ role }) => {
           <li>Generate extended texts on a pdf file</li>
         </ul>
       ),
-      'Receptionist': (
+      'Recepcionist': (
         <ul className="list-disc pl-4 space-y-1">
           <li>Notify residents via WhatsApp about visitors with images</li>
           <li>Send announcements to all residents via WhatsApp</li>
           <li>Manage reservations for common areas</li>
+          <li>Recommend places to visit, restaurants, and incoming events on any location</li>
         </ul>
       ),
       'Personal Skills Trainer': (
@@ -33,6 +34,8 @@ const HelpTooltip = ({ role }) => {
           <li>Send short emails to pre-registered contacts</li>
           <li>Schedule reminders using Google Calendar or other tools</li>
           <li>Inform about office visitors in your absence</li>
+          <li>Keep you on track with your agenda</li>
+          <li>Give you information about the weather and recent news</li>
         </ul>
       ),
       'University Guide': (
@@ -40,6 +43,7 @@ const HelpTooltip = ({ role }) => {
           <li>Provide information on academic calendars, important dates, and administrative services</li>
           <li>Offer guidance on key academic processes (e.g., enrollment, flexible progress)</li>
           <li>Connect with student support services and academic counselors</li>
+          <li>Send emails with information about resources, libraries, and study spaces to your academic email</li>
         </ul>
       ),
     };
