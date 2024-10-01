@@ -11,9 +11,10 @@ def database_connection(db_data):
             db=db_data['db'],
 
         )
+
         return connection
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error en conectar a la db: {e}")
         return None
     
 
@@ -161,3 +162,70 @@ def is_valid_user(connection, username, password):
     except Exception as e:
         print(f"Error: {e}")
         return None
+    
+
+def check_user(connection, user_info):
+    try:
+        user_email = user_info.get("email")
+        cursor = connection.cursor()
+        sql = "select id from users where user_email = (%s)"
+        cursor.execute(sql, (user_email))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return False
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error checking the user. Please try again.")
+    
+def create_user(connection, user_info):
+    try:
+        cursor = connection.cursor()
+        sql = "INSERT INTO users (user_email, user_full_name, user_name, photo_url) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (user_info.get("email"), user_info.get("name"), user_info.get("given_name"), user_info.get("picture")))
+        connection.commit()
+        sql = "select id from users where user_email = (%s)"
+        cursor.execute(sql, (user_info.get("email")))
+        result = cursor.fetchone()
+        user_id = result[0]
+        return user_id
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error creating the user. Please try again.")
+    
+def get_user(connection, user_id):
+    try:
+        cursor = connection.cursor()
+        sql = "select user_full_name, photo_url, user_name from users where id = (%s)"
+        cursor.execute(sql, (user_id))
+        result = cursor.fetchone()
+        print(f"Resultado de la db: {result}")
+        if result:
+            return result[0], result[1], result[2]
+        else:
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        raise Exception("There was an error getting the user information. Please try again.")
+    
+
+def save_useful_data(connection, user_id, location_json):
+    try:
+        cursor = connection.cursor()
+        city = location_json.get("city")
+        country = location_json.get("country")
+        sql = "SELECT city FROM user_useful_info WHERE user_id = (%s)"
+        result = cursor.execute(sql, (user_id))
+        if result:
+            sql = "UPDATE user_useful_info SET city = %s, country = %s WHERE user_id = %s"
+            cursor.execute(sql, (city, country, user_id))
+            connection.commit()
+            return True
+        else:
+            sql = "INSERT INTO user_useful_info (user_id, city, country) VALUES (%s, %s, %s)"
+            cursor.execute(sql, (user_id, city, country))
+            connection.commit()
+    except Exception as e:      
+        print(f"Error: {e}")
+        return False

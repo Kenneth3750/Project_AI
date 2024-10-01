@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from serpapi import GoogleSearch
 import time
 from tools.conversation import generate_response, extract_json
+from tools.database_tools import database_connection
+import pypdf
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -23,6 +25,7 @@ def generateText(parameters, user_id, role_id):
         response = generate_response(client, messages)
         response = extract_json(response)
         text_json = json.loads(response) 
+        text_json["message"] = "Tell the user the text is on screen, do not add the text on your response, just tell the user to look at the screen. Add a nice comment about using the visiom prompt"
         return text_json
     except Exception as e:
         return {"error": str(e)}
@@ -50,17 +53,13 @@ def getPapers(parameters, user_id, role_id):
         new_json = []
         i=0
         for result in organic_results:
-            if "inline_links" not in result or "cited_by" not in result["inline_links"]:
-                new_json.append(f'<div><h5><strong>Paper {i+1}:</strong> {result["title"]}</h5><ul><li>{result["snippet"]}</li><li><strong>Additional info:</strong> {result["publication_info"]}</li><li><strong>Link:</strong> {result["link"]} </li></ul></div><br>')
-            else:
-                new_json.append(f'<div><h5><strong>Paper {i+1}:</strong> {result["title"]}</h5><ul><li>{result["snippet"]}</li><li><strong>Additional info:</strong> {result["publication_info"]}</li><li><strong>Link:</strong> {result["link"]} </li><li>Cited by: {result["inline_links"]["cited_by"]["total"]}</li></ul></div><br>')
-
+            new_json.append(f"<div>Paper {i+1}: <a href='{result['link']}' target='_blank'><span style='color: blue; text-decoration: underline;'>{result['title']}</span></a></div><br>")
             i+=1
             if i==5:
                 break
 
         single_string = ''.join(new_json)
-        text_json = {"display": single_string}
+        text_json = {"display": single_string, "message": "Tell the user the papers are on screen, do not add the papers on your response, just tell the user to look at the screen. Add a nice comment about using the visiom prompt"}
 
         return text_json
     except Exception as e:
@@ -70,8 +69,9 @@ def getPapers(parameters, user_id, role_id):
 def generatePdfInference(parameters, user_id, role_id):
     try:
         query = parameters.get("query")
-        system_prompt = """You are an expert reader that recieves a full pdf converted to text. You will always reply a json with the key fragment and the value of the text fragment that contains 
-        the answer to the question. Do no add more keys, do not add more text and anything except the json, do not even bother to say hello or goodbye. Just give the text. If the answer is not in the text, just say that you could not find it."""
+        system_prompt = """You are an expert reader that recieves a full pdf converted to text.
+        the answer to the question. Do not any text not related to the answer, do not even bother to say hello or goodbye. Just give the text. If the answer is not in the text, just say that you could not find it.\n
+        But if the 'question' really is something like generating a resume a resume, a text, an explanation, etc. from the pdf,  you must do it too."""
         text = ""
         folder_path = f"pdf/user_{user_id}/role_{role_id}"
         file_name = [file for file in os.listdir(folder_path) if file.endswith(".txt")][0]  
@@ -81,11 +81,40 @@ def generatePdfInference(parameters, user_id, role_id):
             text = file.read().replace('\n', ' ')
         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Find the answer to the question: {query} on this text: {text}"}]
         response = generate_response(client, messages)
-        response = extract_json(response)
-        print(response)
-        return json.loads(response)
+        response = {"fragment": response}
+        text_json = response
+        text_json["message"] = "Tell the user the answer is on screen, and explain the inference you made, do not add the answer on your response, just tell the user to look at the screen and explain the inference. Add a nice comment about using the visiom prompt only if that does not compomise a complete explanation"
+        return text_json
     except Exception as e:
         return {'error': str(e)}
+    
+
+def generatePdfText(params, user_id, role_id):
+    try:
+        type_of_text = params.get("type_of_text")
+        topic = params.get("topic")
+        language = params.get("language")
+        other_characteristics = params.get("other_characteristics")
+        system_prompt = """You are an expert writter. Your labour is to generate a medium to long text based on the user requirements.\n
+        You will always reply with a text formatted in html in order to convert it to pdf. Do not add more keys, do not add more text and anything except the text. Do not even bother to say hello or goodbye. Just give the text."""
+        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": f"Generate a {type_of_text} about {topic} in {language} taking into account {other_characteristics}"}]
+        response = generate_response(client, messages)
+        connection = database_connection(
+            {
+             "user": os.getenv('user'), 
+             "password": os.getenv('password'), 
+             "host": os.getenv('host'), 
+             "db": os.getenv('db')
+            }
+        )
+        cursor = connection.cursor()
+        sql = "INSERT INTO investigator_long_texts (user_id, long_text) VALUES (%s, %s)"
+        cursor.execute(sql, (user_id, response))
+        connection.commit()
+        connection.close()
+        return {"message": "Text generated successfully, tell the user to download the pdf by clicking on the button that is on the investigator section on home page. Add a nice comment about using the visiom prompt"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 def investigator_tools():
@@ -94,7 +123,7 @@ def investigator_tools():
             "type": "function",
             "function": {
                 "name": "generateText",
-                "description": "Generate a any kind of text the user wants to generate. It can be an introduction, a conclusion, a summary, even an email.",
+                "description": "Generate a any kind of text the user wants to generate. But only for short texts like introductions, summaries, conclusions, emails, short arguments, etc.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -158,12 +187,60 @@ def investigator_tools():
                     "required": ["query"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "generatePdfText",
+                "description": "Generate a medium to long text based on the user requirements that will be converted to a pdf. Example: essays, articles, reports, etc.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "type_of_text": {
+                            "type": "string",
+                            "description": "The type of text the user wants to generate."
+                        },
+                        "topic": {
+                            "type": "string",
+                            "description": "The topic of the text the user wants to generate."
+                        },
+                        "language": {
+                            "type": "string",
+                            "description": "The language of the text the user wants to generate. If the language is not specified, the default language is the user's language."
+                        },
+                        "other_characteristics": {
+                            "type": "string",
+                            "description": "Other characteristics the user wants the text to have. Example: formal, informal, academic, maximum length, main ideas, focus topics, needed specifications, etc."
+                        }
+                    },
+                    "required": ["type_of_text", "topic"]
+                }
+            }
         }
     ]
 
     available_functions = {
         "generateText": generateText,
         "getPapers": getPapers,
-        "generatePdfInference": generatePdfInference
+        "generatePdfInference": generatePdfInference,
+        "generatePdfText": generatePdfText
     }
     return tools, available_functions
+
+
+
+def get_html_pdf(user_id):
+    connection = database_connection(
+        {
+         "user": os.getenv('user'), 
+         "password": os.getenv('password'), 
+         "host": os.getenv('host'), 
+         "db": os.getenv('db')
+        }
+    )
+    cursor = connection.cursor()
+    sql = "SELECT long_text FROM investigator_long_texts WHERE user_id = %s"
+    cursor.execute(sql, (user_id,))
+    long_text = cursor.fetchone()
+    connection.close()
+    return long_text[0] if long_text else None

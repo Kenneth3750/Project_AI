@@ -11,7 +11,7 @@ import tiktoken
 import re
 
 max_tokens = 5000
-
+function_model = "gpt-4o-mini"
 def speak_text(text):
     engine = pyttsx3.init()
     engine.say(text)
@@ -42,7 +42,7 @@ def speak_text(text):
     
 def generate_response(client, messages):
     completion = client.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-4o-mini",
     messages=messages
     )
 #llama3-70b-8192
@@ -55,7 +55,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
     try:
         tools = json.loads(tools)
         completion = client.chat.completions.create(
-            model="gpt-4o",
+            model=function_model,
             messages=messages,
             tools=tools,
             tool_choice="auto"
@@ -64,6 +64,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
         display_responses = []
         if response.content is not None:
             first_response = extract_json(response.content)
+            first_response = convert_to_array_json(first_response)
             return first_response, display_responses
 
         i = 1
@@ -78,9 +79,9 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 function_args = json.loads(tool_call.function.arguments)
                 function_response = function_to_call(function_args, user_id, role_id)
                 if function_response.get("display"):
-                    display_responses.append(function_response)
+                    display_responses.append({"display": function_response.get("display")})
                 if function_response.get("fragment"):
-                    display_responses.append(function_response)
+                    display_responses.append({"fragment": function_response.get("fragment")})
                 print("function_response:", function_response)
                 messages.append(
                     {
@@ -92,7 +93,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 ) 
             try:
                 second_completion = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=function_model,
                     messages=messages        
                 )
                 messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})
@@ -100,6 +101,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 second_response = second_completion.choices[0].message
 
                 second_response = extract_json(second_response.content)
+                second_response = convert_to_array_json(second_response)
             
                 remove_i_elements_from_penultimate(messages, i)
 
@@ -114,6 +116,12 @@ def remove_i_elements_from_penultimate(messages, i):
     penultimate_index = len(messages) - 2
     start_index = max(penultimate_index - i + 1, 0)
     del messages[start_index:penultimate_index + 1]
+
+def convert_to_array_json(response):
+    response = json.loads(response)
+    if isinstance(response, dict):
+        response = [response]
+    return json.dumps(response)
 
 
 

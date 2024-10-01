@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
+  const [playedMessageIds, setPlayedMessageIds] = useState(new Set());
   const chat = async (message) => {
     setLoading(true);
     const data = await fetch("/audio", {
@@ -26,9 +27,15 @@ export const ChatProvider = ({ children }) => {
     const respDisplayResponses = resp.display_responses;
     console.log("mensajes:", respMessages);
     console.log("display:", respDisplayResponses);
+    setPlayedMessageIds(new Set());
     setMessages((messages) => [...messages, ...respMessages]);
-    if (respDisplayResponses.length > 0) {
-      setDisplayResponses(respDisplayResponses);
+
+    if (!Array.isArray(respDisplayResponses)) {
+      console.error("respDisplayResponses is not an array");
+    } else {
+      if (respDisplayResponses.length > 0) {
+        setDisplayResponses(respDisplayResponses);
+      }
     }
     setLoading(false);
   };
@@ -60,6 +67,8 @@ export const ChatProvider = ({ children }) => {
         cameraZoomed,
         setCameraZoomed,
         displayResponses,
+        playedMessageIds,
+        setPlayedMessageIds,
       }}
     >
       {children}

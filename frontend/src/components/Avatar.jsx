@@ -87,6 +87,7 @@ const facialExpressions = {
     mouthSmileRight: 0.38473918302092225,
     tongueOut: 0.9618479575523053,
   },
+  
 };
 
 const corresponding = {
@@ -104,37 +105,84 @@ const corresponding = {
 let setupMode = false;
 
 export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF(
-    "/models/64f1a714fe61576b46f27ca2.glb"
-  );
 
-  const { message, messages, onMessagePlayed, chat } = useChat();
+  const path = window.location.pathname;
+  const lastNumber = path.split('/').pop();
 
+  let gltfModel;
+  if (lastNumber === '5') {
+    gltfModel = "/models/uni.glb";
+  } else if (lastNumber === '4') {
+    gltfModel = "/models/personal.glb";
+  } else if (lastNumber === '3') {
+    gltfModel = "/models/trainer.glb"
+  } else if (lastNumber === '2') {
+    gltfModel = "/models/recepcionist.glb";
+  } else {
+    gltfModel = "/models/investigator.glb";
+  }
+
+  const { nodes, materials, scene } = useGLTF(gltfModel);
+
+  const { message, messages, onMessagePlayed, chat, playedMessageIds, setPlayedMessageIds } = useChat();
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [lipsync, setLipsync] = useState();
   const { setSubtitles } = useContext(SubtitlesContext);
+  const generateMessageId = (message) => {
+    return btoa(message.text + message.animation + message.facialExpression);
+  };
 
-  useEffect(() => {
+useEffect(() => {
   console.log(message);
-  if (!message) {
+
+  let converastionStatus;
+  if (!message || isAudioPlaying || playedMessageIds.has(generateMessageId(message))) {
+    console.log("Mensaje vacío, audio ya está sonando, o mensaje ya reproducido");
     setAnimation("Idle");
     return;
   }
 
-  if (message.audio !== null) {
-    setAnimation(message.animation);
-    setFacialExpression(message.facialExpression);
-    setLipsync(message.lipsync);
-    const audio = new Audio("data:audio/mp3;base64," + message.audio);
-    audio.play();
-    setAudio(audio);
-    setSubtitles(message.text); 
-    audio.onended = () => {
+  if (audio && !audio.paused) {
+    console.log("Audio already playing, queuing message");
+    return;
+  }
+
+  const playAudio = (audioSource, is_elevenlabs) => {
+    setIsAudioPlaying(true);
+    const messageId = generateMessageId(message);
+    if (playedMessageIds.has(messageId)) {
+      console.log("Este mensaje ya se ha reproducido, saltando...");
+      return;
+    }
+    const newAudio = new Audio(audioSource);
+    newAudio.onplay = () => {
+      window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
+      window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Speaking" } }));
+    };
+    newAudio.onended = () => {
+      setIsAudioPlaying(false);
+      setPlayedMessageIds(prevIds => new Set(prevIds).add(messageId));
       onMessagePlayed();
       if (messages.length === 1) {
-        window.initRecognition();
+        if (!is_elevenlabs) {       
+          window.initRecognition();
+        }else{
+          window.initRecognitionImage();
+        }
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
       }
       setSubtitles('');
     };
+    setAudio(newAudio);
+    setAnimation(message.animation);
+    setFacialExpression(message.facialExpression);
+    setLipsync(message.lipsync);
+    setSubtitles(message.text);
+    newAudio.play();
+  };
+
+  if (message.audio !== null) {
+    playAudio("data:audio/mp3;base64," + message.audio, false);
   } else {
     const options = {
       method: 'POST',
@@ -153,31 +201,44 @@ export function Avatar(props) {
         },
       })
     };
-
-    fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', options)
-      .then(response => response.blob())
-      .then(blob => {
-        const audio = new Audio(URL.createObjectURL(blob));
-        audio.oncanplaythrough = () => {
-          setAnimation(message.animation);
-          setFacialExpression(message.facialExpression);
-          setLipsync(message.lipsync);
-          setSubtitles(message.text);
-          audio.play();
-        };
-        setAudio(audio);
-        audio.onended = () => {
-          onMessagePlayed();
-          if (messages.length === 1) {
-            window.initRecognition();
-          }
-          setSubtitles('');
-        };
-      })
-      .catch(err => console.error(err));
+    let voice_id;
+    let role_id = window.localStorage.getItem('role');
+    if (role_id === "1") {
+      voice_id = "21m00Tcm4TlvDq8ikWAM";
+    }
+    else if (role_id === "2") {
+      voice_id = "FGY2WhTYpPnrIDTdsKH5";
+    }
+    else if (role_id === "3") {
+      voice_id = "Xb7hH8MSUJpSbSDYk0k2";
+    }
+    else if (role_id === "4") {
+      voice_id = "cgSgspJ2msm6clMCkdW9";
+    }
+    else {
+      voice_id = "XrExE9yKIg1WjnnlVkGX";
+    }
+    converastionStatus = window.localStorage.getItem('conversation');
+    console.log(converastionStatus);
+    if (converastionStatus === "true") {
+        fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
+          .then(response => response.blob())
+          .catch(err => console.error('Error:', err))
+          .then(blob => {
+            let conversationStatus2 = window.localStorage.getItem('conversation');
+            console.log(conversationStatus2);
+            if (conversationStatus2 === "true") {
+              playAudio(URL.createObjectURL(blob), true);
+            }
+          })
+          .catch(err => {
+            console.error('Error:', err);
+            window.stopRecognition();
+          });
+    }
   }
 
-}, [message, messages]);
+}, [message, messages, playedMessageIds]);
 
   const { animations } = useGLTF("/models/animations.glb");
 
@@ -429,5 +490,9 @@ export function Avatar(props) {
   );
 }
 
-useGLTF.preload("/models/64f1a714fe61576b46f27ca2.glb");
+useGLTF.preload("/models/uni.glb");
+useGLTF.preload("/models/66a40acb7b8266b463256d3a.glb");
+useGLTF.preload("/models/recepcionist.glb");
+useGLTF.preload("/models/investigator.glb");
+useGLTF.preload("/models/personal.glb");
 useGLTF.preload("/models/animations.glb");

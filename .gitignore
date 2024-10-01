@@ -5,8 +5,11 @@ wake_detect.wav
 audio.mp3
 audio_converted.wav
 
+__pycache__
+
 key.pem
 cert.pem
+/venv
 
 known_people/
 current/
@@ -27,7 +30,7 @@ node_modules/
 dist/
 dist-ssr
 *.local
-
+config.py
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -53,3 +56,13 @@ client_secret_*
 credentials.json
 *.pickle
 tokens/
+apartment/
+
+*.exe
+trainer/
+tools/documents
+tools/chroma_db
+
+prueba.mjs
+package-lock.json
+package.json
