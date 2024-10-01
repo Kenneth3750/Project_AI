@@ -68,31 +68,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-BLOCKED_PATTERNS = [
-    r'/web/css/button_style\.css',
-    r'/favicon\.ico',
-    r'/cgi-bin/',
-    r'/vendor/phpunit/',
-    r'/hello\.world',
-    r'\.\./',  
-    r'%2e%2e',  
-    r'eval-stdin\.php',
-    r'allow_url_include',
-    r'auto_prepend_file'
-]
 
-
-BLOCKED_PATTERNS_COMPILED = [re.compile(pattern) for pattern in BLOCKED_PATTERNS]
-
-@app.before_request
-def block_unwanted_requests():
-    path = request.path
-    full_url = request.url
-
-    for pattern in BLOCKED_PATTERNS_COMPILED:
-        if pattern.search(path) or pattern.search(full_url):
-            logger.warning(f"Intento de acceso bloqueado: {full_url}")
-            abort(403)
 
 @app.errorhandler(403)
 def forbidden(e):
@@ -115,25 +91,6 @@ def logout_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def security_middleware(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        path = request.path
-        full_url = request.url
-
-        # Verificar si la URL coincide con alguno de los patrones bloqueados
-        for pattern in BLOCKED_PATTERNS_COMPILED:
-            if pattern.search(path) or pattern.search(full_url):
-                app.logger.warning(f"Intento de acceso bloqueado: {full_url}")
-                abort(403)  # Forbidden
-
-        # Verificar versión de HTTP
-        if request.environ.get('SERVER_PROTOCOL') not in ['HTTP/1.1', 'HTTP/1.0']:
-            app.logger.warning(f"Versión HTTP no soportada: {request.environ.get('SERVER_PROTOCOL')}")
-            abort(505)  # HTTP Version Not Supported
-
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -188,6 +145,12 @@ def authorize():
             return redirect(url_for('before_login'))
     except Exception as e:
         print(f"Error in authorize: {str(e)}")
+        return redirect(url_for('before_login'))
+
+@app.route('/logout', methods=['POST', 'GET'])
+def logout():
+    if request.method == 'POST' or request.method == 'GET':
+        session.clear()
         return redirect(url_for('before_login'))
 
 @app.route('/home', methods=['GET', 'POST'])
@@ -317,14 +280,7 @@ def save_current():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
-
-@app.route('/logout', methods=['POST', 'GET'])
-def logout():
-    if request.method == 'POST' or request.method == 'GET':
-        session.clear()
-        return redirect(url_for('before_login'))
     
-
 @app.route('/check_session')
 def check_session():
     return jsonify({'logged_in': 'google_token' in session})

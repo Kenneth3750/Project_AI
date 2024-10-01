@@ -62,3 +62,7 @@ apartment/
 trainer/
 tools/documents
 tools/chroma_db
+
+prueba.mjs
+package-lock.json
+package.json
