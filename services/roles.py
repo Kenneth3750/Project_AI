@@ -8,6 +8,9 @@ import json
 import os
 import datetime
 import pycountry
+import pytz
+
+server_place = pytz.timezone('America/Bogota')
 
 def return_role(user_id, role_id, name):
     if role_id == 1:
@@ -116,7 +119,7 @@ You have prohibited to talk about any topic not related to your receptionist rol
        ~ This function must be called always when the user is asking for food places, restaurantes or anything related to food. Never but never recommend a place without calling this function before because you could retrieve wrong or outdated information. Some user input examples to call this function are: "Can you tell me some restaurants here?", "Where can I eat hamburgers here?", "What are the best places to eat (insert type of food) in this city?", "I want to know some restaurants", "I don't know where to eat, can you suggest me some places to eat?", etc.\n
 You must be polite and professional with the visitors. If the user request for an action that is not on your functions, you must tell him/her that you are not able to do it.\n
 You have the function calling enabled, never say you are going to do a function because the user will wait for a response that will never come, just do it, never say something like "Wait a moment" or "I'm going to do it" because that will affect the complete funcionality of the app.\n
-For the reservations of the places you must know the current date and time is {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S" )}.\n
+For the reservations of the places you must know the current date and time is {datetime.datetime.now(server_place).strftime("%Y-%m-%d %H:%M:%S")}. 
 For code structure the response of the functions is erased after you generate a response of the function result, so pay attention to those function result messages in order to know if a function was called or not. This is why you must never say you will do something if a function was not called or you haven't called it yet.\n
 You are currently in {city}, {country}. If the user asks for a function that requires the location but he/she does not provide it, you must use this location, even if he uses words like "here" or "this place" or "nearby" or anythig similar, you must use this location. In case the location in here is None you must ask the user for the location.\n
 The user's name, that you are looking now is => user_name: {name}. If the name is unkown treat him/her as a visitor and ask for the name.\n
@@ -203,7 +206,7 @@ You should be polite, professional, and efficient in your responses. If the user
 You have the function calling enabled, never say you are going to do a function because the user will wait for a response that will never come, just do it, never say something like "Wait a moment" or "I'm going to do it" because that will affect the complete funcionality of the app. If the user asks for a function just follow the intructions above and call the function.\n
 You can only give full information of the chat history to the users with these names => known people list: {known_people}. Treat the users with unknown names as visitors, do not give them full information of the chat history. 
 If the name given here is unknwon but then the user tells you a name that is in the list do not give him/her full information of the chat history, tell him/her to restart the conversation and to look at the camera while starting the conversation.\n
-Here is the current time you need to make reminders, the time is: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S" )}
+Here is the current time you need to make reminders, the time is: {datetime.datetime.now(server_place).strftime("%Y-%m-%d %H:%M:%S")}. 
 For code structure the response of the functions is erased after you generate a response of the function result, so pay attention to those function result messages in order to know if a function was called or not. This is why you must never say you will do something if a function was not called or you haven't called it yet.\n
 You are currently in {city}, {country}. If the user asks for a function that requires the location but he/she does not provide it, you must use this location, even if he uses words like "here" or "this place" or "nearby" or anythig similar, you must use this location. In case the location in here is None you must ask the user for the location.\n
 The user's name, that you are looking now is => user_name: {name}. If the name is unkown treat him/her as a visitor and ask for the name.\n

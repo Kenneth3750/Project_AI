@@ -1,7 +1,7 @@
 import pymysql
 from datetime import datetime
 from tools.conversation import count_tokens, max_tokens
-
+from services.roles import server_place
 def database_connection(db_data):
     try:
         connection = pymysql.connect(
@@ -73,13 +73,13 @@ def save_conversation(connection, user_id, conversation, role_id):
         sql = "select conversations, created_at from user_conversations where user_id = (%s) and role_id = (%s) order by id desc limit 1"
         cursor.execute(sql, (user_id, role_id))
         result = cursor.fetchone()
-        current_date = datetime.now().date()
+        current_date = datetime.now(server_place).date()
         if result:
             if result[1] == current_date:
                 tokens = count_tokens(result[0])
                 if tokens > max_tokens:
                     sql = "INSERT INTO user_conversations (user_id, conversations, created_at, role_id) VALUES (%s, %s, %s, %s)"
-                    cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
+                    cursor.execute(sql, (user_id, conversation, datetime.now(server_place).date(), role_id))
                     connection.commit()
                     return True
                 else:
@@ -87,12 +87,12 @@ def save_conversation(connection, user_id, conversation, role_id):
                     return True
             else:
                 sql = "INSERT INTO user_conversations (user_id, conversations, created_at, role_id) VALUES (%s, %s, %s, %s)"
-                cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
+                cursor.execute(sql, (user_id, conversation, datetime.now(server_place).date(), role_id))
                 connection.commit()
                 return True
         else:
             sql = "INSERT INTO user_conversations (user_id, conversations, created_at, role_id) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
+            cursor.execute(sql, (user_id, conversation, datetime.now(server_place).date(), role_id))
             connection.commit()
             return True
     except Exception as e:
@@ -105,19 +105,19 @@ def save_conversation_history(connection, user_id, conversation, role_id):
         sql = "select created_at from user_conversation_history where user_id = (%s) and role_id = (%s) order by id desc limit 1"
         cursor.execute(sql, (user_id, role_id))
         result = cursor.fetchone()
-        current_date = datetime.now().date()
+        current_date = datetime.now(server_place).date()
         if result:
             if result[0] == current_date:
                 upddate_conversation_history(connection, user_id, conversation, role_id)
                 return True
             else:
                 sql = "INSERT INTO user_conversation_history (user_id, user_resume, created_at, role_id) VALUES (%s, %s, %s, %s)"
-                cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
+                cursor.execute(sql, (user_id, conversation, datetime.now(server_place).date(), role_id))
                 connection.commit()
                 return True
         else:
             sql = "INSERT INTO user_conversation_history (user_id, user_resume, created_at, role_id) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (user_id, conversation, datetime.now().date(), role_id))
+            cursor.execute(sql, (user_id, conversation, datetime.now(server_place).date(), role_id))
             connection.commit()
             return True
     except Exception as e:
@@ -128,7 +128,7 @@ def update_conversation(connection, user_id, conversation, role_id):
     try:
         cursor = connection.cursor()
         sql = "UPDATE user_conversations SET conversations = %s WHERE user_id = %s and created_at = %s and role_id = %s order by id desc limit 1"
-        cursor.execute(sql, (conversation, user_id, datetime.now().date(), role_id))
+        cursor.execute(sql, (conversation, user_id, datetime.now(server_place).date(), role_id))
         connection.commit()
         return True
     except Exception as e:
@@ -139,7 +139,7 @@ def upddate_conversation_history(connection, user_id, conversation, role_id):
     try:
         cursor = connection.cursor()
         sql = "UPDATE user_conversation_history SET user_resume = %s WHERE user_id = %s and created_at = %s and role_id = %s"
-        cursor.execute(sql, (conversation, user_id, datetime.now().date(), role_id))
+        cursor.execute(sql, (conversation, user_id, datetime.now(server_place).date(), role_id))
         connection.commit()
         return True
     except Exception as e:

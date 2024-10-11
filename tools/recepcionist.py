@@ -12,7 +12,7 @@ import json
 from html import escape
 from typing import List, Dict
 from serpapi import GoogleSearch
-from urllib.parse import urlencode
+from services.roles import server_place
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -845,7 +845,7 @@ def delete_recepcionist_area(user_id, area):
 
 
 def list_of_reservations(user_id):
-    current_date = datetime.now().date().strftime("%Y-%m-%d") 
+    current_date = datetime.now(server_place).date().strftime("%Y-%m-%d") 
     connection = database_connection(
         {
             "user": os.getenv('user'), 
