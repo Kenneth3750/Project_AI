@@ -1,7 +1,10 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
+import { useNotification } from './NotificationContext';
 import SubtitlesContext from './subtitles'; 
 import HelpTooltip from "./HelpToolTip";
+
+
 
 export const UI = ({ hidden, ...props }) => {
   const { loading, cameraZoomed, setCameraZoomed, displayResponses } = useChat();
@@ -22,12 +25,21 @@ export const UI = ({ hidden, ...props }) => {
   const [activeEmail, setActiveEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const { notifications } = useNotification();
+
+
   useEffect(() => {
     const storedName = window.localStorage.getItem("pdfFilename");
     if (storedName) {
       setStoredPdfName(storedName);
     }
   }, []);
+
+  const handleLanguageChange = (e) => {
+    const newLanguage = e.target.value;
+    setLanguage(newLanguage);
+    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: newLanguage } }));
+  };
 
   useEffect(() => {
     const handleRoleUpdate = (event) => {
@@ -242,6 +254,18 @@ export const UI = ({ hidden, ...props }) => {
     <>
         
         <div className="fixed inset-0 z-10 flex flex-col justify-between p-4 pointer-events-none">
+          <div className="fixed top-4 right-4 z-50">
+            {notifications.map(notification => (
+              <div
+                key={notification.id}
+                className={`mb-2 p-2 rounded shadow-lg ${
+                  notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                } text-white`}
+              >
+                {notification.message}
+              </div>
+            ))}
+          </div>
           {/* Contenido principal */}
           <div className="flex justify-between items-start w-full">
           {/* Panel izquierdo (existente) */}
@@ -341,13 +365,25 @@ export const UI = ({ hidden, ...props }) => {
           )}
           </div>
           {/* Nuevo panel derecho para el estado del avatar */}
-          <div className={`backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto transition-all duration-300 ${getStatusColor(avatarStatus)}`}>
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full animate-pulse ${getStatusColor(avatarStatus)}`}></div>
-              <h6 id="status" className="text-sm font-semibold text-black whitespace-nowrap overflow-visible">                
-                Status: {getStatusText(avatarStatus)}
-              </h6>
+          <div className="flex flex-col items-end">
+            <div className={`backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto transition-all duration-300 ${getStatusColor(avatarStatus)} mb-2`}>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full animate-pulse ${getStatusColor(avatarStatus)}`}></div>
+                <h6 id="status" className="text-sm font-semibold text-black whitespace-nowrap overflow-visible">                
+                  Status: {getStatusText(avatarStatus)}
+                </h6>
+              </div>
             </div>
+            {/* <div className="backdrop-blur-md bg-white bg-opacity-20 p-3 rounded-lg pointer-events-auto">
+              <select 
+                value={language} 
+                onChange={handleLanguageChange}
+                className="bg-transparent text-sm font-semibold"
+              >
+                <option value="en-US">English</option>
+                <option value="es-ES">Español</option>
+              </select>
+            </div> */}
           </div>
         </div>
 

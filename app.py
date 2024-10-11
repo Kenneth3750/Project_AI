@@ -191,7 +191,6 @@ def index(role_id):
                 image_file = request.files['image'] 
                 name = vision.start_image_recognition(image_file, user_id)
                 vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
-                session['vision_prompt'] = vision_prompt
                 if name:
                     print("el nombre es:", name)
                     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})

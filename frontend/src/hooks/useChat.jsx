@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useNotification } from "../components/NotificationContext";
 
 //const backendUrl = "http://localhost:3000";
 
 const ChatContext = createContext();
 
+
 export const ChatProvider = ({ children }) => {
   const [playedMessageIds, setPlayedMessageIds] = useState(new Set());
+  const { addNotification } = useNotification();
   const chat = async (message) => {
     setLoading(true);
     const data = await fetch("/audio", {
@@ -19,8 +22,8 @@ export const ChatProvider = ({ children }) => {
     if (resp.error) {
       console.error(resp.error);
       setLoading(false);
+      addNotification(`An error occurred: ${resp.error}`);
       window.stopRecognition();
-      alert("An error ocurred: " + resp.error);
       return;
     }
     const respMessages = resp.messages;

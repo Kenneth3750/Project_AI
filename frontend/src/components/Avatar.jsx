@@ -5,7 +5,9 @@ import React, { useEffect, useRef, useState, useContext } from "react";
 import SubtitlesContext from './subtitles'; 
 import * as THREE from "three";
 import { useChat } from "../hooks/useChat";
-import {ELEVEN_LABS_API_KEY} from '../../../config.js';
+import {ELEVEN_LABS_API_KEY, IBM_TTS} from '../../../config.js';
+import { useNotification } from '../components/NotificationContext';
+
 
 
 const facialExpressions = {
@@ -87,6 +89,17 @@ const facialExpressions = {
     mouthSmileRight: 0.38473918302092225,
     tongueOut: 0.9618479575523053,
   },
+  smile_with_teeth: {
+      mouthOpen: 0.61,
+      mouthSmile: 0.56,
+      browInnerUp: 0.17000000000000032,
+      eyeSquintLeft: 0.3999999999999997,
+      eyeSquintRight: 0.43999999999999967,
+      noseSneerLeft: 0.1700000727403591,
+      noseSneerRight: 0.14000002836874018,
+      mouthPressLeft: 0.6099999999999992,
+      mouthPressRight: 0.4099999999999997
+    }
   
 };
 
@@ -108,6 +121,7 @@ export function Avatar(props) {
 
   const path = window.location.pathname;
   const lastNumber = path.split('/').pop();
+  const { addNotification } = useNotification();
 
   let gltfModel;
   if (lastNumber === '5') {
@@ -133,109 +147,100 @@ export function Avatar(props) {
   };
 
 useEffect(() => {
-  console.log(message);
+  try{
+    console.log(message);
 
-  let converastionStatus;
-  if (!message || isAudioPlaying || playedMessageIds.has(generateMessageId(message))) {
-    console.log("Mensaje vacío, audio ya está sonando, o mensaje ya reproducido");
-    setAnimation("Idle");
-    return;
-  }
-
-  if (audio && !audio.paused) {
-    console.log("Audio already playing, queuing message");
-    return;
-  }
-
-  const playAudio = (audioSource, is_elevenlabs) => {
-    setIsAudioPlaying(true);
-    const messageId = generateMessageId(message);
-    if (playedMessageIds.has(messageId)) {
-      console.log("Este mensaje ya se ha reproducido, saltando...");
+    let converastionStatus;
+    if (!message || isAudioPlaying || playedMessageIds.has(generateMessageId(message))) {
+      console.log("Mensaje vacío, audio ya está sonando, o mensaje ya reproducido");
+      setAnimation("Idle");
       return;
     }
-    const newAudio = new Audio(audioSource);
-    newAudio.onplay = () => {
-      window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
-      window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Speaking" } }));
-    };
-    newAudio.onended = () => {
-      setIsAudioPlaying(false);
-      setPlayedMessageIds(prevIds => new Set(prevIds).add(messageId));
-      onMessagePlayed();
-      if (messages.length === 1) {
-        if (!is_elevenlabs) {       
-          window.initRecognition();
-        }else{
-          window.initRecognitionImage();
-        }
-        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
-      }
-      setSubtitles('');
-    };
-    setAudio(newAudio);
-    setAnimation(message.animation);
-    setFacialExpression(message.facialExpression);
-    setLipsync(message.lipsync);
-    setSubtitles(message.text);
-    newAudio.play();
-  };
+    
 
-  if (message.audio !== null) {
-    playAudio("data:audio/mp3;base64," + message.audio, false);
-  } else {
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'xi-api-key': ELEVEN_LABS_API_KEY
-      },
-      body: JSON.stringify({
-        text: message.text,
-        model_id: "eleven_multilingual_v2",
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0,
-          use_speaker_boost: true
-        },
-      })
+    if (audio && !audio.paused) {
+      console.log("Audio already playing, queuing message");
+      return;
+    }
+
+    const playAudio = (audioSource, is_elevenlabs) => {
+      setIsAudioPlaying(true);
+      const messageId = generateMessageId(message);
+      if (playedMessageIds.has(messageId)) {
+        console.log("Este mensaje ya se ha reproducido, saltando...");
+        return;
+      }
+      const newAudio = new Audio(audioSource);
+      newAudio.onplay = () => {
+        window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: true } }));
+        window.dispatchEvent(new CustomEvent('avatarStatusChanged', { detail: { status: "Speaking" } }));
+      };
+      newAudio.onended = () => {
+        setIsAudioPlaying(false);
+        setPlayedMessageIds(prevIds => new Set(prevIds).add(messageId));
+        onMessagePlayed();
+        if (messages.length === 1) {
+          if (!is_elevenlabs) {       
+            window.initRecognition();
+          }else{
+            window.initRecognitionImage();
+          }
+          window.dispatchEvent(new CustomEvent('audioStatusChanged', { detail: { isPlaying: false } }));
+        }
+        setSubtitles('');
+      };
+      setAudio(newAudio);
+      setAnimation(message.animation);
+      setFacialExpression(message.facialExpression);
+      setLipsync(message.lipsync);
+      setSubtitles(message.text);
+      newAudio.play();
     };
-    let voice_id;
-    let role_id = window.localStorage.getItem('role');
-    if (role_id === "1") {
-      voice_id = "21m00Tcm4TlvDq8ikWAM";
-    }
-    else if (role_id === "2") {
-      voice_id = "FGY2WhTYpPnrIDTdsKH5";
-    }
-    else if (role_id === "3") {
-      voice_id = "Xb7hH8MSUJpSbSDYk0k2";
-    }
-    else if (role_id === "4") {
-      voice_id = "cgSgspJ2msm6clMCkdW9";
-    }
-    else {
-      voice_id = "XrExE9yKIg1WjnnlVkGX";
-    }
-    converastionStatus = window.localStorage.getItem('conversation');
-    console.log(converastionStatus);
-    if (converastionStatus === "true") {
-        fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
-          .then(response => response.blob())
-          .catch(err => console.error('Error:', err))
+
+    if (message.audio !== null) {
+      playAudio("data:audio/mp3;base64," + message.audio, false);
+    } else {
+      const url = "https://api.us-south.text-to-speech.watson.cloud.ibm.com/instances/0fd45cc9-7b41-42bb-8cee-1c32272f00d1";
+      const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${btoa(`apikey:${IBM_TTS}`)}`,
+            'Accept': 'audio/wav'
+        },
+        body: JSON.stringify({
+            text: message.text
+        })
+    };
+      let language = message.language;
+      let voice = language === "es" ? "es-LA_DanielaExpressive" : "en-US_AllisonExpressive";
+      const conversationStatus = window.localStorage.getItem('conversation');
+      if (conversationStatus === "true") {
+        fetch(`${url}/v1/synthesize?voice=${voice}`, options)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.blob();
+          })
           .then(blob => {
-            let conversationStatus2 = window.localStorage.getItem('conversation');
-            console.log(conversationStatus2);
-            if (conversationStatus2 === "true") {
+            if (window.localStorage.getItem('conversation') === "true") {
               playAudio(URL.createObjectURL(blob), true);
             }
           })
           .catch(err => {
-            console.error('Error:', err);
+            if (err.message.includes('401')) {
+              addNotification('The voice service has reached its limit. Please contact the administrator.');
+            } else {
+              addNotification(`An error occurred while trying to generate the audio: ${err.message}`);
+            }
             window.stopRecognition();
           });
+      }
     }
+  } catch (e) {
+    addNotification(`An unexpected error occurred: ${e.message}`);
+    window.stopRecognition();
   }
 
 }, [message, messages, playedMessageIds]);
