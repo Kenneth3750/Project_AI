@@ -247,10 +247,11 @@ def save():
             user_id = session['user_id']
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(user_id, conversation, role_id)
-            new_chat = check_current_conversation(conversation, client, db, user_id, role_id)
-            if new_chat:
-                session['chat'] = json.dumps(new_chat)
+            value = db.save_current_conversation(user_id, conversation, role_id)
+            if value:
+                new_chat = check_current_conversation(conversation, client, db, user_id, role_id)
+                if new_chat:
+                    session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
