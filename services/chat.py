@@ -45,14 +45,14 @@ class Chat:
     
 
 
-def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id):
+def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id, language):
     try:
         print("--"*20)
         text = user_input
         if text:
             messages.append({"role": "user", "content": text})
             print(f"user: {text}")
-            response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id)
+            response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id, language)
             print(f"AI: {response}")
             print("--"*20)
             messages.append({"role": "assistant", "content": response})
@@ -135,7 +135,7 @@ def send_intro(language):
         "text": text,
         "facialExpression": "default",
         "audio": audio_file_to_base64(f"audio/{audio}"),
-        "lipsync": read_json_transcript("audio/intro2.json"),
+        "lipsync": read_json_transcript("audio/default.json"),
         "animation": "Talking_1"
 
     }]
@@ -152,7 +152,7 @@ def send_bye(language):
         "text": text,
         "facialExpression": "default",
         "audio": audio_file_to_base64(f"audio/{audio}"),
-        "lipsync": read_json_transcript("audio/Bye.json"),
+        "lipsync": read_json_transcript("audio/default.json"),
         "animation": "Talking_2"
     }]
     return message

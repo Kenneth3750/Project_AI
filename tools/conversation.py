@@ -49,7 +49,7 @@ def generate_response(client, messages):
     return completion.choices[0].message.content
 
 
-def generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id):
+def generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id, language):
     user_id = user_id
     role_id = role_id
     try:
@@ -91,26 +91,52 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                         "content": json.dumps(function_response),
                     }
                 ) 
-            try:
                 second_completion = client.chat.completions.create(
                     model=function_model,
                     messages=messages        
                 )
-                messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})
+            messages.append({"role": "assistant", "content": second_completion.choices[0].message.content})
 
-                second_response = second_completion.choices[0].message
+            second_response = second_completion.choices[0].message
 
-                second_response = extract_json(second_response.content)
-                second_response = convert_to_array_json(second_response)
-            
-                remove_i_elements_from_penultimate(messages, i)
+            second_response = extract_json(second_response.content)
+            second_response = convert_to_array_json(second_response)
+        
+            remove_i_elements_from_penultimate(messages, i)
 
-                return second_response, display_responses
-            except Exception as e:
-                return e
+            return second_response, display_responses
     except Exception as e:
         print("Error en generate_response_with_tools:", e)
-        return e
+        return return_generate_error_audio(language), []
+    
+
+def return_generate_error_audio(language):
+    if language == "es":
+        text_1 = "Lo siento, hubo un problema generando la respuesta"
+        text_2 = "Por favor, inténtalo de nuevo y si el problema persiste, reinicia la aplicación."
+        audio_1 = "sorry_es.mp3"
+        audio_2 = "tryagain_es.mp3"
+    elif language == "en":
+        text_1 = "Sorry, there was a problem generating the response."
+        text_2 = "Please try again and if the problem persists, restart the application."
+        audio_1 = "sorry_en.mp3"
+        audio_2 = "tryagain_en.mp3"
+    
+    message = [{
+        "text": text_1,
+        "facialExpression": "sad",
+        "audio": audio_file_to_base64(f"audio/{audio_1}"),
+        "lipsync": read_json_transcript("audio/default.json"),
+        "animation": "Crying"
+        },
+        {
+            "text": text_2,
+            "facialExpression": "default",
+            "audio": audio_file_to_base64(f"audio/{audio_2}"),
+            "lipsync": read_json_transcript("audio/default.json"),
+        }
+    ]
+    return message
     
 def remove_i_elements_from_penultimate(messages, i):
     penultimate_index = len(messages) - 2

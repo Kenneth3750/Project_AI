@@ -220,7 +220,7 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_input = request.get_json().get('message')
-            language = request.get_json().get('language')
+            language = request.get_json().get('language')[0:2]
             print("el mensaje es:", user_input)
             if user_input == "welcome":
                  return jsonify(messages = send_intro(language))
@@ -228,13 +228,10 @@ def recibir_audio():
                 return jsonify(messages = send_bye(language))
             else:
                 messages = json.loads(session['chat'])
-                print("messages on audio:", messages)
-                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id)
+
+                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id, language)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
-
-                print("display responses:", display_responses)  
-                print(type(display_responses))
 
                 return jsonify(messages=message_response, display_responses=display_responses)
         except Exception as e:
