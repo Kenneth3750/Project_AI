@@ -25,6 +25,16 @@ navigator.getUserMedia = (navigator.getUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia);
 
+function showNotification(message, type) {
+  const notificationDiv = document.createElement('div');
+  notificationDiv.textContent = message;
+  notificationDiv.className = `notification ${type}`;
+  document.body.appendChild(notificationDiv);
+  setTimeout(() => {
+      notificationDiv.remove();
+  }, 3000);
+}
+
 
 recognition.onresult = (e) => {
     const transcript = e.results[0][0].transcript;
@@ -96,6 +106,10 @@ window.toggleRecording = function() {
     let boton = document.getElementById("recordButton");
 
     if (boton.dataset.recording === "false" || !boton.dataset.recording) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showNotification('getUserMedia is not supported in this browser. Please use a modern browser like Chrome', 'error');
+          return;
+        }
         conversation = true;
         window.localStorage.setItem("conversation", "true");
         initConversation();
@@ -151,6 +165,11 @@ function getRoleId() {
 }
 
 function initConversation() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error('getUserMedia is not supported in this browser');
+      showNotification('getUserMedia is not supported in this browser. Please use a modern browser like Chrome', 'error');
+      return;
+    }
     window.dispatchEvent(new CustomEvent('modalVisibilityChanged', { detail: { visible: true } }));
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(function(stream) {
@@ -210,6 +229,7 @@ function initConversation() {
         })
         .catch(function(error) {
             console.error('Error accessing camera:', error);
+            showNotification('Error accessing camera. Please allow camera access and try again. Verify that all permissions are granted and that other applications are not using the camera.', 'error');
         });
 }
 
@@ -265,6 +285,11 @@ window.stopRecording = stopRecording;
 
 
 async function getUserLocation() {
+      if (!navigator.geolocation) {
+        console.error('Geolocation is not supported by this browser.');
+        showNotification('Geolocation is not supported by this browser.', 'error');
+        return null;
+    }
     try {
       const storedLocation = window.localStorage.getItem("user_location");
       const locationDate = window.localStorage.getItem("location_date");
