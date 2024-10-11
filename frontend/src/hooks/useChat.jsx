@@ -9,6 +9,7 @@ const ChatContext = createContext();
 export const ChatProvider = ({ children }) => {
   const [playedMessageIds, setPlayedMessageIds] = useState(new Set());
   const { addNotification } = useNotification();
+  const language = navigator.language;
   const chat = async (message) => {
     setLoading(true);
     const data = await fetch("/audio", {
@@ -16,7 +17,7 @@ export const ChatProvider = ({ children }) => {
       headers: {
       "Content-Type": "application/json",
       }, 
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, language }),
     });
     const resp = (await data.json());
     if (resp.error) {

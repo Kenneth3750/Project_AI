@@ -220,11 +220,12 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_input = request.get_json().get('message')
+            language = request.get_json().get('language')
             print("el mensaje es:", user_input)
             if user_input == "welcome":
-                 return jsonify(messages = send_intro())
+                 return jsonify(messages = send_intro(language))
             elif user_input == "goodbye":
-                return jsonify(messages = send_bye())
+                return jsonify(messages = send_bye(language))
             else:
                 messages = json.loads(session['chat'])
                 print("messages on audio:", messages)
