@@ -522,6 +522,101 @@ function deleteArea(area){
 }
 
 
+function getRegisteredUsers() {
+    $.ajax({
+        url: '/users',
+        type: 'GET',
+        success: function(data) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            data.forEach(user => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.textContent = user;
+                li.onclick = () => showUserDetails(user);
+                userList.appendChild(li);
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error getting registered users:', error);
+            showNotification("Error retrieving registered users", "error");
+        }
+    });
+}
+
+function showUserDetails(username) {
+    $.ajax({
+        url: `/users/${username}`,
+        type: 'GET',
+        success: function(data) {
+            if (data.photo) {
+                const base64Image = `data:image/jpeg;base64,${data.photo}`;
+                document.getElementById('userPhoto').src = base64Image;
+            } else {
+ 
+                document.getElementById('userPhoto').src = '/static/img/default-user.jpg';
+                console.warn(`No photo data for user: ${username}`);
+            }
+            
+            document.getElementById('editName').value = username;
+            document.getElementById('userDetailsModalLabel').textContent = `User: ${username}`;
+            
+
+            document.getElementById('saveNameBtn').onclick = () => updateUsername(username);
+            document.getElementById('deleteUserBtn').onclick = () => deleteUser(username);
+            
+
+            new bootstrap.Modal(document.getElementById('userDetailsModal')).show();
+        },
+        error: function(xhr, status, error) {
+            console.error('Error getting user details:', error);
+            showNotification(xhr.responseJSON?.error || "Error retrieving user details", "error");
+        }
+    });
+}
+
+
+function updateUsername(oldUsername) {
+    const newUsername = document.getElementById('editName').value.trim();
+    if (newUsername && newUsername !== oldUsername) {
+        $.ajax({
+            url: '/users',
+            type: 'PUT',
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({ oldUsername, newUsername }),
+            success: function(response) {
+                showNotification("Username updated successfully", "success");
+                getRegisteredUsers(); // Refresh the user list
+                bootstrap.Modal.getInstance(document.getElementById('userDetailsModal')).hide();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error updating username:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+                showNotification("Error updating username: " + errorMessage, "error");
+            }
+        });
+    }
+}
+
+function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete user ${username}? This will also delete their photo.`)) {
+        $.ajax({
+            url: `/users/${username}`,
+            type: 'DELETE',
+            success: function(response) {
+                showNotification("User deleted successfully", "success");
+                getRegisteredUsers(); // Refresh the user list
+                bootstrap.Modal.getInstance(document.getElementById('userDetailsModal')).hide();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting user:', error);
+                const errorMessage = xhr.responseJSON ? xhr.responseJSON.error : "Unknown error";
+                showNotification("Error deleting user: " + errorMessage, "error");
+            }
+        });
+    }
+}
+
 
 function getInfo(){
     getApartmentInfo();
@@ -530,6 +625,7 @@ function getInfo(){
     getUserInfo();
     getPdfFilename();
     getCommonAreas();
+    getRegisteredUsers();
 }
 document.addEventListener('DOMContentLoaded', (event) => {
     

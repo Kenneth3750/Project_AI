@@ -6,7 +6,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
 from services.roles import return_role, roles_list, return_tools
-from services.vision import Vision, manage_image, manage_current_image, current_image_description
+from services.vision import Vision, manage_image, manage_current_image, current_image_description, list_known_people_names,change_image_name, return_user_image, delete_user_image
 from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, get_user_useful_info, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
 from services.support import return_university_emails, set_university_email
 from tools.conversation import generate_response
@@ -323,6 +323,45 @@ def get_user_info():
         return jsonify({"name": full_name, "image": image_url, "given_name": name})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/users', methods=['GET', 'PUT'])
+def users():
+    user_id = session['user_id']
+    if request.method == 'GET':
+        try:
+            users = list_known_people_names(user_id)
+            return jsonify(users)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    elif request.method == 'PUT':
+        try:
+            data = request.json
+            old_username = data['oldUsername']
+            new_username = data['newUsername']
+            change_image_name(new_username, old_username, user_id)
+            return jsonify({"message": "Username updated successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+@app.route('/users/<username>', methods=['GET', 'DELETE'])
+def user(username):
+    user_id = session['user_id']
+    if request.method == 'GET':
+        try:
+            photo = return_user_image(user_id, username)
+            return jsonify({'photo': photo})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    elif request.method == 'DELETE':
+        try:
+            delete_user_image(user_id, username)
+            return jsonify({"message": "User deleted successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
 
 @app.route('/audio_prueba', methods=['POST'])
 def audio_prueba():

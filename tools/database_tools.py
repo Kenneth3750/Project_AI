@@ -1,7 +1,9 @@
 import pymysql
 from datetime import datetime
 from tools.conversation import count_tokens, max_tokens
-from services.roles import server_place
+import pytz
+
+server_place = pytz.timezone('America/Bogota')
 def database_connection(db_data):
     try:
         connection = pymysql.connect(

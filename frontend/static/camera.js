@@ -8,7 +8,17 @@ const videoImageContainer = document.getElementById('video-image-container');
 let reader;
 let image;
 
-// Function to stop the camera
+
+function showNotification(message, type) {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.textContent = message;
+    notificationDiv.className = `notification ${type}`;
+    document.body.appendChild(notificationDiv);
+    setTimeout(() => {
+        notificationDiv.remove();
+    }, 3000);
+}
+
 function stopCamera() {
     if (video.srcObject) {
         const tracks = video.srcObject.getTracks();
@@ -99,22 +109,41 @@ document.getElementById('send').addEventListener('click', () => {
             success: function(data) {
                 console.log('Image sent successfully:', data);
                 if (data.error) {
-                    alert(data.error);
+                    showNotification(data.error, 'error');
                 } else {
-                    alert('Image sent successfully.');
+                    showNotification("Image sent successfully", 'success');
                     stopCamera();
                     myImage.style.display = 'none';
                     erase.style.display = 'none';
+                    document.getElementById('person_name').value = "";
+                    
+                    // Add the new user to the list
+                    addUserToList(personName);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error sending the image:', error);
+                showNotification('Error sending the image. Please try again.', 'error');
             }
         });
     } else {
-        alert('Please capture an image and enter your name.');
+        showNotification('Please take a picture and enter your name', 'error');
     }
 });
+
+
+function addUserToList(username) {
+    const userList = document.getElementById('userList');
+    if (userList) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.textContent = username;
+        li.onclick = () => showUserDetails(username);
+        userList.appendChild(li);
+    } else {
+        console.error('User list element not found');
+    }
+}
 
 function goToChat() {
     var role = document.getElementById('select-role').value;

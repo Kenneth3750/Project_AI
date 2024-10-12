@@ -3,7 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 from openai import OpenAI
-import os
+import pytz
 from dotenv import load_dotenv
 from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
@@ -12,11 +12,10 @@ import json
 from html import escape
 from typing import List, Dict
 from serpapi import GoogleSearch
-from services.roles import server_place
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-
+server_place = pytz.timezone('America/Bogota')
 
 def send_alert_to_apartment_owner(params, user_id, role_id):
     try:

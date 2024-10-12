@@ -445,6 +445,37 @@
                 <button id="send" class="btn-naia">Send image</button>
             </div>
         </div>
+
+
+        <div class="registered-users-section mt-5">
+            <h3>Registered App Users</h3>
+            <ul id="userList" class="list-group user-list">
+
+            </ul>
+        </div>
+
+        <div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="userPhoto" src="" alt="User Photo" class="img-fluid mb-3">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Edit Name</label>
+                            <input type="text" class="form-control" id="editName">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveNameBtn">Save Changes</button>
+                        <button type="button" class="btn btn-danger" id="deleteUserBtn">Delete User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
         <div class="section-divider"></div>
