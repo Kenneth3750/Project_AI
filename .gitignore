@@ -63,6 +63,8 @@ trainer/
 tools/documents
 tools/chroma_db
 
+tools/images
+
 prueba.mjs
 package-lock.json
 package.json

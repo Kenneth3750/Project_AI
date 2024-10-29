@@ -45,7 +45,6 @@ def generate_response(client, messages):
     model="gpt-4o-mini",
     messages=messages
     )
-#llama3-70b-8192
     return completion.choices[0].message.content
 
 

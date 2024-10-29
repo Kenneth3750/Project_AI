@@ -560,6 +560,10 @@ def save_university_email():
             return jsonify({"message": "Email saved successfully"})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+@app.route('/uni_map', methods=['GET', 'POST'])
+def uni_map():
+    return send_from_directory(app.static_folder, 'static/img/uni_map.png')
 
 
 if __name__ == "__main__":  
