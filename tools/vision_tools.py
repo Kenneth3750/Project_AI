@@ -127,7 +127,22 @@ def image_to_text(api_key, image_path):
     
     return response.json().get('choices')[0].get('message').get('content')
 
+def get_knonw_people_names(user_id):
+    known_people = []
+    if os.path.exists(f'known_people/user_{user_id}'):
+        for person_name in os.listdir(f'known_people/user_{user_id}'):
+            if os.path.isdir(f'known_people/user_{user_id}/{person_name}'):  
+                known_people.append(person_name)
+    return known_people
 
+def change_name(new_name, old_name, user_id):
+    os.rename(f'known_people/user_{user_id}/{old_name}', f'known_people/user_{user_id}/{new_name}')
 
+def return_image(user_id, name):
+    with open(f'known_people/user_{user_id}/{name}/image.jpg', 'rb') as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    return encoded_string
 
-   
+def delete_image(user_id, username):
+    os.remove(f'known_people/user_{user_id}/{username}/image.jpg')
+    os.rmdir(f'known_people/user_{user_id}/{username}')

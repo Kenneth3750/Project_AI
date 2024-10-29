@@ -45,14 +45,14 @@ class Chat:
     
 
 
-def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id):
+def AI_response(client, user_input, messages, tools, available_functions, role_id, user_id, language):
     try:
         print("--"*20)
         text = user_input
         if text:
             messages.append({"role": "user", "content": text})
             print(f"user: {text}")
-            response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id)
+            response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id, language)
             print(f"AI: {response}")
             print("--"*20)
             messages.append({"role": "assistant", "content": response})
@@ -124,23 +124,35 @@ def add_new_vision_prompt(messages, vision_prompt, role_id, name, user_id):
         print("An error occurred: ", e)
         raise Exception("There was an error adding the new vision prompt. Please try again.")
 
-def send_intro():
+def send_intro(language):
+    if language == "es":
+        text = "Hola, me llamo NAIA. Soy tu asistente virtual, ¿en qué puedo ayudarte?"
+        audio = "welcome_es.mp3"
+    elif language == "en":
+        text = "Hello, I am is NAIA, your virtual assistant, how can I help you?"
+        audio = "welcome_en.mp3"
     message = [{
-        "text": "Bienvenido. Me llamo Naia, tu asistente virtual. ¿con qué puedo ayudarte hoy?",
+        "text": text,
         "facialExpression": "default",
-        "audio": audio_file_to_base64("audio/intro2.wav"),
-        "lipsync": read_json_transcript("audio/intro2.json"),
+        "audio": audio_file_to_base64(f"audio/{audio}"),
+        "lipsync": read_json_transcript("audio/default.json"),
         "animation": "Talking_1"
 
     }]
     return message
 
-def send_bye():
+def send_bye(language):
+    if language == "es":
+        text = "Hasta luego, que tengas un buen día"
+        audio = "bye_es.mp3"
+    elif language == "en":
+        text = "See you later, have a nice day"
+        audio = "bye_en.mp3"
     message = [{
-        "text": "Hasta luego, un placer haber hablado contigo, nos vemos pronto.",
+        "text": text,
         "facialExpression": "default",
-        "audio": audio_file_to_base64("audio/Bye.wav"),
-        "lipsync": read_json_transcript("audio/Bye.json"),
+        "audio": audio_file_to_base64(f"audio/{audio}"),
+        "lipsync": read_json_transcript("audio/default.json"),
         "animation": "Talking_2"
     }]
     return message

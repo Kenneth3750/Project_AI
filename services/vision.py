@@ -1,4 +1,4 @@
-from tools.vision_tools import save_image, save_current_image, upload_configurations, compare_faces, image_to_text
+from tools.vision_tools import save_image, save_current_image, upload_configurations, compare_faces, image_to_text, get_knonw_people_names, change_name, return_image, delete_image
 
 class Vision():
     def __init__(self, user_id):
@@ -52,3 +52,34 @@ def current_image_description(api_key, user_id):
     except Exception as e:
         print("An error occurred: ", e)
         raise Exception("There was an error trying to identify what is in the image. Please try again.")
+    
+def list_known_people_names(user_id):
+    try:
+        result = get_knonw_people_names(user_id)
+        return result
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error trying to get the list of known people. Please try again.")
+    
+
+def change_image_name(new_name, old_name, user_id):
+    try:
+        change_name(new_name, old_name, user_id)
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error trying to change the name of the image. Please try again.")
+    
+def return_user_image(user_id, name):
+    try:
+        encoded_image = return_image(user_id, name)
+        return encoded_image
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error trying to get the image. Please try again.")
+    
+def delete_user_image(user_id, username):
+    try:
+        delete_image(user_id, username)
+    except Exception as e:
+        print("An error occurred: ", e)
+        raise Exception("There was an error trying to delete the image. Please try again.")

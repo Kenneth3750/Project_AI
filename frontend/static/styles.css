@@ -350,3 +350,35 @@
     padding: 15px;
     margin-bottom: 15px;
 }
+
+
+
+
+
+.user-list .list-group-item {
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.user-list .list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.user-list .list-group-item:active {
+    transform: translateY(0);
+}
+
+.user-list .list-group-item::after {
+    content: '►';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.user-list .list-group-item:hover::after {
+    opacity: 1;
+}

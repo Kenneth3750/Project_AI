@@ -10,6 +10,9 @@ from langchain_openai import OpenAI as LangChainOpenAI
 from email.mime.text import MIMEText
 import smtplib
 from tools.database_tools import database_connection
+from openai import OpenAI
+import requests
+import base64
 
 # Cargar variables de entorno
 load_dotenv()
@@ -19,6 +22,8 @@ DOCUMENTS_DIRECTORY = 'tools/documents'
 
 # Verificar la clave API de OpenAI
 OPENAI_API_KEY = os.getenv('OPENAI_API_TOKEN')
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 if not OPENAI_API_KEY:
     raise ValueError("No se encontró la clave API de OpenAI. Asegúrate de tener un archivo .env con OPENAI_API_KEY=tu_clave_api")
 
@@ -147,6 +152,89 @@ def send_university_info_to_email(params, user_id, role_id):
     except Exception as e:
         print(f"Error sending email: {e}")
         return {"error": f"Error sending the email: {str(e)}"}
+    
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+def get_path_info(api_key, image_path, where_i_am, where_i_want_to_go):
+    completion = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{
+        "role": "system",
+        "content": f"""You must only indicate the number of the locations in order to give the user the info needed to understad the map.
+                Biblioteca
+
+                1. Biblioteca Karl C. Parrish
+
+                Bloques
+
+                2. Bloque A
+                3. Bloque Administrativo I
+                4. Bloque Administrativo II
+                5. Bloque B
+                6. Bloque C
+                7. Bloque D
+                8. Bloque E
+                9. Bloque F
+                10. Bloque G. Edificio Postgrados
+                11. Bloque I. Instituto de Idiomas
+                12. Bloque J
+                13. Bloque K. Edificio de Ingenierías
+                14. Bloque L. Edificio Julio Muvdi
+                15. Bloque M
+                16. Laboratorio de Arquitectura Tropical
+                17. Laboratorio de Energías Renovables
+                18. Bloque de Salud  
+
+                Escenarios Deportivos y culturales
+
+                19. Canchas Múltiples
+                20. Coliseo Cultural y Deportivo Los Fundadores (GYM is located here, inside the Coliseum)
+
+                Parqueaderos
+
+                21. Parqueadero administrativo principal
+                22. Parqueadero Bloque C
+                23. Parqueadero Bloque J
+                24. Parqueadero canchas de futbol
+                25. Parqueader Coliseo 
+                26. Parqueadero Edificio Postgrados
+                27. Parqueadero 10
+
+                Tiendas y Restaurantes
+
+                28. DuNord Café
+                29. DuNord Express
+                30. DuNord Graphique
+                31. DuNord Plaza
+                32. DuNord Terrasse
+                33. Iwanna Store
+                34. Km5
+                35. Le Salon
+                36. Restaurante 1966
+
+        You must respond like this "According to the map you are now on {where_i_am} listed with the number (add the number of the location) and you want to go to {where_i_want_to_go} listed with the number (add the number of the location)."
+        If the location where the user wants to go or where the user is in, is an access, you must tell the user that on the map is written the name of the access."""
+    }]
+    )
+    return completion.choices[0].message.content
+
+
+
+def give_location_info(params, user_id, role_id):
+    try:
+        where_i_want_to_go = params["where_i_want_to_go"]
+        where_i_am = params["where_i_am"]
+        response = get_path_info(OPENAI_API_KEY, "frontend/static/img/uni_map.png", where_i_am, where_i_want_to_go)
+        image_link = f"<a href='/uni_map' target='_blank'><span style='color: blue; text-decoration: underline;'>Click here to see the University map</span></a>"
+
+        return {"display": image_link, "message": f""" Tell the user the following information: {response}. Do not add the link of the map on your response cause it is already on screen.
+                Remember to always use the number of the location in the map to give the user the information needed to understand the map. Do not add directions like go to the east, go to the west, etc. Just use the number of the location."""}
+                
+    except Exception as e:
+        print(f"An error ocurred: {e}")
+        return {"error": str(e)}
 
 
 def university_assistant_tools():
@@ -188,12 +276,35 @@ def university_assistant_tools():
                     "required": ["query", "name"]
                 }
             }
+        },
+
+        {
+            "type": "function",
+            "function": {
+                "name": "give_location_info",
+                "description": "Give the user the information to get from one place to another in the university. If the user is not on the university, you must put the variable 'where_i_am' as 'acceso 07' ",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "where_i_am": {
+                            "type": "string",
+                            "description": "The place where the user is. This also means the place where the user is going to start."
+                        },
+                        "where_i_want_to_go": {
+                            "type": "string",
+                            "description": "The place where the user wants to go."
+                        }
+                    },
+                    "required": ["where_i_am", "where_i_want_to_go"]
+                }
+            }
         }
     ]
 
     available_functions = {
         "query_university_info": query_university_info,
-        "send_university_info_to_email": send_university_info_to_email
+        "send_university_info_to_email": send_university_info_to_email,
+        "give_location_info": give_location_info
     }
 
     return tools, available_functions

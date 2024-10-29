@@ -33,13 +33,16 @@ class Database:
             raise Exception("There was an error initializing the conversation. Please try again.")
         
     def save_current_conversation(self, user_id, conversation, role_id):
-        connection = self.connect()
         conversation = json.loads(conversation)
+        if len(conversation) <= 3:
+            return False
+        connection = self.connect()
         if conversation[0].get("role") == "system":
             conversation.pop(0)
         conversation = json.dumps(conversation)
         save_conversation(connection, user_id, conversation, role_id)
         connection.close()
+        return True
 
     
     def save_conversation_historic(self, user_id, conversation, role_id):

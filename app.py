@@ -6,7 +6,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from services.chat import Chat, AI_response, check_current_conversation, create_voice, send_intro, send_bye, add_new_vision_prompt
 from services.roles import return_role, roles_list, return_tools
-from services.vision import Vision, manage_image, manage_current_image, current_image_description
+from services.vision import Vision, manage_image, manage_current_image, current_image_description, list_known_people_names,change_image_name, return_user_image, delete_user_image
 from services.support import new_apartment, save_pdf, return_apartments, new_email, return_emails, get_user_useful_info, get_reservations, delete_apartment, add_area, get_areas, delete_area, save_token, delete_contact_email, get_summary, get_pdf
 from services.support import return_university_emails, set_university_email
 from tools.conversation import generate_response
@@ -191,7 +191,6 @@ def index(role_id):
                 image_file = request.files['image'] 
                 name = vision.start_image_recognition(image_file, user_id)
                 vision_prompt = vision.what_is_in_image(os.getenv('OPENAI_API_TOKEN'), user_id)
-                session['vision_prompt'] = vision_prompt
                 if name:
                     print("el nombre es:", name)
                     db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
@@ -221,20 +220,18 @@ def recibir_audio():
     if request.method == 'POST':
         try:
             user_input = request.get_json().get('message')
+            language = request.get_json().get('language')[0:2]
             print("el mensaje es:", user_input)
             if user_input == "welcome":
-                 return jsonify(messages = send_intro())
+                 return jsonify(messages = send_intro(language))
             elif user_input == "goodbye":
-                return jsonify(messages = send_bye())
+                return jsonify(messages = send_bye(language))
             else:
                 messages = json.loads(session['chat'])
-                print("messages on audio:", messages)
-                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id)
+
+                ai_response, display_responses = AI_response(client, user_input, messages, tools, available_functions, role_id, user_id, language)
                 message_response = create_voice(voice_client, user_id, ai_response)
                 session['chat'] = json.dumps(messages)
-
-                print("display responses:", display_responses)  
-                print(type(display_responses))
 
                 return jsonify(messages=message_response, display_responses=display_responses)
         except Exception as e:
@@ -250,10 +247,11 @@ def save():
             user_id = session['user_id']
             db = Database({"user": os.getenv('user'), "password": os.getenv('password'), "host": os.getenv('host'), "db": os.getenv('db')})
             conversation = session['chat']
-            db.save_current_conversation(user_id, conversation, role_id)
-            new_chat = check_current_conversation(conversation, client, db, user_id, role_id)
-            if new_chat:
-                session['chat'] = json.dumps(new_chat)
+            value = db.save_current_conversation(user_id, conversation, role_id)
+            if value:
+                new_chat = check_current_conversation(conversation, client, db, user_id, role_id)
+                if new_chat:
+                    session['chat'] = json.dumps(new_chat)
             return jsonify({'result': 'ok'})
         except Exception as e:
             return jsonify({'error': str(e)})
@@ -325,6 +323,45 @@ def get_user_info():
         return jsonify({"name": full_name, "image": image_url, "given_name": name})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/users', methods=['GET', 'PUT'])
+def users():
+    user_id = session['user_id']
+    if request.method == 'GET':
+        try:
+            users = list_known_people_names(user_id)
+            return jsonify(users)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    elif request.method == 'PUT':
+        try:
+            data = request.json
+            old_username = data['oldUsername']
+            new_username = data['newUsername']
+            change_image_name(new_username, old_username, user_id)
+            return jsonify({"message": "Username updated successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+@app.route('/users/<username>', methods=['GET', 'DELETE'])
+def user(username):
+    user_id = session['user_id']
+    if request.method == 'GET':
+        try:
+            photo = return_user_image(user_id, username)
+            return jsonify({'photo': photo})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    elif request.method == 'DELETE':
+        try:
+            delete_user_image(user_id, username)
+            return jsonify({"message": "User deleted successfully"})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
 
 @app.route('/audio_prueba', methods=['POST'])
 def audio_prueba():
@@ -523,6 +560,10 @@ def save_university_email():
             return jsonify({"message": "Email saved successfully"})
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+@app.route('/uni_map', methods=['GET', 'POST'])
+def uni_map():
+    return send_from_directory(app.static_folder, 'static/img/uni_map.png')
 
 
 if __name__ == "__main__":  

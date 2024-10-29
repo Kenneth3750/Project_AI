@@ -3,7 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 from openai import OpenAI
-import os
+import pytz
 from dotenv import load_dotenv
 from tools.conversation import generate_response, extract_json
 from tools.database_tools import database_connection
@@ -12,11 +12,10 @@ import json
 from html import escape
 from typing import List, Dict
 from serpapi import GoogleSearch
-from urllib.parse import urlencode
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
-
+server_place = pytz.timezone('America/Bogota')
 
 def send_alert_to_apartment_owner(params, user_id, role_id):
     try:
@@ -845,7 +844,7 @@ def delete_recepcionist_area(user_id, area):
 
 
 def list_of_reservations(user_id):
-    current_date = datetime.now().date().strftime("%Y-%m-%d") 
+    current_date = datetime.now(server_place).date().strftime("%Y-%m-%d") 
     connection = database_connection(
         {
             "user": os.getenv('user'), 
