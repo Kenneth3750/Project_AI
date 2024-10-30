@@ -206,12 +206,17 @@ useEffect(() => {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Basic ${btoa(`apikey:${IBM_TTS}`)}`,
-            'Accept': 'audio/wav'
-        },
-        body: JSON.stringify({
+            'Accept': 'audio/wav',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          },
+          mode: 'cors', // Explicitar el modo CORS
+          credentials: 'include', // Incluir credenciales si es necesario
+          body: JSON.stringify({
             text: message.text
-        })
-    };
+          })
+      };
       let language = message.language;
       let voice = language === "es" ? "es-LA_DanielaExpressive" : "en-US_AllisonExpressive";
       const conversationStatus = window.localStorage.getItem('conversation');
