@@ -223,9 +223,9 @@ def recibir_audio():
             language = request.get_json().get('language')[0:2]
             print("el mensaje es:", user_input)
             if user_input == "welcome":
-                 return jsonify(messages = send_intro(language))
+                 return jsonify(messages = send_intro())
             elif user_input == "goodbye":
-                return jsonify(messages = send_bye(language))
+                return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
 
