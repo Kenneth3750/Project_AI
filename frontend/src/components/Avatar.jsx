@@ -200,7 +200,7 @@ useEffect(() => {
     if (message.audio !== null) {
       playAudio("data:audio/mp3;base64," + message.audio, false);
     } else {
-      const url = "https://api.au-syd.text-to-speech.watson.cloud.ibm.com/instances/c7c0acfd-f149-457c-a2de-3a3316ea5b6e";
+      const url = "https://api.au-syd.text-to-speech.watson.cloud.ibm.com/instances/97a6bcfa-7da1-40cf-9e4d-70a32161b5c5";
       const options = {
         method: 'POST',
         headers: {
