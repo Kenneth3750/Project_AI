@@ -200,27 +200,23 @@ useEffect(() => {
     if (message.audio !== null) {
       playAudio("data:audio/mp3;base64," + message.audio, false);
     } else {
-      const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
       const url = "https://api.au-syd.text-to-speech.watson.cloud.ibm.com/instances/97a6bcfa-7da1-40cf-9e4d-70a32161b5c5";
       const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${btoa(`apikey:${IBM_TTS}`)}`,
-          'Accept': 'audio/wav',
-          'Origin': window.location.origin  
+          'Accept': 'audio/wav'
         },
         body: JSON.stringify({
           text: message.text
         })
       };
-      
       let language = message.language;
       let voice = language === "es" ? "es-LA_DanielaExpressive" : "en-US_AllisonExpressive";
       const conversationStatus = window.localStorage.getItem('conversation');
-      
       if (conversationStatus === "true") {
-        fetch(`${CORS_PROXY}${url}/v1/synthesize?voice=${voice}`, options)
+        fetch(`${url}/v1/synthesize?voice=${voice}`, options)
           .then(response => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
