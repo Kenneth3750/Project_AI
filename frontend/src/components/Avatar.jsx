@@ -208,7 +208,6 @@ useEffect(() => {
           'Authorization': `Basic ${btoa(`apikey:${IBM_TTS}`)}`,
           'Accept': 'audio/wav'
         },
-        mode: 'no-cors', // Añadir esta línea
         body: JSON.stringify({
           text: message.text
         })
