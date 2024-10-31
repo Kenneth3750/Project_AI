@@ -4,7 +4,9 @@ from tools.conversation import lipSync, audio_file_to_base64, read_json_transcri
 from services.roles import return_role
 import json
 import random
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 class Chat:
@@ -52,8 +54,10 @@ def AI_response(client, user_input, messages, tools, available_functions, role_i
         if text:
             messages.append({"role": "user", "content": text})
             print(f"user: {text}")
+            logger.info(f"user: {text}")
             response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id, language)
             print(f"AI: {response}")
+            logger.info(f"AI: {response}")
             print("--"*20)
             messages.append({"role": "assistant", "content": response})
         return response, display_responses
