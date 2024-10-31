@@ -119,7 +119,7 @@ def get_university_email(user_id):
 def send_university_info_to_email(params, user_id, role_id):
     try:
         query = params["query"]
-        user_name = params["user_name"]
+        user_name = params["name"]
         receiver_email = get_university_email(user_id)
         receiver_email_complete = f"{receiver_email}"
         if not query:
