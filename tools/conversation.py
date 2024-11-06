@@ -74,7 +74,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
         if tool_calls:
             messages.append(response)
             print("respose:", response)
-            logger.info(f"Tool calls: {tool_calls}")
+            logger.info("Tool calls: %s", tool_calls)
             for tool_call in tool_calls:
                 i += 1
                 function_name = tool_call.function.name
@@ -86,7 +86,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 if function_response.get("fragment"):
                     display_responses.append({"fragment": function_response.get("fragment")})
                 print("function_response:", function_response)
-                logger.info(f"Function response: {function_response}")
+                logger.info("Function response: %s", function_response)
                 messages.append(
                     {
                         "tool_call_id": tool_call.id,
