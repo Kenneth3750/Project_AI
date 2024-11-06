@@ -11,6 +11,7 @@ import tiktoken
 import re
 import logging
 from logging.handlers import RotatingFileHandler
+import sys
 
 def setup_logging():
     """Configure logging for the entire application"""
