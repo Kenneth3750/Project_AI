@@ -243,7 +243,7 @@ def university_assistant_tools():
             "type": "function",
             "function": {
                 "name": "query_university_info",
-                "description": "Answer any question related to college/university information.",
+                "description": "Answer any question related to college/university information. You must call this function always a person asks a question about college/university information.",
                 "parameters": {
                     "type": "object",
                     "properties": {
