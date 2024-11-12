@@ -1,3 +1,33 @@
+async function requestDevicePermissions() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+        });
+        
+        console.log('Permisos concedidos para cámara y micrófono');
+        
+        stream.getTracks().forEach(track => track.stop());
+        
+        return true;
+    } catch (error) {
+        console.error('Error al solicitar permisos:', error);
+        return false;
+    }
+}
+
+
+requestDevicePermissions()
+    .then(resultado => {
+        if(resultado) {
+            console.log('Permisos concedidos exitosamente');
+        } else {
+            console.log('No se pudieron obtener los permisos');
+        }
+    });
+
+
+
 function sendApartment() {
     const apartmentNumber = document.getElementById("apartment-number").value.trim();
     const apartmentPhone = document.getElementById("apartment-phone").value.trim();

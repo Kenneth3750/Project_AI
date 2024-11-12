@@ -142,7 +142,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                         "content": json.dumps(function_response),
                     }
                 ) 
-                second_completion = client.chat.completions.create(
+            second_completion = client.chat.completions.create(
                     model=function_model,
                     messages=messages        
                 )
