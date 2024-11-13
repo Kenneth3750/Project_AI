@@ -18,9 +18,6 @@ function App() {
 
   return (
     <>
-      {!permissionsGranted ? (
-        <PermissionHandler onAllPermissionsGranted={handlePermissionsGranted} />
-      ) : (
         <>
           <ChatEventListener />
           <Loader />
@@ -33,7 +30,6 @@ function App() {
             </Canvas>
           </SubtitlesContext.Provider>
         </>
-      )}
     </>
   );
 }
