@@ -100,10 +100,6 @@ create table if not exists university_emails(
     foreign key (user_id) references users(id) on delete cascade
 );
 
-
-
-
-
 insert into roles (role_name) values ('Investigator');
 insert into roles (role_name) values ('Hotel');
 insert into roles (role_name) values ('Trainer');

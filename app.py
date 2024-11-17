@@ -173,7 +173,9 @@ def authorize():
         if user:
             user_email = user.get('email')
             if user_email not in authorized_emails:
+                print("User email:", user_email)
                 return redirect(url_for('unauthorized'))
+                
             session['google_token'] = token
             user_id = db.check_and_create_user(user)
             print("User id:", user_id)
