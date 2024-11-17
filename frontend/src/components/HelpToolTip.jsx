@@ -6,7 +6,7 @@ const HelpTooltip = ({ role }) => {
 
   useEffect(() => {
     const roleContent = {
-      'Investigator': (
+      'Researcher': (
         <ul className="list-disc pl-4 space-y-1">
           <li>Read and extract information from PDFs (up to 1GB)</li>
           <li>Search for relevant scientific articles using Google Scholar</li>
