@@ -23,6 +23,7 @@ from flask_cors import CORS
 from config import authorized_emails
 import re
 import logging
+from logging.handlers import RotatingFileHandler
 import sys
 mimetypes.add_type('application/javascript', '.js')
 
@@ -30,7 +31,6 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 
-os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 # client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
@@ -39,8 +39,7 @@ voice_client = ElevenLabs(api_key=os.getenv("ELEVEN_LABS_API_KEY"))
 app = Flask(__name__, static_folder='frontend', static_url_path='/')
 app.secret_key = "hola34"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-app.logger.addHandler(logging.StreamHandler(sys.stdout))
-app.logger.setLevel(logging.DEBUG)
+
 SESSION_TYPE = 'redis'
 SESSION_REDIS = Redis(host='localhost', port=6379)
 app.config.from_object(__name__)
@@ -64,10 +63,52 @@ google = oauth.register(
         }
     )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+def setup_logging():
+    """Configure logging for the entire application"""
+    try:
+        # Create logs directory if it doesn't exist
+        os.makedirs('logs', exist_ok=True)
+        
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)  # Set to DEBUG to see all logs
 
+        # Format for the logs
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
 
+        # File handler with rotation
+        log_file = os.path.join('logs', 'flask_app.log')
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=10485760,  # 10MB
+            backupCount=10,
+            mode='a'  # Append mode
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)
+
+        # Console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.DEBUG)
+
+        # Remove existing handlers to avoid duplicates
+        if root_logger.handlers:
+            root_logger.handlers.clear()
+
+        # Add handlers to root logger
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(console_handler)
+
+        return logging.getLogger(__name__)
+
+    except Exception as e:
+        print(f"Error setting up logging: {str(e)}")
+        raise
+
+logger = setup_logging()
 
 
 @app.errorhandler(403)
@@ -223,9 +264,9 @@ def recibir_audio():
             language = request.get_json().get('language')[0:2]
             print("el mensaje es:", user_input)
             if user_input == "welcome":
-                 return jsonify(messages = send_intro(language))
+                 return jsonify(messages = send_intro())
             elif user_input == "goodbye":
-                return jsonify(messages = send_bye(language))
+                return jsonify(messages = send_bye())
             else:
                 messages = json.loads(session['chat'])
 

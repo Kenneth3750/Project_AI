@@ -4,6 +4,57 @@ from tools.conversation import lipSync, audio_file_to_base64, read_json_transcri
 from services.roles import return_role
 import json
 import random
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+import sys
+
+def setup_logging():
+    """Configure logging for the entire application"""
+    try:
+        # Create logs directory if it doesn't exist
+        os.makedirs('logs', exist_ok=True)
+        
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)  # Set to DEBUG to see all logs
+
+        # Format for the logs
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+
+        # File handler with rotation
+        log_file = os.path.join('logs', 'flask_app.log')
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=10485760,  # 10MB
+            backupCount=10,
+            mode='a'  # Append mode
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)
+
+        # Console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.DEBUG)
+
+        # Remove existing handlers to avoid duplicates
+        if root_logger.handlers:
+            root_logger.handlers.clear()
+
+        # Add handlers to root logger
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(console_handler)
+
+        return logging.getLogger(__name__)
+
+    except Exception as e:
+        print(f"Error setting up logging: {str(e)}")
+        raise
+
+logger = setup_logging()
 
 
 
@@ -52,8 +103,10 @@ def AI_response(client, user_input, messages, tools, available_functions, role_i
         if text:
             messages.append({"role": "user", "content": text})
             print(f"user: {text}")
+            logger.info("user: %s", text)
             response, display_responses = generate_response_with_tools(client, messages, tools, available_functions, role_id, user_id, language)
             print(f"AI: {response}")
+            logger.info("AI: %s", response)
             print("--"*20)
             messages.append({"role": "assistant", "content": response})
         return response, display_responses
@@ -124,35 +177,23 @@ def add_new_vision_prompt(messages, vision_prompt, role_id, name, user_id):
         print("An error occurred: ", e)
         raise Exception("There was an error adding the new vision prompt. Please try again.")
 
-def send_intro(language):
-    if language == "es":
-        text = "Hola, me llamo NAIA. Soy tu asistente virtual, ¿en qué puedo ayudarte?"
-        audio = "welcome_es.mp3"
-    elif language == "en":
-        text = "Hello, I am is NAIA, your virtual assistant, how can I help you?"
-        audio = "welcome_en.mp3"
+def send_intro():
     message = [{
-        "text": text,
+        "text": "Bienvenido. Me llamo Naia, tu asistente virtual. ¿con qué puedo ayudarte hoy?",
         "facialExpression": "default",
-        "audio": audio_file_to_base64(f"audio/{audio}"),
-        "lipsync": read_json_transcript("audio/default.json"),
+        "audio": audio_file_to_base64("audio/intro2.wav"),
+        "lipsync": read_json_transcript("audio/intro2.json"),
         "animation": "Talking_1"
 
     }]
     return message
 
-def send_bye(language):
-    if language == "es":
-        text = "Hasta luego, que tengas un buen día"
-        audio = "bye_es.mp3"
-    elif language == "en":
-        text = "See you later, have a nice day"
-        audio = "bye_en.mp3"
+def send_bye():
     message = [{
-        "text": text,
+        "text": "Hasta luego, un placer haber hablado contigo, nos vemos pronto.",
         "facialExpression": "default",
-        "audio": audio_file_to_base64(f"audio/{audio}"),
-        "lipsync": read_json_transcript("audio/default.json"),
+        "audio": audio_file_to_base64("audio/Bye.wav"),
+        "lipsync": read_json_transcript("audio/Bye.json"),
         "animation": "Talking_2"
     }]
     return message

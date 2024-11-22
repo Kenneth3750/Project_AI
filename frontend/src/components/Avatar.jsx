@@ -200,42 +200,57 @@ useEffect(() => {
     if (message.audio !== null) {
       playAudio("data:audio/mp3;base64," + message.audio, false);
     } else {
-      const url = "https://api.au-syd.text-to-speech.watson.cloud.ibm.com/instances/c7c0acfd-f149-457c-a2de-3a3316ea5b6e";
       const options = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${btoa(`apikey:${IBM_TTS}`)}`,
-            'Accept': 'audio/wav'
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVEN_LABS_API_KEY
         },
         body: JSON.stringify({
-            text: message.text
+          text: message.text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0,
+            use_speaker_boost: true
+          },
         })
-    };
-      let language = message.language;
-      let voice = language === "es" ? "es-LA_DanielaExpressive" : "en-US_AllisonExpressive";
-      const conversationStatus = window.localStorage.getItem('conversation');
-      if (conversationStatus === "true") {
-        fetch(`${url}/v1/synthesize?voice=${voice}`, options)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.blob();
-          })
-          .then(blob => {
-            if (window.localStorage.getItem('conversation') === "true") {
-              playAudio(URL.createObjectURL(blob), true);
-            }
-          })
-          .catch(err => {
-            if (err.message.includes('401')) {
-              addNotification('The voice service has reached its limit. Please contact the administrator.');
-            } else {
-              addNotification(`An error occurred while trying to generate the audio: ${err.message}`);
-            }
-            window.stopRecognition();
-          });
+      };
+      let voice_id;
+      let role_id = window.localStorage.getItem('role');
+      if (role_id === "1") {
+        voice_id = "21m00Tcm4TlvDq8ikWAM";
+      }
+      else if (role_id === "2") {
+        voice_id = "FGY2WhTYpPnrIDTdsKH5";
+      }
+      else if (role_id === "3") {
+        voice_id = "Xb7hH8MSUJpSbSDYk0k2";
+      }
+      else if (role_id === "4") {
+        voice_id = "cgSgspJ2msm6clMCkdW9";
+      }
+      else {
+        voice_id = "XrExE9yKIg1WjnnlVkGX";
+      }
+      converastionStatus = window.localStorage.getItem('conversation');
+      console.log(converastionStatus);
+      if (converastionStatus === "true") {
+          fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice_id}/stream`, options)
+            .then(response => response.blob())
+            .catch(err => console.error('Error:', err))
+            .then(blob => {
+              let conversationStatus2 = window.localStorage.getItem('conversation');
+              console.log(conversationStatus2);
+              if (conversationStatus2 === "true") {
+                playAudio(URL.createObjectURL(blob), true);
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              window.stopRecognition();
+            });
       }
     }
   } catch (e) {

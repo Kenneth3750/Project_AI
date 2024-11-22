@@ -18,22 +18,18 @@ function App() {
 
   return (
     <>
-      {!permissionsGranted ? (
-        <PermissionHandler onAllPermissionsGranted={handlePermissionsGranted} />
-      ) : (
         <>
           <ChatEventListener />
           <Loader />
           
           <SubtitlesContext.Provider value={{ subtitles, setSubtitles }}>
             <Leva hidden />
-            <UI />
+            <UI/>
             <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
               <Experience />
             </Canvas>
           </SubtitlesContext.Provider>
         </>
-      )}
     </>
   );
 }

@@ -9,6 +9,56 @@ from elevenlabs import play, save
 import base64 
 import tiktoken
 import re
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+
+def setup_logging():
+    """Configure logging for the entire application"""
+    try:
+        # Create logs directory if it doesn't exist
+        os.makedirs('logs', exist_ok=True)
+        
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)  # Set to DEBUG to see all logs
+
+        # Format for the logs
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+
+        # File handler with rotation
+        log_file = os.path.join('logs', 'flask_app.log')
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=10485760,  # 10MB
+            backupCount=10,
+            mode='a'  # Append mode
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)
+
+        # Console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.DEBUG)
+
+        # Remove existing handlers to avoid duplicates
+        if root_logger.handlers:
+            root_logger.handlers.clear()
+
+        # Add handlers to root logger
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(console_handler)
+
+        return logging.getLogger(__name__)
+
+    except Exception as e:
+        print(f"Error setting up logging: {str(e)}")
+        raise
+
+logger = setup_logging()
 
 max_tokens = 5000
 function_model = "gpt-4o-mini"
@@ -71,6 +121,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
         if tool_calls:
             messages.append(response)
             print("respose:", response)
+            logger.info("Tool calls: %s", tool_calls)
             for tool_call in tool_calls:
                 i += 1
                 function_name = tool_call.function.name
@@ -82,6 +133,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                 if function_response.get("fragment"):
                     display_responses.append({"fragment": function_response.get("fragment")})
                 print("function_response:", function_response)
+                logger.info("Function response: %s", function_response)
                 messages.append(
                     {
                         "tool_call_id": tool_call.id,
@@ -90,7 +142,7 @@ def generate_response_with_tools(client, messages, tools, available_functions, r
                         "content": json.dumps(function_response),
                     }
                 ) 
-                second_completion = client.chat.completions.create(
+            second_completion = client.chat.completions.create(
                     model=function_model,
                     messages=messages        
                 )
