@@ -58,31 +58,31 @@ Este proyecto utiliza un archivo `.env` para gestionar las variables de entorno 
 2. Copia y pega las siguientes líneas en el archivo `.env` y completa los valores según corresponda:
 
 
-# OpenAI API Key para interactuar con los modelos de IA.
+### OpenAI API Key para interactuar con los modelos de IA.
 OPENAI_API_TOKEN=tu_api_token_de_openai
 https://openai.com/
 
-# API Key para servicios de búsqueda web.
+### API Key para servicios de búsqueda web.
 SEARCH_WEB_API_KEY=tu_api_key_de_SerpAPI
 https://serpapi.com/
 
-# Credenciales del cliente de Google para autenticación OAuth2.
+### Credenciales del cliente de Google para autenticación OAuth2.
 GOOGLE_CLIENT_ID=tu_client_id_de_google
 GOOGLE_CLIENT_SECRET=tu_client_secret_de_google
 https://cloud.google.com/?hl=es_419
 
-# Configuración de conexión a la base de datos MySQL.
+### Configuración de conexión a la base de datos MySQL.
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=tu_contraseña_de_mysql
 DB_NAME=prueba_ai
 
-# Token y ID del teléfono para integraciones con WhatsApp Business.
+### Token y ID del teléfono para integraciones con WhatsApp Business.
 WHATSAPP_TOKEN=tu_token_de_whatsapp
 PHONE_ID=tu_id_del_teléfono_de_whatsapp
 https://developers.facebook.com/
 
-# Credenciales de Gmail para el envío de correos electrónicos del guia universitario.
+### Credenciales de Gmail para el envío de correos electrónicos del guia universitario.
 GMAIL_USERNAME=tu_correo_gmail
 GMAIL_PASSWORD=tu_contraseña_de_aplicación_gmail
 
