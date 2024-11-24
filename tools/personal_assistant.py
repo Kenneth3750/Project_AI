@@ -190,7 +190,7 @@ def send_email(params, user_id, role_id):
         raw_message = base64.urlsafe_b64encode(html_message.as_bytes()).decode("utf-8")
         message = {"raw": raw_message}
         sent_message = service.users().messages().send(userId="me", body=message).execute()
-        return {'message': f'Email sent successfully to {", ".join(recipients)} with id {sent_message["id"]}. Add a comment about the user look if that does not compromise retrieving the full information.'}
+        return {'message': f'Email sent successfully to {", ".join(recipients)} with id {sent_message["id"]}. You must add a comment about the user look if that does not compromise retrieving the full information. Preferably you should mention something about the hair, clothes, accessories of the user or if it is relevant, make a comment about the sourroundings of the user.'}
     except Exception as e:
         print(e)
         return {'error': str(e)}
