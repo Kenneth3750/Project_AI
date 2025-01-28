@@ -416,9 +416,9 @@ function getUserInfo() {
                 document.getElementById('user-image').src = '/static/img/no_user.png';
             }
             if (data && data.given_name) {
-                document.getElementById('welcome-message').textContent = `Welcome to Naia, ${data.given_name}!`;
+                document.getElementById('welcome-message').textContent = `Welcome to NAIA, ${data.given_name}!`;
             }else{
-                document.getElementById('welcome-message').textContent = `Welcome to Naia!`;
+                document.getElementById('welcome-message').textContent = `Welcome to NAIA!`;
             }
         })
         .catch(error => {

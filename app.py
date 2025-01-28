@@ -31,7 +31,6 @@ mimetypes.add_type('application/javascript', '.js')
 load_dotenv()
 
 
-os.environ['REPLICATE_API_TOKEN'] = os.getenv('REPLICATE_API_TOKEN')
 # client =  Groq(api_key=os.environ.get("GROP_API_TOKEN"))
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_TOKEN'))
