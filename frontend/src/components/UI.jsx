@@ -387,10 +387,10 @@ export const UI = ({ hidden, ...props }) => {
           </div>
         </div>
 
-  
+{/*   
         <div className="flex items-center justify-center flex-grow">
           <p className="text-center text-white bg-black bg-opacity-50 p-2 rounded-md text-xl font-semibold">{subtitles}</p>
-        </div>
+        </div> */}
 
         {/* Barra de control inferior */}
         <div className="self-end w-full flex justify-between items-end pointer-events-auto">
